@@ -18,6 +18,23 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
+## Backend Login Configuration
+
+This UI logs in by calling `POST /api/login` (Next.js), which proxies to your backend.
+
+1) Create a `.env.local` file in the project root with:
+
+```bash
+NEXT_PUBLIC_BACKEND_URL=http://localhost:4000
+```
+
+You can copy `env.example` to `.env.local`.
+
+2) Ensure your backend exposes:
+
+- `POST /auth/login` with JSON body `{ "email": "...", "password": "..." }`
+- Responds `200` with a JSON token field like `{ "token": "..." }` (also supports `accessToken` or `jwt`)
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
