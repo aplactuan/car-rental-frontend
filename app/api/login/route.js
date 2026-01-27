@@ -28,7 +28,7 @@ export async function POST(req) {
     );
   }
 
-  const url = new URL("/auth/login", backendBase);
+  const url = new URL("/api/login", backendBase);
 
   let upstreamRes;
   try {
@@ -53,8 +53,12 @@ export async function POST(req) {
     );
   }
 
+  // Extract token from response - handle nested data.token structure
   const token =
-    upstreamJson?.token || upstreamJson?.accessToken || upstreamJson?.jwt;
+    upstreamJson?.data?.token ||
+    upstreamJson?.token ||
+    upstreamJson?.accessToken ||
+    upstreamJson?.jwt;
 
   const res = NextResponse.json({ ok: true });
 
