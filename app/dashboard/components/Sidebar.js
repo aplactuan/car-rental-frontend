@@ -26,26 +26,26 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="flex w-56 shrink-0 flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="flex h-14 items-center border-b border-zinc-200 px-4 dark:border-zinc-800">
-        <Link
-          href="/dashboard"
-          className="text-sm font-semibold tracking-tight text-zinc-950 dark:text-zinc-50"
-        >
-          Car Rental
+    <aside className="flex w-72 shrink-0 flex-col bg-[#0B0F14]">
+      <div className="px-6 pb-5 pt-6">
+        <Link href="/dashboard" className="block">
+          <div className="text-lg font-semibold tracking-tight text-teal-400">
+            CarRental
+          </div>
+          <div className="mt-1 text-xs text-zinc-400">Management System</div>
         </Link>
       </div>
-      <nav className="flex-1 gap-1 p-3">
+      <nav className="flex-1 px-4">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+              className={`mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-zinc-100 text-zinc-950 dark:bg-zinc-800 dark:text-zinc-50"
-                  : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-50"
+                  ? "bg-[#0F766E] text-white"
+                  : "text-zinc-300 hover:bg-white/5 hover:text-white"
               }`}
             >
               <svg
@@ -67,11 +67,11 @@ export default function Sidebar() {
           );
         })}
       </nav>
-      <div className="border-t border-zinc-200 p-3 dark:border-zinc-800">
+      <div className="mt-auto px-4 pb-5">
         <button
           type="button"
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-50 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-50"
+          className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white"
         >
           <svg
             className="h-5 w-5 shrink-0"
@@ -89,6 +89,7 @@ export default function Sidebar() {
           </svg>
           Logout
         </button>
+        <div className="mt-6 px-2 text-xs text-zinc-500">© 2026 CarRental</div>
       </div>
     </aside>
   );
