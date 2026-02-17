@@ -26,7 +26,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="flex w-72 shrink-0 flex-col bg-[#0B0F14]">
+    <aside className="relative z-0 flex w-72 shrink-0 flex-col bg-[#0B0F14]">
       <div className="px-6 pb-5 pt-6">
         <Link href="/dashboard" className="block">
           <div className="text-lg font-semibold tracking-tight text-teal-400">
