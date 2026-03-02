@@ -5,7 +5,7 @@ export default async function DashboardPage() {
   const token = cookieStore.get("auth_token")?.value;
 
   return (
-    <div className="max-w-6xl">
+    <div className="w-full pr-8">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
