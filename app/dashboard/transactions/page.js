@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const drivers = ["John Doe", "Jane Smith", "Alex Carter"];
-const cars = ["Toyota Vios", "Honda City", "Mitsubishi Xpander"];
 const createEmptyBooking = () => ({
   driver: "",
   car: "",
@@ -16,6 +14,50 @@ export default function TransactionsPage() {
   const [customerName, setCustomerName] = useState("");
   const [bookings, setBookings] = useState([]);
   const [bookingErrors, setBookingErrors] = useState({});
+  const [drivers, setDrivers] = useState([]);
+  const [driversLoading, setDriversLoading] = useState(false);
+  const [driversError, setDriversError] = useState(null);
+  const [cars, setCars] = useState([]);
+  const [carsLoading, setCarsLoading] = useState(false);
+  const [carsError, setCarsError] = useState(null);
+
+  useEffect(() => {
+    if (showTransactionForm) {
+      setDriversLoading(true);
+      setDriversError(null);
+      fetch("/api/v1/drivers", { credentials: "include" })
+        .then((res) => res.json())
+        .then((data) => {
+          const list = Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data?.drivers)
+              ? data.drivers
+              : Array.isArray(data)
+                ? data
+                : [];
+          setDrivers(list);
+        })
+        .catch((err) => setDriversError(err?.message || "Failed to load drivers"))
+        .finally(() => setDriversLoading(false));
+
+      setCarsLoading(true);
+      setCarsError(null);
+      fetch("/api/v1/cars", { credentials: "include" })
+        .then((res) => res.json())
+        .then((data) => {
+          const list = Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data?.cars)
+              ? data.cars
+              : Array.isArray(data)
+                ? data
+                : [];
+          setCars(list);
+        })
+        .catch((err) => setCarsError(err?.message || "Failed to load cars"))
+        .finally(() => setCarsLoading(false));
+    }
+  }, [showTransactionForm]);
 
   const handleTransactionSubmit = (event) => {
     event.preventDefault();
@@ -151,57 +193,7 @@ export default function TransactionsPage() {
                 </button>
               </div>
 
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <div>
-                  <label
-                    htmlFor={`driver-${index}`}
-                    className="mb-1 block text-sm font-medium text-zinc-700"
-                  >
-                    Driver
-                  </label>
-                  <select
-                    id={`driver-${index}`}
-                    value={booking.driver}
-                    onChange={(event) =>
-                      handleBookingChange(index, "driver", event.target.value)
-                    }
-                    required
-                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2"
-                  >
-                    <option value="">Select driver</option>
-                    {drivers.map((driver) => (
-                      <option key={driver} value={driver}>
-                        {driver}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor={`car-${index}`}
-                    className="mb-1 block text-sm font-medium text-zinc-700"
-                  >
-                    Car
-                  </label>
-                  <select
-                    id={`car-${index}`}
-                    value={booking.car}
-                    onChange={(event) =>
-                      handleBookingChange(index, "car", event.target.value)
-                    }
-                    required
-                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2"
-                  >
-                    <option value="">Select car</option>
-                    {cars.map((car) => (
-                      <option key={car} value={car}>
-                        {car}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
+              <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <div>
                   <label
                     htmlFor={`startDateTime-${index}`}
@@ -239,6 +231,70 @@ export default function TransactionsPage() {
                     required
                     className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2"
                   />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={`driver-${index}`}
+                    className="mb-1 block text-sm font-medium text-zinc-700"
+                  >
+                    Driver
+                  </label>
+                  <select
+                    id={`driver-${index}`}
+                    value={booking.driver}
+                    onChange={(event) =>
+                      handleBookingChange(index, "driver", event.target.value)
+                    }
+                    required
+                    disabled={driversLoading}
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 disabled:bg-zinc-100"
+                  >
+                    <option value="">
+                      {driversLoading
+                        ? "Loading..."
+                        : driversError
+                          ? driversError
+                          : "Select driver"}
+                    </option>
+                    {drivers.map((driver) => (
+                      <option key={driver.id} value={driver.id}>
+                        {[driver.attributes.firstName, driver.attributes.lastName].filter(Boolean).join(" ")}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={`car-${index}`}
+                    className="mb-1 block text-sm font-medium text-zinc-700"
+                  >
+                    Car
+                  </label>
+                  <select
+                    id={`car-${index}`}
+                    value={booking.car}
+                    onChange={(event) =>
+                      handleBookingChange(index, "car", event.target.value)
+                    }
+                    required
+                    disabled={carsLoading}
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 disabled:bg-zinc-100"
+                  >
+                    <option value="">
+                      {carsLoading
+                        ? "Loading..."
+                        : carsError
+                          ? carsError
+                          : "Select car"}
+                    </option>
+                    {cars.map((car) => (
+                      <option key={car.id} value={car.id}>
+                        {[car.attributes?.make, car.attributes?.model].filter(Boolean).join(" ")}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
