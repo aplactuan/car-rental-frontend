@@ -31,6 +31,9 @@ export default function Home() {
         setError(data?.error || "Login failed.");
         return;
       }
+      if (data?.token) {
+        localStorage.setItem("auth_token", data.token);
+      }
 
       router.push("/dashboard");
       router.refresh();

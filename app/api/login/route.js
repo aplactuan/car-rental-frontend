@@ -60,17 +60,21 @@ export async function POST(req) {
     upstreamJson?.accessToken ||
     upstreamJson?.jwt;
 
-  const res = NextResponse.json({ ok: true });
-
-  if (token) {
-    res.cookies.set("auth_token", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-    });
+  if (!token) {
+    return NextResponse.json(
+      { error: "Login succeeded but no token was returned by backend." },
+      { status: 502 },
+    );
   }
+
+  const res = NextResponse.json({ ok: true, token });
+
+  res.cookies.set("auth_token", token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
 
   return res;
 }
-

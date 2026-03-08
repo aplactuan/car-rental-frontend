@@ -1,119 +1,57 @@
 "use client";
 
-import { useState, useEffect } from "react";
-
-const createEmptyBooking = () => ({
-  driver: "",
-  car: "",
-  startDateTime: "",
-  endDateTime: "",
-});
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function TransactionsPage() {
+  const router = useRouter();
   const [showTransactionForm, setShowTransactionForm] = useState(false);
   const [customerName, setCustomerName] = useState("");
-  const [bookings, setBookings] = useState([]);
-  const [bookingErrors, setBookingErrors] = useState({});
-  const [drivers, setDrivers] = useState([]);
-  const [driversLoading, setDriversLoading] = useState(false);
-  const [driversError, setDriversError] = useState(null);
-  const [cars, setCars] = useState([]);
-  const [carsLoading, setCarsLoading] = useState(false);
-  const [carsError, setCarsError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (showTransactionForm) {
-      setDriversLoading(true);
-      setDriversError(null);
-      fetch("/api/v1/drivers", { credentials: "include" })
-        .then((res) => res.json())
-        .then((data) => {
-          const list = Array.isArray(data?.data)
-            ? data.data
-            : Array.isArray(data?.drivers)
-              ? data.drivers
-              : Array.isArray(data)
-                ? data
-                : [];
-          setDrivers(list);
-        })
-        .catch((err) => setDriversError(err?.message || "Failed to load drivers"))
-        .finally(() => setDriversLoading(false));
-
-      setCarsLoading(true);
-      setCarsError(null);
-      fetch("/api/v1/cars", { credentials: "include" })
-        .then((res) => res.json())
-        .then((data) => {
-          const list = Array.isArray(data?.data)
-            ? data.data
-            : Array.isArray(data?.cars)
-              ? data.cars
-              : Array.isArray(data)
-                ? data
-                : [];
-          setCars(list);
-        })
-        .catch((err) => setCarsError(err?.message || "Failed to load cars"))
-        .finally(() => setCarsLoading(false));
-    }
-  }, [showTransactionForm]);
-
-  const handleTransactionSubmit = (event) => {
+  const handleTransactionSubmit = async (event) => {
     event.preventDefault();
+    setError("");
+    setIsLoading(true);
 
-    const nextErrors = {};
-    bookings.forEach((booking, index) => {
-      if (
-        booking.startDateTime &&
-        booking.endDateTime &&
-        new Date(booking.startDateTime) > new Date(booking.endDateTime)
-      ) {
-        nextErrors[index] =
-          "Start date time should not be greater than end date time.";
-      }
-    });
-
-    if (Object.keys(nextErrors).length > 0) {
-      setBookingErrors(nextErrors);
-      return;
-    }
-
-    setBookingErrors({});
-    setCustomerName("");
-    setBookings([]);
-    setShowTransactionForm(false);
-  };
-
-  const handleAddBooking = () => {
-    setBookings((prev) => [...prev, createEmptyBooking()]);
-  };
-
-  const handleRemoveBooking = (indexToRemove) => {
-    setBookings((prev) => prev.filter((_, index) => index !== indexToRemove));
-    setBookingErrors((prev) => {
-      const next = {};
-      Object.entries(prev).forEach(([key, value]) => {
-        const index = Number(key);
-        if (index < indexToRemove) next[index] = value;
-        if (index > indexToRemove) next[index - 1] = value;
+    try {
+      const authToken = localStorage.getItem("auth_token");
+      const response = await fetch("/api/v1/transactions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          customer_name: customerName.trim(),
+        }),
       });
-      return next;
-    });
-  };
 
-  const handleBookingChange = (indexToUpdate, field, value) => {
-    setBookings((prev) =>
-      prev.map((booking, index) =>
-        index === indexToUpdate ? { ...booking, [field]: value } : booking
-      )
-    );
-    setBookingErrors((prev) => {
-      if (!prev[indexToUpdate]) return prev;
-      const next = { ...prev };
-      delete next[indexToUpdate];
-      return next;
-    });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setError(data?.error || data?.message || "Failed to save transaction.");
+        return;
+      }
+
+      const transactionId =
+        data?.id ?? data?.transaction_id ?? data?.data?.id ?? data?.data?.transaction_id;
+
+      if (!transactionId) {
+        setError("Transaction saved but no transaction ID was returned.");
+        return;
+      }
+
+      setCustomerName("");
+      setShowTransactionForm(false);
+      router.push(`/dashboard/transactions/${transactionId}`);
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -155,156 +93,22 @@ export default function TransactionsPage() {
               type="text"
               value={customerName}
               onChange={(event) => setCustomerName(event.target.value)}
+              disabled={isLoading}
               required
               className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2"
               placeholder="Enter customer name"
             />
           </div>
+          {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
           <div className="mt-4">
             <button
               type="submit"
-              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+              disabled={isLoading}
+              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
             >
-              Save Transaction
-            </button>
-            <button
-              type="button"
-              onClick={handleAddBooking}
-              className="ml-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-50"
-            >
-              Add Booking
+              {isLoading ? "Saving..." : "Save Transaction"}
             </button>
           </div>
-          {bookings.map((booking, index) => (
-            <div
-              key={`booking-${index}`}
-              className="mt-6 rounded-lg border border-zinc-200 p-4"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-sm font-semibold text-zinc-900">
-                  Booking {index + 1}
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveBooking(index)}
-                  className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
-                >
-                  Remove
-                </button>
-              </div>
-
-              <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <div>
-                  <label
-                    htmlFor={`startDateTime-${index}`}
-                    className="mb-1 block text-sm font-medium text-zinc-700"
-                  >
-                    Start Date Time
-                  </label>
-                  <input
-                    id={`startDateTime-${index}`}
-                    type="datetime-local"
-                    value={booking.startDateTime}
-                    onChange={(event) =>
-                      handleBookingChange(index, "startDateTime", event.target.value)
-                    }
-                    required
-                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor={`endDateTime-${index}`}
-                    className="mb-1 block text-sm font-medium text-zinc-700"
-                  >
-                    End Date Time
-                  </label>
-                  <input
-                    id={`endDateTime-${index}`}
-                    type="datetime-local"
-                    value={booking.endDateTime}
-                    min={booking.startDateTime || undefined}
-                    onChange={(event) =>
-                      handleBookingChange(index, "endDateTime", event.target.value)
-                    }
-                    required
-                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor={`driver-${index}`}
-                    className="mb-1 block text-sm font-medium text-zinc-700"
-                  >
-                    Driver
-                  </label>
-                  <select
-                    id={`driver-${index}`}
-                    value={booking.driver}
-                    onChange={(event) =>
-                      handleBookingChange(index, "driver", event.target.value)
-                    }
-                    required
-                    disabled={driversLoading}
-                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 disabled:bg-zinc-100"
-                  >
-                    <option value="">
-                      {driversLoading
-                        ? "Loading..."
-                        : driversError
-                          ? driversError
-                          : "Select driver"}
-                    </option>
-                    {drivers.map((driver) => (
-                      <option key={driver.id} value={driver.id}>
-                        {[driver.attributes.firstName, driver.attributes.lastName].filter(Boolean).join(" ")}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor={`car-${index}`}
-                    className="mb-1 block text-sm font-medium text-zinc-700"
-                  >
-                    Car
-                  </label>
-                  <select
-                    id={`car-${index}`}
-                    value={booking.car}
-                    onChange={(event) =>
-                      handleBookingChange(index, "car", event.target.value)
-                    }
-                    required
-                    disabled={carsLoading}
-                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 disabled:bg-zinc-100"
-                  >
-                    <option value="">
-                      {carsLoading
-                        ? "Loading..."
-                        : carsError
-                          ? carsError
-                          : "Select car"}
-                    </option>
-                    {cars.map((car) => (
-                      <option key={car.id} value={car.id}>
-                        {[car.attributes?.make, car.attributes?.model].filter(Boolean).join(" ")}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {bookingErrors[index] && (
-                <p className="mt-3 text-sm text-red-600" role="alert">
-                  {bookingErrors[index]}
-                </p>
-              )}
-            </div>
-          ))}
         </form>
       )}
 
