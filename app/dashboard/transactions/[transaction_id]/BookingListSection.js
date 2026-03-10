@@ -27,10 +27,16 @@ function toDisplayBooking(raw) {
   const attrs = raw?.attributes ?? raw?.data?.attributes ?? raw ?? {};
   const driver = attrs.driver ?? attrs.driverName ?? "";
   const car = attrs.car ?? attrs.carInfo ?? "";
+  const startDate = attrs.startDate ?? attrs.start_date ?? attrs.startsAt ?? "";
+  const endDate = attrs.endDate ?? attrs.end_date ?? attrs.endsAt ?? "";
+  const note = attrs.note ?? "";
   return {
     id: raw?.id ?? attrs.id ?? crypto.randomUUID(),
-    startTime: attrs.startTime ?? attrs.start_time ?? attrs.startsAt ?? "-",
-    endTime: attrs.endTime ?? attrs.end_time ?? attrs.endsAt ?? "-",
+    startTime: attrs.startTime ?? attrs.start_time ?? startDate ?? "-",
+    endTime: attrs.endTime ?? attrs.end_time ?? endDate ?? "-",
+    startDate: startDate || "-",
+    endDate: endDate || "-",
+    note: String(note || "-"),
     driver: typeof driver === "object" ? [driver.firstName, driver.lastName].filter(Boolean).join(" ") : String(driver || "-"),
     car: typeof car === "object" ? [car.make, car.model, car.plateNumber].filter(Boolean).join(" - ") : String(car || "-"),
   };
