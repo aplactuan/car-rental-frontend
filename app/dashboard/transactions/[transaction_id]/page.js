@@ -34,7 +34,39 @@ export default async function TransactionDetailPage({ params }) {
       const bookingsData =
         data?.data?.relationships?.bookings?.data ??
         data?.relationships?.bookings?.data;
-      bookings = Array.isArray(bookingsData) ? bookingsData : [];
+      const includedData = Array.isArray(data?.included) ? data.included : [];
+      bookings = Array.isArray(bookingsData)
+        ? bookingsData.map((booking, index) => {
+            const includedBooking =
+              includedData.find((item) => String(item?.id) === String(booking?.id)) ??
+              includedData[index];
+            const includedAttributes = includedBooking?.attributes ?? {};
+            const driverAttributes =
+              includedBooking?.relationships?.driver?.data?.attributes ?? null;
+            const carAttributes =
+              includedBooking?.relationships?.car?.data?.attributes ?? null;
+            const startDate = includedAttributes?.startDate;
+            const endDate = includedAttributes?.endDate;
+            const note = includedAttributes?.note;
+
+            return {
+              ...booking,
+              attributes: {
+                ...(booking?.attributes ?? {}),
+                ...(startDate !== undefined ? { startDate } : {}),
+                ...(endDate !== undefined ? { endDate } : {}),
+                ...(note !== undefined ? { note } : {}),
+                ...(driverAttributes ? { driver: driverAttributes } : {}),
+                ...(carAttributes ? { car: carAttributes } : {}),
+              },
+              ...(startDate !== undefined ? { startDate } : {}),
+              ...(endDate !== undefined ? { endDate } : {}),
+              ...(note !== undefined ? { note } : {}),
+              ...(driverAttributes ? { driver: driverAttributes } : {}),
+              ...(carAttributes ? { car: carAttributes } : {}),
+            };
+          })
+        : [];
     }
   }
 
