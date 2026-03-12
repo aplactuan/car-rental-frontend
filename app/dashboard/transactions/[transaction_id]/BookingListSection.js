@@ -62,27 +62,62 @@ export default function BookingListSection({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState("");
+
+  const isTimeValid =
+    startTime &&
+    endTime &&
+    new Date(endTime) - new Date(startTime) >= 60 * 60 * 1000;
 
   useEffect(() => {
-    if (!showForm) return;
+    if (!showForm || !isTimeValid) {
+      setDrivers([]);
+      setCars([]);
+      setDriverId("");
+      setCarId("");
+      setAvailabilityError("");
+      return;
+    }
+
     const token = localStorage.getItem("auth_token");
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    Promise.all([
-      fetch("/api/v1/drivers", { headers, credentials: "include" }).then(
-        (r) => r.json(),
-      ),
-      fetch("/api/v1/cars", { headers, credentials: "include" }).then((r) =>
-        r.json(),
-      ),
-    ]).then(([driversRes, carsRes]) => {
-      const dList = normalizeDrivers(driversRes);
-      const cList = normalizeCars(carsRes);
-      setDrivers(dList);
-      setCars(cList);
-      if (dList.length > 0) setDriverId(String(dList[0]?.id ?? ""));
-      if (cList.length > 0) setCarId(String(cList[0]?.id ?? ""));
+
+    const params = new URLSearchParams({
+      start: startTime,
+      end: endTime,
     });
-  }, [showForm]);
+
+    setIsLoadingAvailability(true);
+    setAvailabilityError("");
+
+    Promise.all([
+      fetch(
+        `/api/v1/availability?type=car&${params.toString()}`,
+        { headers, credentials: "include" },
+      ).then((r) => r.json()),
+      fetch(
+        `/api/v1/availability?type=driver&${params.toString()}`,
+        { headers, credentials: "include" },
+      ).then((r) => r.json()),
+    ])
+      .then(([carsRes, driversRes]) => {
+        const cList = normalizeCars(carsRes);
+        const dList = normalizeDrivers(driversRes);
+        setCars(cList);
+        setDrivers(dList);
+        if (cList.length > 0) setCarId(String(cList[0]?.id ?? ""));
+        if (dList.length > 0) setDriverId(String(dList[0]?.id ?? ""));
+        if (carsRes?.error) setAvailabilityError(carsRes.error);
+        else if (driversRes?.error) setAvailabilityError(driversRes.error);
+      })
+      .catch(() => {
+        setAvailabilityError("Failed to load availability.");
+      })
+      .finally(() => {
+        setIsLoadingAvailability(false);
+      });
+  }, [showForm, startTime, endTime, isTimeValid]);
 
   const handleCancel = () => {
     setShowForm(false);
@@ -91,11 +126,16 @@ export default function BookingListSection({
     setDriverId("");
     setCarId("");
     setSubmitError("");
+    setAvailabilityError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!transactionId) return;
+    if (!isTimeValid) {
+      setSubmitError("End Time must be at least 1 hour after Start Time.");
+      return;
+    }
     setSubmitError("");
     setIsSubmitting(true);
     const token = localStorage.getItem("auth_token");
@@ -202,6 +242,11 @@ export default function BookingListSection({
                 required
                 className="rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2"
               />
+              {startTime && endTime && !isTimeValid && (
+                <p className="mt-1 text-xs text-amber-600">
+                  End Time must be at least 1 hour after Start Time.
+                </p>
+              )}
             </div>
             <div>
               <label
@@ -215,9 +260,16 @@ export default function BookingListSection({
                 value={driverId}
                 onChange={(e) => setDriverId(e.target.value)}
                 required
-                className="rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 min-w-[140px]"
+                disabled={!isTimeValid || isLoadingAvailability}
+                className="rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 min-w-[140px] disabled:bg-zinc-100 disabled:cursor-not-allowed"
               >
-                <option value="">Select driver</option>
+                <option value="">
+                  {!isTimeValid
+                    ? "Set times first"
+                    : isLoadingAvailability
+                      ? "Loading..."
+                      : "Select driver"}
+                </option>
                 {drivers.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.label}
@@ -237,9 +289,16 @@ export default function BookingListSection({
                 value={carId}
                 onChange={(e) => setCarId(e.target.value)}
                 required
-                className="rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 min-w-[140px]"
+                disabled={!isTimeValid || isLoadingAvailability}
+                className="rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 min-w-[140px] disabled:bg-zinc-100 disabled:cursor-not-allowed"
               >
-                <option value="">Select car</option>
+                <option value="">
+                  {!isTimeValid
+                    ? "Set times first"
+                    : isLoadingAvailability
+                      ? "Loading..."
+                      : "Select car"}
+                </option>
                 {cars.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.label}
@@ -258,15 +317,23 @@ export default function BookingListSection({
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={
+                  isSubmitting ||
+                  !isTimeValid ||
+                  isLoadingAvailability ||
+                  !driverId ||
+                  !carId
+                }
                 className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
               >
                 {isSubmitting ? "Saving..." : "Save Booking"}
               </button>
             </div>
           </div>
-          {submitError && (
-            <p className="mt-3 text-sm text-red-600">{submitError}</p>
+          {(submitError || availabilityError) && (
+            <p className="mt-3 text-sm text-red-600">
+              {submitError || availabilityError}
+            </p>
           )}
         </form>
       )}
