@@ -1,0 +1,757 @@
+{
+	"info": {
+		"_postman_id": "car-rental-api-collection",
+		"name": "Car Rental API",
+		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n**Setup:**\n1. Set the `base_url` variable (default: http://localhost)\n2. Run the Login request to authenticate (test@example.com / password)\n3. The token is automatically saved - all authenticated requests will use it\n4. Set `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id` from list/get responses (all IDs are UUIDs)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost"
+		},
+		{
+			"key": "token",
+			"value": ""
+		},
+		{
+			"key": "car_id",
+			"value": ""
+		},
+		{
+			"key": "driver_id",
+			"value": ""
+		},
+		{
+			"key": "customer_id",
+			"value": ""
+		},
+		{
+			"key": "transaction_id",
+			"value": ""
+		},
+		{
+			"key": "booking_id",
+			"value": ""
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "login"]
+						},
+						"description": "Authenticate and receive a Bearer token. The token is automatically saved to the collection variable."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const json = pm.response.json();",
+									"    if (json.data && json.data.token) {",
+									"        pm.collectionVariables.set('token', json.data.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/logout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "logout"]
+						}
+					}
+				},
+				{
+					"name": "Get Current User",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/user",
+							"host": ["{{base_url}}"],
+							"path": ["api", "user"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Cars",
+			"item": [
+				{
+					"name": "Add Car",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"make\": \"Toyota\",\n    \"model\": \"Camry\",\n    \"plate_number\": \"ABC-1234\",\n    \"mileage\": 50000,\n    \"type\": \"sedan\",\n    \"number_of_seats\": 5,\n    \"year\": 2022\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/cars",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "cars"]
+						}
+					}
+				},
+				{
+					"name": "List Cars",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/cars",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "cars"]
+						}
+					}
+				},
+				{
+					"name": "Get Single Car",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/cars/{{car_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "cars", "{{car_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Car",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"make\": \"Toyota\",\n    \"model\": \"Camry\",\n    \"plate_number\": \"ABC-1234\",\n    \"mileage\": 55000,\n    \"type\": \"sedan\",\n    \"number_of_seats\": 5,\n    \"year\": 2022\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/cars/{{car_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "cars", "{{car_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Drivers",
+			"item": [
+				{
+					"name": "Add Driver",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"license_number\": \"DL-12345678\",\n    \"license_expiry_date\": \"2027-12-31\",\n    \"address\": \"123 Main St, City\",\n    \"phone_number\": \"+1234567890\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/drivers",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "drivers"]
+						}
+					}
+				},
+				{
+					"name": "List Drivers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/drivers?per_page=15",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "drivers"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Optional: 1-100"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Single Driver",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/drivers/{{driver_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "drivers", "{{driver_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Driver",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"license_number\": \"DL-12345678\",\n    \"license_expiry_date\": \"2027-12-31\",\n    \"address\": \"123 Main St, City\",\n    \"phone_number\": \"+1234567890\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/drivers/{{driver_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "drivers", "{{driver_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Customers",
+			"item": [
+				{
+					"name": "Add Customer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Jane Smith\",\n    \"type\": \"personal\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers"]
+						},
+						"description": "Create a customer. Type must be 'personal' or 'business'."
+					}
+				},
+				{
+					"name": "List Customers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers?per_page=15",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Optional: 1-100"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Single Customer",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "{{customer_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Customer",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Jane Smith Updated\",\n    \"type\": \"business\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "{{customer_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Customer",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "{{customer_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Add Customer Transaction",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "{{customer_id}}", "transactions"]
+						},
+						"description": "Create a transaction for the given customer. No body required."
+					}
+				},
+				{
+					"name": "List Customer Transactions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions?per_page=15",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "{{customer_id}}", "transactions"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Optional: 1-100"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Single Customer Transaction",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions/{{transaction_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "{{customer_id}}", "transactions", "{{transaction_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Customer Transaction",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"customer_id\": \"{{customer_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions/{{transaction_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "{{customer_id}}", "transactions", "{{transaction_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Customer Transaction",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions/{{transaction_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "{{customer_id}}", "transactions", "{{transaction_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Transactions",
+			"item": [
+				{
+					"name": "Add Transaction",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"customer_id\": \"{{customer_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/transactions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "transactions"]
+						}
+					}
+				},
+				{
+					"name": "List Transactions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/transactions?per_page=15",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "transactions"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Optional: 1-100"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Single Transaction",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "transactions", "{{transaction_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Bookings",
+			"item": [
+				{
+					"name": "Add Booking",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"car_id\": \"{{car_id}}\",\n    \"driver_id\": \"{{driver_id}}\",\n    \"start_date\": \"2025-03-10\",\n    \"end_date\": \"2025-03-15\",\n    \"note\": \"Customer requested specific car\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/book",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "transactions", "{{transaction_id}}", "book"]
+						}
+					}
+				},
+				{
+					"name": "List Bookings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings?per_page=15",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Optional: 1-100"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Single Booking",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings/{{booking_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings", "{{booking_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Booking",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"car_id\": \"{{car_id}}\",\n    \"driver_id\": \"{{driver_id}}\",\n    \"start_date\": \"2025-03-10\",\n    \"end_date\": \"2025-03-20\",\n    \"note\": \"Extended rental period\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings/{{booking_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings", "{{booking_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Booking",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings/{{booking_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings", "{{booking_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Availability",
+			"item": [
+				{
+					"name": "List Availability",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/availability?type=car&start=2025-03-01&end=2025-03-31",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "availability"],
+							"query": [
+								{
+									"key": "type",
+									"value": "car",
+									"description": "Required: 'car' or 'driver'"
+								},
+								{
+									"key": "start",
+									"value": "2025-03-01",
+									"description": "Required: Start date"
+								},
+								{
+									"key": "end",
+									"value": "2025-03-31",
+									"description": "Required: End date (must be after start)"
+								}
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}
