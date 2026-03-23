@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+const inputClass =
+  "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100";
+const labelClass = "block text-xs font-medium text-zinc-700";
+
 function readField(source, keys) {
   if (!source || typeof source !== "object") return "";
 
@@ -32,9 +36,15 @@ function normalizeCustomers(payload) {
     ? payload
     : Array.isArray(payload?.data)
       ? payload.data
-      : Array.isArray(payload?.customers)
-        ? payload.customers
-        : [];
+      : payload?.data && typeof payload.data === "object"
+        ? [payload.data]
+        : Array.isArray(payload?.customers)
+          ? payload.customers
+          : payload?.customer && typeof payload.customer === "object"
+            ? [payload.customer]
+            : payload && typeof payload === "object"
+              ? [payload]
+              : [];
 
   return rawCustomers.map((customer) => {
     const attrs = customer?.attributes ?? {};
@@ -56,9 +66,20 @@ function normalizeCustomers(payload) {
 }
 
 export default function CustomerDashboardPage() {
+  const [showForm, setShowForm] = useState(false);
+  const [name, setName] = useState("");
+  const [type, setType] = useState("personal");
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+
+  function resetForm() {
+    setName("");
+    setType("personal");
+    setSubmitError("");
+  }
 
   async function fetchCustomers() {
     setIsLoading(true);
@@ -90,6 +111,44 @@ export default function CustomerDashboardPage() {
     fetchCustomers();
   }, []);
 
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSubmitError("");
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch("/api/v1/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: name.trim(),
+          type,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setSubmitError(data?.error || data?.message || "Failed to add customer.");
+        return;
+      }
+
+      const [createdCustomer] = normalizeCustomers(data);
+
+      if (createdCustomer) {
+        setError("");
+        setCustomers((current) => [...current, createdCustomer]);
+      }
+
+      setShowForm(false);
+      resetForm();
+    } catch {
+      setSubmitError("Network error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <div className="w-full pr-8">
       <div className="flex items-start justify-between gap-4">
@@ -99,7 +158,84 @@ export default function CustomerDashboardPage() {
             Browse all customers from the API customer list endpoint
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => {
+            setShowForm(true);
+            resetForm();
+          }}
+          className="inline-flex items-center gap-2 rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
+        >
+          <svg
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+          </svg>
+          Add Customer
+        </button>
       </div>
+
+      {showForm && (
+        <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <h2 className="text-base font-semibold text-zinc-900">Add new customer</h2>
+          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+            <div>
+              <label htmlFor="customer-name" className={labelClass}>
+                Name
+              </label>
+              <input
+                id="customer-name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={inputClass}
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="customer-type" className={labelClass}>
+                Type
+              </label>
+              <select
+                id="customer-type"
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                className={inputClass}
+                required
+              >
+                <option value="personal">Personal</option>
+                <option value="business">Business</option>
+              </select>
+            </div>
+            {submitError && <p className="text-sm text-red-600">{submitError}</p>}
+            <div className="flex gap-2 pt-2">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:opacity-50"
+              >
+                {isSubmitting ? "Saving..." : "Save customer"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForm(false);
+                  resetForm();
+                }}
+                disabled={isSubmitting}
+                className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       <div className="mt-6 rounded-xl border border-zinc-200 bg-white shadow-sm">
         <div className="px-6 py-5">
