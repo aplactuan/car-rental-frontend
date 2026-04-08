@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
+import AddCustomerTransactionButton from "./AddCustomerTransactionButton";
 
 function readField(source, keys) {
   if (!source || typeof source !== "object") return "";
@@ -74,6 +75,8 @@ export default async function CustomerDetailPage({ params }) {
 
   let customer = null;
   let error = "";
+  let transactions = [];
+  let transactionsError = "";
 
   if (customerId) {
     try {
@@ -93,6 +96,27 @@ export default async function CustomerDetailPage({ params }) {
     } catch {
       error = "Could not reach the customer details endpoint.";
     }
+
+    try {
+      const txRes = await fetch(
+        `${baseUrl}/api/v1/customers/${customerId}/transactions?per_page=15`,
+        {
+          headers: cookieHeader ? { Cookie: cookieHeader } : {},
+          cache: "no-store",
+        },
+      );
+      const txData = await txRes.json().catch(() => ({}));
+      if (!txRes.ok) {
+        transactionsError =
+          txData?.error || txData?.message || "Failed to load transactions.";
+      } else {
+        const raw =
+          txData?.data ?? txData?.transactions ?? txData?.items ?? txData;
+        transactions = Array.isArray(raw) ? raw : [];
+      }
+    } catch {
+      transactionsError = "Could not reach the transactions endpoint.";
+    }
   } else {
     error = "Customer ID was not provided.";
   }
@@ -100,17 +124,25 @@ export default async function CustomerDetailPage({ params }) {
   return (
     <div className="w-full pr-8">
       <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <Link
-          href="/dashboard/customer"
-          className="text-sm font-medium text-teal-700 transition hover:text-teal-800"
-        >
-          Back to customer list
-        </Link>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <Link
+              href="/dashboard/customer"
+              className="text-sm font-medium text-teal-700 transition hover:text-teal-800"
+            >
+              Back to customer list
+            </Link>
 
-        <h1 className="mt-4 text-3xl font-bold tracking-tight">Customer Details</h1>
-        <p className="mt-2 text-sm text-zinc-500">
-          Customer ID: <span className="font-medium text-zinc-900">{customerId}</span>
-        </p>
+            <h1 className="mt-4 text-3xl font-bold tracking-tight">Customer Details</h1>
+            <p className="mt-2 text-sm text-zinc-500">
+              Customer ID:{" "}
+              <span className="font-medium text-zinc-900">{customerId}</span>
+            </p>
+          </div>
+          {customerId ? (
+            <AddCustomerTransactionButton customerId={customerId} />
+          ) : null}
+        </div>
       </div>
 
       <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
@@ -128,6 +160,71 @@ export default async function CustomerDetailPage({ params }) {
           </div>
         ) : (
           <p className="text-sm text-zinc-500">No customer data returned.</p>
+        )}
+      </div>
+
+      <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
+          Transactions
+        </h2>
+
+        {transactionsError ? (
+          <p className="mt-4 text-sm text-red-600">{transactionsError}</p>
+        ) : transactions.length === 0 ? (
+          <p className="mt-4 text-sm text-zinc-500">No transactions found.</p>
+        ) : (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  <th className="pb-3 pr-6">Transaction ID</th>
+                  <th className="pb-3 pr-6">Status</th>
+                  <th className="pb-3 pr-6">Created At</th>
+                  <th className="pb-3" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {transactions.map((tx) => {
+                  const attrs = tx?.attributes ?? tx ?? {};
+                  const id =
+                    tx?.id ??
+                    attrs?.id ??
+                    attrs?.transaction_id ??
+                    attrs?.transactionId;
+                  const status =
+                    attrs?.status ?? attrs?.state ?? "—";
+                  const createdAt =
+                    attrs?.created_at ??
+                    attrs?.createdAt ??
+                    tx?.created_at ??
+                    "—";
+                  return (
+                    <tr key={id} className="group">
+                      <td className="py-3 pr-6 font-mono text-xs text-zinc-700">
+                        {id ?? "—"}
+                      </td>
+                      <td className="py-3 pr-6">
+                        <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium capitalize text-zinc-700">
+                          {status}
+                        </span>
+                      </td>
+                      <td className="py-3 pr-6 text-zinc-500">{createdAt}</td>
+                      <td className="py-3 text-right">
+                        {id ? (
+                          <Link
+                            href={`/dashboard/customer/${customerId}/transaction/${id}`}
+                            className="text-xs font-medium text-teal-700 transition hover:text-teal-800"
+                          >
+                            View
+                          </Link>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
