@@ -6,16 +6,65 @@ const inputClass =
   "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100";
 const labelClass = "block text-xs font-medium text-zinc-700";
 
+function readField(source, keys) {
+  if (!source || typeof source !== "object") return "";
+
+  for (const key of keys) {
+    const value = source[key];
+    if (value !== undefined && value !== null && value !== "") return value;
+  }
+
+  const normalizedMap = Object.fromEntries(
+    Object.entries(source).map(([k, v]) => [
+      k.toLowerCase().replace(/[_\s]/g, ""),
+      v,
+    ]),
+  );
+
+  for (const key of keys) {
+    const normalizedKey = key.toLowerCase().replace(/[_\s]/g, "");
+    const value = normalizedMap[normalizedKey];
+    if (value !== undefined && value !== null && value !== "") return value;
+  }
+
+  return "";
+}
+
+function formatDateForInput(value) {
+  if (!value) return "";
+  const raw = String(value).trim();
+  const matched = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (matched) return `${matched[1]}-${matched[2]}-${matched[3]}`;
+
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return "";
+
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function splitFullName(fullName) {
+  const cleaned = String(fullName || "").trim().replace(/\s+/g, " ");
+  if (!cleaned) return { first_name: "", last_name: "" };
+
+  const parts = cleaned.split(" ");
+  const first_name = parts.shift() || "";
+  const last_name = parts.join(" ");
+  return { first_name, last_name };
+}
+
 export default function DriversPage() {
-  const [showForm, setShowForm] = useState(false);
-  const [first_name, setFirstName] = useState("");
-  const [last_name, setLastName] = useState("");
+  const [formMode, setFormMode] = useState(null);
+  const [editingDriverId, setEditingDriverId] = useState("");
+  const [name, setName] = useState("");
   const [license_number, setLicenseNumber] = useState("");
   const [license_expiry_date, setLicenseExpiryDate] = useState("");
   const [address, setAddress] = useState("");
   const [phone_number, setPhoneNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [formError, setFormError] = useState("");
   const [drivers, setDrivers] = useState([]);
   const [driversLoading, setDriversLoading] = useState(true);
   const [driversError, setDriversError] = useState("");
@@ -31,29 +80,6 @@ export default function DriversPage() {
 
     return rawDrivers.map((driver) => {
       const attrs = driver?.attributes ?? {};
-      const readField = (source, keys) => {
-        if (!source || typeof source !== "object") return "";
-
-        for (const key of keys) {
-          const value = source[key];
-          if (value !== undefined && value !== null && value !== "") return value;
-        }
-
-        const normalizedMap = Object.fromEntries(
-          Object.entries(source).map(([k, v]) => [
-            k.toLowerCase().replace(/[_\s]/g, ""),
-            v,
-          ]),
-        );
-
-        for (const key of keys) {
-          const normalizedKey = key.toLowerCase().replace(/[_\s]/g, "");
-          const value = normalizedMap[normalizedKey];
-          if (value !== undefined && value !== null && value !== "") return value;
-        }
-
-        return "";
-      };
 
       const pick = (keys) => {
         const fromAttrs = readField(attrs, keys);
@@ -64,7 +90,8 @@ export default function DriversPage() {
       return {
         id:
           pick(["id"]) ||
-          pick(["license_number", "licenseNumber", "licenseNUmber"]),
+          pick(["driver_id", "driverId"]) ||
+          pick(["uuid", "driver_uuid", "driverUuid"]),
         first_name: pick(["first_name", "firstName"]),
         last_name: pick(["last_name", "lastName"]),
         license_number: pick([
@@ -77,20 +104,20 @@ export default function DriversPage() {
           "licenseExpiryDate",
           "licenseEXpiryDate",
         ]),
-        address: pick(["address", "full_address", "fullAddress"]),
+        address: pick(["address", "full_address", "fullAddress", "email"]),
         phone_number: pick(["phone_number", "phoneNumber", "phoneNUmber"]),
       };
     });
   }
 
   function resetForm() {
-    setFirstName("");
-    setLastName("");
+    setName("");
     setLicenseNumber("");
     setLicenseExpiryDate("");
     setAddress("");
     setPhoneNumber("");
-    setError("");
+    setFormError("");
+    setEditingDriverId("");
   }
 
   async function fetchDrivers() {
@@ -120,34 +147,72 @@ export default function DriversPage() {
     fetchDrivers();
   }, []);
 
+  function openAddForm() {
+    resetForm();
+    setFormMode("add");
+  }
+
+  function openEditForm(driver) {
+    setFormMode("edit");
+    setEditingDriverId(driver.id || "");
+    setName([driver.first_name, driver.last_name].filter(Boolean).join(" ").trim());
+    setLicenseNumber(driver.license_number || "");
+    setPhoneNumber(driver.phone_number || "");
+    setAddress(driver.address || "");
+    setLicenseExpiryDate(formatDateForInput(driver.license_expiry_date));
+    setFormError("");
+  }
+
+  function closeForm() {
+    setFormMode(null);
+    resetForm();
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
-    setError("");
+    setFormError("");
     setIsLoading(true);
     try {
-      const res = await fetch("/api/v1/drivers", {
-        method: "POST",
+      const { first_name, last_name } = splitFullName(name);
+      const payload = {
+        first_name,
+        last_name,
+        license_number: license_number.trim(),
+        license_expiry_date,
+        address: address.trim(),
+        phone_number: phone_number.trim(),
+      };
+
+      const isEdit = formMode === "edit";
+      if (isEdit && !editingDriverId) {
+        setFormError("Unable to update this driver because no driver ID was found.");
+        return;
+      }
+
+      const endpoint = isEdit
+        ? `/api/v1/drivers/${encodeURIComponent(editingDriverId)}`
+        : "/api/v1/drivers";
+      const method = isEdit ? "PUT" : "POST";
+
+      const res = await fetch(endpoint, {
+        method,
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          first_name,
-          last_name,
-          license_number,
-          license_expiry_date,
-          address,
-          phone_number,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data?.error || data?.message || "Failed to add driver.");
+        setFormError(
+          data?.error ||
+            data?.message ||
+            (isEdit ? "Failed to update driver." : "Failed to add driver."),
+        );
         return;
       }
-      setShowForm(false);
-      resetForm();
-      fetchDrivers();
-    } catch (err) {
-      setError("Network error. Please try again.");
+      closeForm();
+      await fetchDrivers();
+    } catch {
+      setFormError("Network error. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -164,10 +229,7 @@ export default function DriversPage() {
         </div>
         <button
           type="button"
-          onClick={() => {
-            setShowForm(true);
-            resetForm();
-          }}
+          onClick={openAddForm}
           className="inline-flex items-center gap-2 rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
         >
           <svg
@@ -184,42 +246,56 @@ export default function DriversPage() {
         </button>
       </div>
 
-      {showForm && (
+      {formMode && (
         <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-zinc-900">Add new driver</h2>
+          <h2 className="text-base font-semibold text-zinc-900">
+            {formMode === "edit" ? "Edit Driver" : "Add Driver"}
+          </h2>
           <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-            <div>
-              <label className={labelClass}>First name</label>
-              <input
-                type="text"
-                value={first_name}
-                onChange={(e) => setFirstName(e.target.value)}
-                className={inputClass}
-                required
-              />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className={labelClass}>Name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className={inputClass}
+                  required
+                />
+              </div>
+              <div>
+                <label className={labelClass}>License Number</label>
+                <input
+                  type="text"
+                  value={license_number}
+                  onChange={(e) => setLicenseNumber(e.target.value)}
+                  className={inputClass}
+                  required
+                />
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className={labelClass}>Phone</label>
+                <input
+                  type="text"
+                  value={phone_number}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Address</label>
+                <input
+                  type="text"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
             </div>
             <div>
-              <label className={labelClass}>Last name</label>
-              <input
-                type="text"
-                value={last_name}
-                onChange={(e) => setLastName(e.target.value)}
-                className={inputClass}
-                required
-              />
-            </div>
-            <div>
-              <label className={labelClass}>License number</label>
-              <input
-                type="text"
-                value={license_number}
-                onChange={(e) => setLicenseNumber(e.target.value)}
-                className={inputClass}
-                required
-              />
-            </div>
-            <div>
-              <label className={labelClass}>License expiry date</label>
+              <label className={labelClass}>License Expiry</label>
               <input
                 type="date"
                 value={license_expiry_date}
@@ -228,26 +304,8 @@ export default function DriversPage() {
                 required
               />
             </div>
-            <div>
-              <label className={labelClass}>Address</label>
-              <input
-                type="text"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Phone number</label>
-              <input
-                type="text"
-                value={phone_number}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            {error && (
-              <p className="text-sm text-red-600">{error}</p>
+            {formError && (
+              <p className="text-sm text-red-600">{formError}</p>
             )}
             <div className="flex gap-2 pt-2">
               <button
@@ -255,14 +313,17 @@ export default function DriversPage() {
                 disabled={isLoading}
                 className="rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:opacity-50"
               >
-                {isLoading ? "Saving…" : "Save driver"}
+                {isLoading
+                  ? formMode === "edit"
+                    ? "Updating..."
+                    : "Saving..."
+                  : formMode === "edit"
+                    ? "Update Driver"
+                    : "Save Driver"}
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setShowForm(false);
-                  resetForm();
-                }}
+                onClick={closeForm}
                 disabled={isLoading}
                 className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50"
               >
@@ -291,32 +352,92 @@ export default function DriversPage() {
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-zinc-100 px-6 pb-2">
-            {drivers.map((driver) => (
-              <li
-                key={driver.id ?? driver.license_number}
-                className="flex flex-wrap items-center justify-between gap-2 py-4"
-              >
-                <div>
-                  <p className="font-medium text-zinc-900">
-                    {driver.first_name} {driver.last_name}
-                  </p>
-                  <p className="text-sm text-zinc-500">
-                    License: {driver.license_number}
-                    {driver.license_expiry_date &&
-                      ` · Expires ${driver.license_expiry_date}`}
-                  </p>
-                  {(driver.address || driver.phone_number) && (
-                    <p className="mt-1 text-sm text-zinc-600">
-                      {[driver.address, driver.phone_number]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="overflow-x-auto px-6 pb-4">
+            <table className="w-full min-w-[760px] border-collapse">
+              <thead>
+                <tr className="border-b border-zinc-200 text-left text-sm font-semibold text-zinc-800">
+                  <th className="py-3 pr-4">Name</th>
+                  <th className="py-3 pr-4">License</th>
+                  <th className="py-3 pr-4">Phone</th>
+                  <th className="py-3 pr-4">Address</th>
+                  <th className="py-3 pr-4">License Expiry</th>
+                  <th className="py-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {drivers.map((driver) => {
+                  const rowName = [driver.first_name, driver.last_name]
+                    .filter(Boolean)
+                    .join(" ")
+                    .trim();
+                  return (
+                    <tr
+                      key={driver.id ?? driver.license_number}
+                      className="border-b border-zinc-100 text-sm text-zinc-700"
+                    >
+                      <td className="py-4 pr-4 font-medium text-zinc-900">
+                        {rowName || "-"}
+                      </td>
+                      <td className="py-4 pr-4">{driver.license_number || "-"}</td>
+                      <td className="py-4 pr-4">{driver.phone_number || "-"}</td>
+                      <td className="py-4 pr-4">{driver.address || "-"}</td>
+                      <td className="py-4 pr-4">
+                        {formatDateForInput(driver.license_expiry_date) || "-"}
+                      </td>
+                      <td className="py-4">
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => openEditForm(driver)}
+                            className="text-blue-600 transition hover:text-blue-700"
+                            title="Edit driver"
+                            aria-label={`Edit ${rowName || "driver"}`}
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              className="h-4 w-4"
+                              aria-hidden
+                            >
+                              <path
+                                d="M16.862 3.487a2.25 2.25 0 1 1 3.182 3.182L7.25 19.463 3 21l1.537-4.25L16.862 3.487Z"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            disabled
+                            className="cursor-not-allowed text-red-400"
+                            title="Delete is not available yet"
+                            aria-label="Delete not available"
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              className="h-4 w-4"
+                              aria-hidden
+                            >
+                              <path
+                                d="M3 6h18M8 6V4h8v2m-7 4v7m4-7v7m-9 1h14a1 1 0 0 0 1-1V6H4v12a1 1 0 0 0 1 1Z"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

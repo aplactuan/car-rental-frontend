@@ -47,7 +47,7 @@ function normalizeCars(payload) {
     };
 
     return {
-      id: pick(["id", "car_id", "carId"]),
+      id: pick(["id", "car_id", "carId", "uuid", "car_uuid", "carUuid"]),
       make: pick(["make"]),
       model: pick(["model"]),
       plate_number: pick(["plate_number", "plateNumber", "plateNUmber"]),
@@ -60,7 +60,8 @@ function normalizeCars(payload) {
 }
 
 export default function CarsPage() {
-  const [showForm, setShowForm] = useState(false);
+  const [formMode, setFormMode] = useState(null);
+  const [editingCarId, setEditingCarId] = useState("");
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
   const [plate_number, setPlateNumber] = useState("");
@@ -69,7 +70,7 @@ export default function CarsPage() {
   const [number_of_seats, setNumberOfSeats] = useState("");
   const [year, setYear] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [formError, setFormError] = useState("");
   const [cars, setCars] = useState([]);
   const [carsLoading, setCarsLoading] = useState(true);
   const [carsError, setCarsError] = useState("");
@@ -82,7 +83,8 @@ export default function CarsPage() {
     setType("");
     setNumberOfSeats("");
     setYear("");
-    setError("");
+    setFormError("");
+    setEditingCarId("");
   }
 
   async function fetchCars() {
@@ -112,9 +114,38 @@ export default function CarsPage() {
     fetchCars();
   }, []);
 
+  function openAddForm() {
+    resetForm();
+    setFormMode("add");
+  }
+
+  function openEditForm(car) {
+    setFormMode("edit");
+    setEditingCarId(car.id || "");
+    setMake(car.make || "");
+    setModel(car.model || "");
+    setPlateNumber(car.plate_number || "");
+    setMileage(
+      car.mileage !== undefined && car.mileage !== null ? String(car.mileage) : "",
+    );
+    setType(car.type || "");
+    setNumberOfSeats(
+      car.number_of_seats !== undefined && car.number_of_seats !== null
+        ? String(car.number_of_seats)
+        : "",
+    );
+    setYear(car.year !== undefined && car.year !== null ? String(car.year) : "");
+    setFormError("");
+  }
+
+  function closeForm() {
+    setFormMode(null);
+    resetForm();
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
-    setError("");
+    setFormError("");
     setIsLoading(true);
     try {
       const payload = {
@@ -127,8 +158,19 @@ export default function CarsPage() {
         year: year ? Number(year) : new Date().getFullYear(),
       };
 
-      const res = await fetch("/api/v1/cars", {
-        method: "POST",
+      const isEdit = formMode === "edit";
+      if (isEdit && !editingCarId) {
+        setFormError("Unable to update this car because no car ID was found.");
+        return;
+      }
+
+      const endpoint = isEdit
+        ? `/api/v1/cars/${encodeURIComponent(editingCarId)}`
+        : "/api/v1/cars";
+      const method = isEdit ? "PUT" : "POST";
+
+      const res = await fetch(endpoint, {
+        method,
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(payload),
@@ -136,14 +178,17 @@ export default function CarsPage() {
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data?.error || data?.message || "Failed to add car.");
+        setFormError(
+          data?.error ||
+            data?.message ||
+            (isEdit ? "Failed to update car." : "Failed to add car."),
+        );
         return;
       }
-      setShowForm(false);
-      resetForm();
-      fetchCars();
-    } catch (err) {
-      setError("Network error. Please try again.");
+      closeForm();
+      await fetchCars();
+    } catch {
+      setFormError("Network error. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -160,10 +205,7 @@ export default function CarsPage() {
         </div>
         <button
           type="button"
-          onClick={() => {
-            setShowForm(true);
-            resetForm();
-          }}
+          onClick={openAddForm}
           className="inline-flex items-center gap-2 rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
         >
           <svg
@@ -180,9 +222,11 @@ export default function CarsPage() {
         </button>
       </div>
 
-      {showForm && (
+      {formMode && (
         <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-zinc-900">Add new car</h2>
+          <h2 className="text-base font-semibold text-zinc-900">
+            {formMode === "edit" ? "Edit Car" : "Add Car"}
+          </h2>
           <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -268,8 +312,8 @@ export default function CarsPage() {
                 />
               </div>
             </div>
-            {error && (
-              <p className="text-sm text-red-600">{error}</p>
+            {formError && (
+              <p className="text-sm text-red-600">{formError}</p>
             )}
             <div className="flex gap-2 pt-2">
               <button
@@ -277,14 +321,17 @@ export default function CarsPage() {
                 disabled={isLoading}
                 className="rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:opacity-50"
               >
-                {isLoading ? "Saving…" : "Save car"}
+                {isLoading
+                  ? formMode === "edit"
+                    ? "Updating..."
+                    : "Saving..."
+                  : formMode === "edit"
+                    ? "Update Car"
+                    : "Save Car"}
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setShowForm(false);
-                  resetForm();
-                }}
+                onClick={closeForm}
                 disabled={isLoading}
                 className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50"
               >
@@ -299,11 +346,11 @@ export default function CarsPage() {
         <div className="px-6 py-5">
           <div className="text-sm font-semibold text-zinc-900">Available Cars</div>
           <div className="mt-1 text-xs text-zinc-500">
-            {carsLoading ? "Loading…" : `${cars.length} cars registered`}
+            {carsLoading ? "Loading..." : `${cars.length} cars registered`}
           </div>
         </div>
         {carsLoading ? (
-          <div className="px-6 pb-6 text-sm text-zinc-500">Loading cars…</div>
+          <div className="px-6 pb-6 text-sm text-zinc-500">Loading cars...</div>
         ) : carsError ? (
           <div className="px-6 pb-6 text-sm text-red-600">{carsError}</div>
         ) : cars.length === 0 ? (
@@ -313,32 +360,94 @@ export default function CarsPage() {
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-zinc-100 px-6 pb-2">
-            {cars.map((car) => (
-              <li
-                key={car.id ?? car.plate_number ?? car.make + car.model}
-                className="flex flex-wrap items-center justify-between gap-2 py-4"
-              >
-                <div>
-                  <p className="font-medium text-zinc-900">
-                    {car.make} {car.model}
-                    {car.year && ` (${car.year})`}
-                  </p>
-                  <p className="text-sm text-zinc-500">
-                    Plate: {car.plate_number}
-                    {car.type && ` · ${car.type}`}
-                    {car.number_of_seats
-                      ? ` · ${car.number_of_seats} seats` : ""}
-                  </p>
-                  {car.mileage != null && car.mileage !== "" && (
-                    <p className="mt-1 text-sm text-zinc-600">
-                      Mileage: {Number(car.mileage).toLocaleString()} km
-                    </p>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="overflow-x-auto px-6 pb-4">
+            <table className="w-full min-w-[920px] border-collapse">
+              <thead>
+                <tr className="border-b border-zinc-200 text-left text-sm font-semibold text-zinc-800">
+                  <th className="py-3 pr-4">Make</th>
+                  <th className="py-3 pr-4">Model</th>
+                  <th className="py-3 pr-4">Plate</th>
+                  <th className="py-3 pr-4">Type</th>
+                  <th className="py-3 pr-4">Seats</th>
+                  <th className="py-3 pr-4">Mileage</th>
+                  <th className="py-3 pr-4">Year</th>
+                  <th className="py-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cars.map((car) => (
+                  <tr
+                    key={car.id ?? car.plate_number ?? `${car.make}-${car.model}`}
+                    className="border-b border-zinc-100 text-sm text-zinc-700"
+                  >
+                    <td className="py-4 pr-4 font-medium text-zinc-900">
+                      {car.make || "-"}
+                    </td>
+                    <td className="py-4 pr-4">{car.model || "-"}</td>
+                    <td className="py-4 pr-4">{car.plate_number || "-"}</td>
+                    <td className="py-4 pr-4">{car.type || "-"}</td>
+                    <td className="py-4 pr-4">
+                      {car.number_of_seats ? String(car.number_of_seats) : "-"}
+                    </td>
+                    <td className="py-4 pr-4">
+                      {car.mileage !== undefined && car.mileage !== null && car.mileage !== ""
+                        ? Number(car.mileage).toLocaleString()
+                        : "-"}
+                    </td>
+                    <td className="py-4 pr-4">{car.year || "-"}</td>
+                    <td className="py-4">
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => openEditForm(car)}
+                          className="text-blue-600 transition hover:text-blue-700"
+                          title="Edit car"
+                          aria-label={`Edit ${car.make || ""} ${car.model || "car"}`.trim()}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="h-4 w-4"
+                            aria-hidden
+                          >
+                            <path
+                              d="M16.862 3.487a2.25 2.25 0 1 1 3.182 3.182L7.25 19.463 3 21l1.537-4.25L16.862 3.487Z"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          disabled
+                          className="cursor-not-allowed text-red-400"
+                          title="Delete is not available yet"
+                          aria-label="Delete not available"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="h-4 w-4"
+                            aria-hidden
+                          >
+                            <path
+                              d="M3 6h18M8 6V4h8v2m-7 4v7m4-7v7m-9 1h14a1 1 0 0 0 1-1V6H4v12a1 1 0 0 0 1 1Z"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
