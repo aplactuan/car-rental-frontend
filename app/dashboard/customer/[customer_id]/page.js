@@ -177,7 +177,7 @@ export default async function CustomerDetailPage({ params }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  <th className="pb-3 pr-6">Transaction ID</th>
+                  <th className="pb-3 pr-6">Transaction Name</th>
                   <th className="pb-3 pr-6">Status</th>
                   <th className="pb-3 pr-6">Created At</th>
                   <th className="pb-3" />
@@ -191,17 +191,20 @@ export default async function CustomerDetailPage({ params }) {
                     attrs?.id ??
                     attrs?.transaction_id ??
                     attrs?.transactionId;
-                  const status =
-                    attrs?.status ?? attrs?.state ?? "—";
+                  const name =
+                    readField(attrs, ["name", "transaction_name", "transactionName"]) ||
+                    readField(tx, ["name", "transaction_name", "transactionName"]);
+                  const status = attrs?.status ?? attrs?.state ?? "-";
                   const createdAt =
                     attrs?.created_at ??
                     attrs?.createdAt ??
                     tx?.created_at ??
-                    "—";
+                    "-";
+
                   return (
                     <tr key={id} className="group">
-                      <td className="py-3 pr-6 font-mono text-xs text-zinc-700">
-                        {id ?? "—"}
+                      <td className="py-3 pr-6 text-zinc-700">
+                        {name || "Unnamed transaction"}
                       </td>
                       <td className="py-3 pr-6">
                         <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium capitalize text-zinc-700">

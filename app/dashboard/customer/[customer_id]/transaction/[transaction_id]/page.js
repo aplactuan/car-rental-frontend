@@ -8,6 +8,8 @@ export default async function CustomerTransactionDetailPage({ params }) {
   const transactionId = resolvedParams?.transaction_id;
 
   let customerName = null;
+  let transactionName = null;
+  let transactionLoaded = false;
   let bookings = [];
   if (transactionId) {
     const cookieStore = await cookies();
@@ -29,6 +31,13 @@ export default async function CustomerTransactionDetailPage({ params }) {
     );
     if (res.ok) {
       const data = await res.json();
+      transactionLoaded = true;
+      const attrs = data?.data?.attributes ?? data?.attributes ?? {};
+      transactionName =
+        attrs?.name ??
+        attrs?.transaction_name ??
+        attrs?.transactionName ??
+        null;
       customerName =
         data?.data?.attributes?.customerName ??
         data?.attributes?.customerName ??
@@ -91,6 +100,16 @@ export default async function CustomerTransactionDetailPage({ params }) {
           Transaction ID:{" "}
           <span className="font-medium text-zinc-900">{transactionId}</span>
         </p>
+        {transactionLoaded && (
+          <p className="mt-2 text-sm text-zinc-500">
+            Transaction name:{" "}
+            <span className="font-medium text-zinc-900">
+              {transactionName != null && transactionName !== ""
+                ? transactionName
+                : "Unnamed transaction"}
+            </span>
+          </p>
+        )}
         {customerName && (
           <p className="mt-2 text-sm text-zinc-500">
             Customer:{" "}

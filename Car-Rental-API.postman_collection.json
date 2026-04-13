@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "car-rental-api-collection",
 		"name": "Car Rental API",
-		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n**Setup:**\n1. Set the `base_url` variable (default: http://localhost)\n2. Run the Login request to authenticate (test@example.com / password)\n3. The token is automatically saved - all authenticated requests will use it\n4. Set `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id` from list/get responses (all IDs are UUIDs)",
+		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n**Setup:**\n1. Set the `base_url` variable (default: http://localhost)\n2. Run the Login request to authenticate (test@example.com / password)\n3. The token is automatically saved - all authenticated requests will use it\n4. Set `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id` from list/get responses (all IDs are UUIDs)\n\n**Transactions:** Creating or updating a transaction requires a `name` string (max 255). Transaction responses include `data.attributes.name`. Listing bookings for a transaction returns newest-first (by `created_at`, then `start_date`).",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -435,14 +435,22 @@
 							{
 								"key": "Accept",
 								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
 							}
 						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Summer rental\"\n}"
+						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "customers", "{{customer_id}}", "transactions"]
 						},
-						"description": "Create a transaction for the given customer. No body required."
+						"description": "Create a transaction for the customer in the URL. JSON body must include required `name` (string, max 255)."
 					}
 				},
 				{
@@ -502,13 +510,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"customer_id\": \"{{customer_id}}\"\n}"
+							"raw": "{\n    \"customer_id\": \"{{customer_id}}\",\n    \"name\": \"Updated transaction label\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions/{{transaction_id}}",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "customers", "{{customer_id}}", "transactions", "{{transaction_id}}"]
-						}
+						},
+						"description": "Requires `customer_id` (UUID) and `name` (string, max 255)."
 					}
 				},
 				{
@@ -549,13 +558,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"customer_id\": \"{{customer_id}}\"\n}"
+							"raw": "{\n    \"customer_id\": \"{{customer_id}}\",\n    \"name\": \"Corporate fleet deal\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "transactions"]
-						}
+						},
+						"description": "Requires `customer_id` (UUID) and `name` (string, max 255)."
 					}
 				},
 				{
@@ -596,7 +606,8 @@
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "transactions", "{{transaction_id}}"]
-						}
+						},
+						"description": "Returns transaction attributes including `name`, `userId`, `customerId`, and nested `bookings` (newest first) plus `included` booking details when present."
 					}
 				}
 			]
@@ -650,7 +661,8 @@
 									"description": "Optional: 1-100"
 								}
 							]
-						}
+						},
+						"description": "Bookings are ordered newest first (`created_at` desc, then `start_date` desc)."
 					}
 				},
 				{

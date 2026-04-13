@@ -99,12 +99,15 @@ export async function POST(req, { params }) {
   );
 
   try {
+    const body = await req.json().catch(() => ({}));
     const res = await fetch(url.toString(), {
       method: "POST",
       headers: {
         Accept: "application/json",
+        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify(body),
       cache: "no-store",
     });
     const data = await res.json().catch(() => ({}));
