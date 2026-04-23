@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import BookingListSection from "../../../../transactions/[transaction_id]/BookingListSection";
+import BillingSection from "../../../../transactions/[transaction_id]/BillingSection";
 
 export default async function CustomerTransactionDetailPage({ params }) {
   const resolvedParams = await params;
@@ -117,6 +118,8 @@ export default async function CustomerTransactionDetailPage({ params }) {
           </p>
         )}
       </div>
+
+      <BillingSection transactionId={transactionId} />
 
       <BookingListSection
         transactionId={transactionId}

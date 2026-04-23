@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import BookingListSection from "./BookingListSection";
+import BillingSection from "./BillingSection";
 
 export default async function TransactionDetailPage({ params }) {
   const resolvedParams = await params;
@@ -85,6 +86,8 @@ export default async function TransactionDetailPage({ params }) {
           </p>
         )}
       </div>
+
+      <BillingSection transactionId={transactionId} />
 
       <BookingListSection
         transactionId={transactionId}
