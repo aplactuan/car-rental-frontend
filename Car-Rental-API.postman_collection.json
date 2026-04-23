@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "car-rental-api-collection",
 		"name": "Car Rental API",
-		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n**Setup:**\n1. Set the `base_url` variable (default: http://localhost)\n2. Run the Login request to authenticate (test@example.com / password)\n3. The token is automatically saved - all authenticated requests will use it\n4. Set `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id` from list/get responses (all IDs are UUIDs)\n\n**Transactions:** Creating or updating a transaction requires a `name` string (max 255). Transaction responses include `data.attributes.name`. Listing bookings for a transaction returns newest-first (by `created_at`, then `start_date`).",
+		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n**Setup:**\n1. Set the `base_url` variable (default: http://localhost)\n2. Run the Login request to authenticate (test@example.com / password)\n3. The token is automatically saved - all authenticated requests will use it\n4. Set `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id` from list/get responses (all IDs are UUIDs)\n\n**Transactions:** Creating or updating a transaction requires a `name` string (max 255). Transaction responses include `data.attributes.name`. Listing bookings for a transaction returns newest-first (by `created_at`, then `start_date`).\n\n**Bookings:** Creating or updating a booking requires `car_id`, `driver_id`, `start_date`, and `end_date`. The dashboard booking form submits full datetime values for `start_date` and `end_date`, and the end time must be at least 1 hour after the start time. `note` is optional.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -609,6 +609,93 @@
 						},
 						"description": "Returns transaction attributes including `name`, `userId`, `customerId`, and nested `bookings` (newest first) plus `included` booking details when present."
 					}
+				},
+				{
+					"name": "Add Bill",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"amount\": 1500000,\n    \"notes\": \"Initial invoice\",\n    \"due_at\": \"2026-05-01\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bill",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill"]
+						},
+						"description": "Create a bill for a transaction. Only one bill is allowed per transaction."
+					}
+				},
+				{
+					"name": "Get Bill",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bill",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill"]
+						}
+					}
+				},
+				{
+					"name": "Update Bill",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"issued\",\n    \"notes\": \"Issued to customer\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bill",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill"]
+						},
+						"description": "Allowed status transitions: draft->issued/cancelled, issued->paid/cancelled."
+					}
+				},
+				{
+					"name": "Delete Bill",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bill",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill"]
+						},
+						"description": "Only draft bills can be deleted."
+					}
 				}
 			]
 		},
@@ -631,13 +718,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"car_id\": \"{{car_id}}\",\n    \"driver_id\": \"{{driver_id}}\",\n    \"start_date\": \"2025-03-10\",\n    \"end_date\": \"2025-03-15\",\n    \"note\": \"Customer requested specific car\"\n}"
+							"raw": "{\n    \"car_id\": \"{{car_id}}\",\n    \"driver_id\": \"{{driver_id}}\",\n    \"start_date\": \"2025-03-10T09:00\",\n    \"end_date\": \"2025-03-10T17:00\",\n    \"note\": \"Customer requested specific car\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/book",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "transactions", "{{transaction_id}}", "book"]
-						}
+						},
+						"description": "Requires `car_id`, `driver_id`, `start_date`, and `end_date`. Use full datetime values to match the dashboard booking form. `note` is optional, and `end_date` should be at least 1 hour after `start_date`."
 					}
 				},
 				{
@@ -698,13 +786,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"car_id\": \"{{car_id}}\",\n    \"driver_id\": \"{{driver_id}}\",\n    \"start_date\": \"2025-03-10\",\n    \"end_date\": \"2025-03-20\",\n    \"note\": \"Extended rental period\"\n}"
+							"raw": "{\n    \"car_id\": \"{{car_id}}\",\n    \"driver_id\": \"{{driver_id}}\",\n    \"start_date\": \"2025-03-10T09:00\",\n    \"end_date\": \"2025-03-10T18:00\",\n    \"note\": \"Extended rental period\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings/{{booking_id}}",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings", "{{booking_id}}"]
-						}
+						},
+						"description": "Requires `car_id`, `driver_id`, `start_date`, and `end_date`. Use full datetime values to match the dashboard booking form. `note` is optional, and `end_date` should be at least 1 hour after `start_date`."
 					}
 				},
 				{
@@ -740,7 +829,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/availability?type=car&start=2025-03-01&end=2025-03-31",
+							"raw": "{{base_url}}/api/v1/availability?type=car&start=2025-03-10T09:00&end=2025-03-10T17:00",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "availability"],
 							"query": [
@@ -751,13 +840,13 @@
 								},
 								{
 									"key": "start",
-									"value": "2025-03-01",
-									"description": "Required: Start date"
+									"value": "2025-03-10T09:00",
+									"description": "Required: Start datetime"
 								},
 								{
 									"key": "end",
-									"value": "2025-03-31",
-									"description": "Required: End date (must be after start)"
+									"value": "2025-03-10T17:00",
+									"description": "Required: End datetime (must be after start)"
 								}
 							]
 						}

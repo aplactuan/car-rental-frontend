@@ -58,6 +58,64 @@ function DetailRow({ label, value }) {
   );
 }
 
+function toBillStatusMeta(rawStatus) {
+  const status = String(rawStatus ?? "").toLowerCase();
+
+  if (status === "draft") {
+    return {
+      label: "Draft",
+      className: "bg-zinc-100 text-zinc-700",
+    };
+  }
+
+  if (status === "issued") {
+    return {
+      label: "Issued",
+      className: "bg-blue-100 text-blue-700",
+    };
+  }
+
+  if (status === "paid") {
+    return {
+      label: "Paid",
+      className: "bg-emerald-100 text-emerald-700",
+    };
+  }
+
+  if (status === "cancelled") {
+    return {
+      label: "Cancelled",
+      className: "bg-amber-100 text-amber-700",
+    };
+  }
+
+  return {
+    label: "No bill",
+    className: "bg-zinc-100 text-zinc-600",
+  };
+}
+
+function formatIdr(amount) {
+  if (typeof amount !== "number" || !Number.isFinite(amount)) return "—";
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+function formatDate(value) {
+  if (!value) return "—";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return String(value);
+
+  return parsed.toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export default async function CustomerDetailPage({ params }) {
   const resolvedParams = await params;
   const customerId = resolvedParams?.customer_id;
@@ -77,6 +135,14 @@ export default async function CustomerDetailPage({ params }) {
   let error = "";
   let transactions = [];
   let transactionsError = "";
+  let billByTransactionId = {};
+  let billingSummary = {
+    noBill: 0,
+    draft: 0,
+    issued: 0,
+    paid: 0,
+    cancelled: 0,
+  };
 
   if (customerId) {
     try {
@@ -113,6 +179,85 @@ export default async function CustomerDetailPage({ params }) {
         const raw =
           txData?.data ?? txData?.transactions ?? txData?.items ?? txData;
         transactions = Array.isArray(raw) ? raw : [];
+
+        const transactionIds = transactions
+          .map((tx) => {
+            const attrs = tx?.attributes ?? tx ?? {};
+            return (
+              tx?.id ??
+              attrs?.id ??
+              attrs?.transaction_id ??
+              attrs?.transactionId ??
+              null
+            );
+          })
+          .filter(Boolean)
+          .map((id) => String(id));
+
+        if (transactionIds.length > 0) {
+          const billPairs = await Promise.all(
+            transactionIds.map(async (id) => {
+              try {
+                const billRes = await fetch(
+                  `${baseUrl}/api/v1/transactions/${id}/bill`,
+                  {
+                    headers: cookieHeader ? { Cookie: cookieHeader } : {},
+                    cache: "no-store",
+                  },
+                );
+
+                if (billRes.status === 404) {
+                  return [id, null];
+                }
+
+                const billData = await billRes.json().catch(() => ({}));
+                if (!billRes.ok) return [id, null];
+
+                const source = billData?.data ?? billData ?? {};
+                const attrs = source?.attributes ?? source;
+
+                return [
+                  id,
+                  {
+                    status: attrs?.status ?? null,
+                    amount: attrs?.amount ?? null,
+                    dueAt: attrs?.dueAt ?? attrs?.due_at ?? null,
+                  },
+                ];
+              } catch {
+                return [id, null];
+              }
+            }),
+          );
+
+          billByTransactionId = Object.fromEntries(billPairs);
+
+          transactionIds.forEach((id) => {
+            const current = billByTransactionId[id];
+            const normalizedStatus = String(current?.status ?? "").toLowerCase();
+            if (!current) {
+              billingSummary.noBill += 1;
+              return;
+            }
+            if (normalizedStatus === "draft") {
+              billingSummary.draft += 1;
+              return;
+            }
+            if (normalizedStatus === "issued") {
+              billingSummary.issued += 1;
+              return;
+            }
+            if (normalizedStatus === "paid") {
+              billingSummary.paid += 1;
+              return;
+            }
+            if (normalizedStatus === "cancelled") {
+              billingSummary.cancelled += 1;
+              return;
+            }
+            billingSummary.noBill += 1;
+          });
+        }
       }
     } catch {
       transactionsError = "Could not reach the transactions endpoint.";
@@ -173,12 +318,32 @@ export default async function CustomerDetailPage({ params }) {
         ) : transactions.length === 0 ? (
           <p className="mt-4 text-sm text-zinc-500">No transactions found.</p>
         ) : (
-          <div className="mt-4 overflow-x-auto">
+          <div className="mt-4 space-y-4">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-700">
+                No bill: {billingSummary.noBill}
+              </div>
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-700">
+                Draft: {billingSummary.draft}
+              </div>
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-700">
+                Issued: {billingSummary.issued}
+              </div>
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-700">
+                Paid: {billingSummary.paid}
+              </div>
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-700">
+                Cancelled: {billingSummary.cancelled}
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                   <th className="pb-3 pr-6">Transaction Name</th>
                   <th className="pb-3 pr-6">Status</th>
+                  <th className="pb-3 pr-6">Bill</th>
                   <th className="pb-3 pr-6">Created At</th>
                   <th className="pb-3" />
                 </tr>
@@ -200,6 +365,10 @@ export default async function CustomerDetailPage({ params }) {
                     attrs?.createdAt ??
                     tx?.created_at ??
                     "-";
+                  const bill = id ? billByTransactionId[String(id)] : null;
+                  const billMeta = toBillStatusMeta(bill?.status);
+                  const billAmount = formatIdr(bill?.amount);
+                  const billDueAt = formatDate(bill?.dueAt);
 
                   return (
                     <tr key={id} className="group">
@@ -210,6 +379,20 @@ export default async function CustomerDetailPage({ params }) {
                         <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium capitalize text-zinc-700">
                           {status}
                         </span>
+                      </td>
+                      <td className="py-3 pr-6">
+                        <div className="flex flex-col gap-1">
+                          <span
+                            className={`inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${billMeta.className}`}
+                          >
+                            {billMeta.label}
+                          </span>
+                          {bill ? (
+                            <span className="text-xs text-zinc-500">
+                              {billAmount} • due {billDueAt}
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="py-3 pr-6 text-zinc-500">{createdAt}</td>
                       <td className="py-3 text-right">
@@ -227,6 +410,7 @@ export default async function CustomerDetailPage({ params }) {
                 })}
               </tbody>
             </table>
+          </div>
           </div>
         )}
       </div>
