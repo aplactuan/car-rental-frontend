@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 const inputClass =
   "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100";
@@ -386,6 +387,54 @@ export default function DriversPage() {
                       </td>
                       <td className="py-4">
                         <div className="flex items-center gap-3">
+                          {driver.id ? (
+                            <Link
+                              href={`/dashboard/drivers/${encodeURIComponent(driver.id)}`}
+                              className="text-teal-600 transition hover:text-teal-700"
+                              title="View driver"
+                              aria-label={`View ${rowName || "driver"}`}
+                            >
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                className="h-4 w-4"
+                                aria-hidden
+                              >
+                                <path
+                                  d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <circle cx="12" cy="12" r="2.5" />
+                              </svg>
+                            </Link>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              className="cursor-not-allowed text-zinc-300"
+                              title="Driver ID is unavailable"
+                              aria-label="View not available"
+                            >
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                className="h-4 w-4"
+                                aria-hidden
+                              >
+                                <path
+                                  d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                                <circle cx="12" cy="12" r="2.5" />
+                              </svg>
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => openEditForm(driver)}

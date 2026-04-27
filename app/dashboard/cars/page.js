@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 const inputClass =
   "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100";
@@ -367,7 +368,6 @@ export default function CarsPage() {
                   <th className="py-3 pr-4">Make</th>
                   <th className="py-3 pr-4">Model</th>
                   <th className="py-3 pr-4">Plate</th>
-                  <th className="py-3 pr-4">Type</th>
                   <th className="py-3 pr-4">Seats</th>
                   <th className="py-3 pr-4">Mileage</th>
                   <th className="py-3 pr-4">Year</th>
@@ -385,7 +385,6 @@ export default function CarsPage() {
                     </td>
                     <td className="py-4 pr-4">{car.model || "-"}</td>
                     <td className="py-4 pr-4">{car.plate_number || "-"}</td>
-                    <td className="py-4 pr-4">{car.type || "-"}</td>
                     <td className="py-4 pr-4">
                       {car.number_of_seats ? String(car.number_of_seats) : "-"}
                     </td>
@@ -397,6 +396,54 @@ export default function CarsPage() {
                     <td className="py-4 pr-4">{car.year || "-"}</td>
                     <td className="py-4">
                       <div className="flex items-center gap-3">
+                        {car.id ? (
+                          <Link
+                            href={`/dashboard/cars/${encodeURIComponent(car.id)}`}
+                            className="text-teal-600 transition hover:text-teal-700"
+                            title="View car"
+                            aria-label={`View ${car.make || ""} ${car.model || "car"}`.trim()}
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              className="h-4 w-4"
+                              aria-hidden
+                            >
+                              <path
+                                d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <circle cx="12" cy="12" r="2.5" />
+                            </svg>
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled
+                            className="cursor-not-allowed text-zinc-300"
+                            title="Car ID is unavailable"
+                            aria-label="View not available"
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              className="h-4 w-4"
+                              aria-hidden
+                            >
+                              <path
+                                d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <circle cx="12" cy="12" r="2.5" />
+                            </svg>
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => openEditForm(car)}
