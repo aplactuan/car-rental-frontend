@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 const inputClass =
@@ -75,6 +75,12 @@ export default function CarsPage() {
   const [cars, setCars] = useState([]);
   const [carsLoading, setCarsLoading] = useState(true);
   const [carsError, setCarsError] = useState("");
+  const [showImportForm, setShowImportForm] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState("");
+  const [importStatus, setImportStatus] = useState("");
+  const importInputRef = useRef(null);
 
   function resetForm() {
     setMake("");
@@ -144,6 +150,61 @@ export default function CarsPage() {
     resetForm();
   }
 
+  async function handleImportSubmit(e) {
+    e.preventDefault();
+    setImportError("");
+    setImportStatus("");
+
+    if (!importFile) {
+      setImportError("Please choose a CSV file to import.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", importFile);
+
+    setIsImporting(true);
+    try {
+      const res = await fetch("/api/v1/cars/import", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setImportError(
+          data?.error ||
+            data?.message ||
+            "Failed to queue car import. Please try again.",
+        );
+        return;
+      }
+
+      const importId =
+        data?.data?.id ||
+        data?.id ||
+        data?.import_id ||
+        data?.importId ||
+        "";
+
+      setImportStatus(
+        importId
+          ? `Import queued successfully. Import ID: ${importId}`
+          : "Import queued successfully.",
+      );
+      setImportFile(null);
+      if (importInputRef.current) {
+        importInputRef.current.value = "";
+      }
+      setShowImportForm(false);
+    } catch {
+      setImportError("Network error. Please try again.");
+    } finally {
+      setIsImporting(false);
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setFormError("");
@@ -204,24 +265,110 @@ export default function CarsPage() {
             Manage your fleet vehicles, availability, and details
           </p>
         </div>
-        <button
-          type="button"
-          onClick={openAddForm}
-          className="inline-flex items-center gap-2 rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
-        >
-          <svg
-            className="h-4 w-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-hidden
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setShowImportForm((prev) => !prev);
+              setImportError("");
+              setImportStatus("");
+            }}
+            className="inline-flex items-center gap-2 rounded-md border border-blue-900 bg-white px-4 py-2 text-sm font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
-          </svg>
-          Add Car
-        </button>
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 16V4m0 0-4 4m4-4 4 4M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"
+              />
+            </svg>
+            Import Car
+          </button>
+          <button
+            type="button"
+            onClick={openAddForm}
+            className="inline-flex items-center gap-2 rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
+          >
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+            </svg>
+            Add Car
+          </button>
+        </div>
       </div>
+
+      {showImportForm && (
+        <div className="mt-4 rounded-xl border border-dashed border-blue-200 bg-blue-50 p-4 text-sm text-zinc-800">
+          <form
+            onSubmit={handleImportSubmit}
+            className="flex flex-col gap-3 sm:flex-row sm:items-center"
+          >
+            <div className="flex-1">
+              <label className={labelClass}>Import Cars CSV</label>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                className={inputClass}
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  setImportFile(file);
+                  setImportError("");
+                  setImportStatus("");
+                }}
+              />
+              <p className="mt-1 text-xs text-zinc-500">
+                Upload a CSV file to queue a car import.
+              </p>
+            </div>
+            <div className="flex gap-2 pt-2 sm:pt-6">
+              <button
+                type="submit"
+                disabled={isImporting}
+                className="rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:opacity-50"
+              >
+                {isImporting ? "Importing..." : "Import CSV"}
+              </button>
+              <button
+                type="button"
+                disabled={isImporting}
+                onClick={() => {
+                  setShowImportForm(false);
+                  setImportFile(null);
+                  setImportError("");
+                  setImportStatus("");
+                  if (importInputRef.current) {
+                    importInputRef.current.value = "";
+                  }
+                }}
+                className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+          {importError && (
+            <p className="mt-2 text-xs text-red-600">{importError}</p>
+          )}
+          {importStatus && (
+            <p className="mt-2 text-xs text-teal-700">{importStatus}</p>
+          )}
+        </div>
+      )}
 
       {formMode && (
         <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">

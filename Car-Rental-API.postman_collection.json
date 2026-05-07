@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "car-rental-api-collection",
 		"name": "Car Rental API",
-		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n**Setup:**\n1. Set the `base_url` variable (default: http://localhost)\n2. Run the Login request to authenticate (test@example.com / password)\n3. The token is automatically saved - all authenticated requests will use it\n4. Set `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id` from list/get responses (all IDs are UUIDs)\n\n**Transactions:** Creating or updating a transaction requires a `name` string (max 255). Transaction responses include `data.attributes.name`. Listing bookings for a transaction returns newest-first (by `created_at`, then `start_date`).",
+		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n**Setup:**\n1. Set the `base_url` variable (default: http://localhost)\n2. Run the Login request to authenticate (test@example.com / password)\n3. The token is automatically saved — all authenticated requests will use it automatically\n4. Set `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id`, `car_import_id`, `driver_import_id` from list/get responses (all IDs are UUIDs)\n\n**User Registration:** `POST /api/v1/users` is a public endpoint but requires the `allow_user_registration` feature flag to be enabled in the application configuration. Returns 403 if registration is disabled.\n\n**CSV Imports:** Both cars and drivers support queued CSV imports. Submit the file via `multipart/form-data`, then poll the status endpoint using the returned import ID.\n\n**Transactions:** Creating or updating a transaction requires a `name` string (max 255). Transaction responses include `data.attributes.name`. Listing bookings for a transaction returns newest-first (by `created_at`, then `start_date`).",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -32,6 +32,14 @@
 		},
 		{
 			"key": "booking_id",
+			"value": ""
+		},
+		{
+			"key": "car_import_id",
+			"value": ""
+		},
+		{
+			"key": "driver_import_id",
 			"value": ""
 		}
 	],
@@ -131,6 +139,40 @@
 			]
 		},
 		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Jane Smith\",\n    \"email\": \"jane@example.com\",\n    \"password\": \"password\",\n    \"password_confirmation\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "users"]
+						},
+						"description": "Register a new user account. This is a public endpoint that does not require authentication. Requires `name`, `email`, `password`, and `password_confirmation`. Returns 403 if user registration is disabled via the `allow_user_registration` feature flag."
+					}
+				}
+			]
+		},
+		{
 			"name": "Cars",
 			"item": [
 				{
@@ -156,6 +198,68 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "cars"]
 						}
+					}
+				},
+				{
+					"name": "Import Cars CSV",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": ""
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/cars/import",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "cars", "import"]
+						},
+						"description": "Queue a CSV import of cars (multipart/form-data, `file` required)."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 202) {",
+									"    const json = pm.response.json();",
+									"    if (json.data && json.data.id) {",
+									"        pm.collectionVariables.set('car_import_id', json.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Car Import Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/cars/imports/{{car_import_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "cars", "imports", "{{car_import_id}}"]
+						},
+						"description": "Fetch status/result summary for a queued car import job."
 					}
 				},
 				{
@@ -245,6 +349,68 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "drivers"]
 						}
+					}
+				},
+				{
+					"name": "Import Drivers CSV",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": ""
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/drivers/import",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "drivers", "import"]
+						},
+						"description": "Queue a CSV import of drivers (multipart/form-data, `file` required)."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 202) {",
+									"    const json = pm.response.json();",
+									"    if (json.data && json.data.id) {",
+									"        pm.collectionVariables.set('driver_import_id', json.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Driver Import Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/drivers/imports/{{driver_import_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "drivers", "imports", "{{driver_import_id}}"]
+						},
+						"description": "Fetch status/result summary for a queued driver import job."
 					}
 				},
 				{
