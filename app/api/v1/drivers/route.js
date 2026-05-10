@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-export async function GET() {
+export async function GET(req) {
   const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL;
   if (!backendBase) {
     return NextResponse.json(
@@ -20,12 +20,17 @@ export async function GET() {
   }
 
   const url = new URL("/api/v1/drivers", backendBase);
+  const { searchParams } = new URL(req.url);
+  searchParams.forEach((value, key) => url.searchParams.set(key, value));
+
   try {
     const res = await fetch(url.toString(), {
       method: "GET",
       headers: {
+        Accept: "application/json",
         Authorization: `Bearer ${token}`,
       },
+      cache: "no-store",
     });
     const data = await res.json().catch(() => ({}));
     return NextResponse.json(data, { status: res.status });

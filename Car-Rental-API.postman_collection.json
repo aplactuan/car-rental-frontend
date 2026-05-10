@@ -273,10 +273,23 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/cars",
+							"raw": "{{base_url}}/api/v1/cars?per_page=10&page=1",
 							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "cars"]
-						}
+							"path": ["api", "v1", "cars"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "10",
+									"description": "Optional: items per page"
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Optional: page number (1-based)"
+								}
+							]
+						},
+						"description": "Paginated list. Response includes Laravel-style `meta` (`current_page`, `last_page`, `total`, etc.) when pagination is applied."
 					}
 				},
 				{
@@ -424,7 +437,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/drivers?per_page=15",
+							"raw": "{{base_url}}/api/v1/drivers?per_page=15&filter=",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "drivers"],
 							"query": [
@@ -432,9 +445,15 @@
 									"key": "per_page",
 									"value": "15",
 									"description": "Optional: 1-100"
+								},
+								{
+									"key": "filter",
+									"value": "",
+									"description": "Optional: partial match on first_name OR last_name"
 								}
 							]
-						}
+						},
+						"description": "List drivers with pagination. Omit `filter` to return all drivers; when set (e.g. `filter=John`), results include drivers whose `first_name` or `last_name` matches the term (partial match)."
 					}
 				},
 				{

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 
 const inputClass =
@@ -60,6 +60,37 @@ function normalizeCars(payload) {
   });
 }
 
+const CARS_PER_PAGE = 10;
+
+function formatCarRangeLabel(page, carsOnPage, total) {
+  if (total <= 0 || carsOnPage <= 0) return "";
+  const from = (page - 1) * CARS_PER_PAGE + 1;
+  const to = from + carsOnPage - 1;
+  return `Showing ${from.toLocaleString()}–${to.toLocaleString()} of ${total.toLocaleString()}`;
+}
+
+function extractCarListMeta(payload) {
+  const meta = payload?.meta;
+  if (meta && typeof meta === "object") {
+    return {
+      currentPage: Math.max(1, Number(meta.current_page) || 1),
+      lastPage: Math.max(1, Number(meta.last_page) || 1),
+      total: Math.max(0, Number(meta.total) || 0),
+    };
+  }
+
+  const list = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.data)
+      ? payload.data
+      : [];
+  return {
+    currentPage: 1,
+    lastPage: 1,
+    total: list.length,
+  };
+}
+
 export default function CarsPage() {
   const [formMode, setFormMode] = useState(null);
   const [editingCarId, setEditingCarId] = useState("");
@@ -75,6 +106,12 @@ export default function CarsPage() {
   const [cars, setCars] = useState([]);
   const [carsLoading, setCarsLoading] = useState(true);
   const [carsError, setCarsError] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    lastPage: 1,
+    total: 0,
+  });
   const [showImportForm, setShowImportForm] = useState(false);
   const [importFile, setImportFile] = useState(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -94,11 +131,15 @@ export default function CarsPage() {
     setEditingCarId("");
   }
 
-  async function fetchCars() {
+  const fetchCars = useCallback(async (pageNum = page) => {
     setCarsLoading(true);
     setCarsError("");
     try {
-      const res = await fetch("/api/v1/cars", {
+      const params = new URLSearchParams({
+        per_page: String(CARS_PER_PAGE),
+        page: String(pageNum),
+      });
+      const res = await fetch(`/api/v1/cars?${params}`, {
         method: "GET",
         credentials: "include",
       });
@@ -109,17 +150,18 @@ export default function CarsPage() {
         return;
       }
       setCars(normalizeCars(data));
+      setPagination(extractCarListMeta(data));
     } catch {
       setCarsError("Network error. Please try again.");
       setCars([]);
     } finally {
       setCarsLoading(false);
     }
-  }
+  }, [page]);
 
   useEffect(() => {
-    fetchCars();
-  }, []);
+    fetchCars(page);
+  }, [page, fetchCars]);
 
   function openAddForm() {
     resetForm();
@@ -198,6 +240,7 @@ export default function CarsPage() {
         importInputRef.current.value = "";
       }
       setShowImportForm(false);
+      await fetchCars(page);
     } catch {
       setImportError("Network error. Please try again.");
     } finally {
@@ -248,7 +291,7 @@ export default function CarsPage() {
         return;
       }
       closeForm();
-      await fetchCars();
+      await fetchCars(page);
     } catch {
       setFormError("Network error. Please try again.");
     } finally {
@@ -494,7 +537,11 @@ export default function CarsPage() {
         <div className="px-6 py-5">
           <div className="text-sm font-semibold text-zinc-900">Available Cars</div>
           <div className="mt-1 text-xs text-zinc-500">
-            {carsLoading ? "Loading..." : `${cars.length} cars registered`}
+            {carsLoading
+              ? "Loading..."
+              : pagination.total > 0
+                ? `${pagination.total.toLocaleString()} cars registered (${CARS_PER_PAGE} per page)`
+                : "0 cars registered"}
           </div>
         </div>
         {carsLoading ? (
@@ -641,6 +688,34 @@ export default function CarsPage() {
                 ))}
               </tbody>
             </table>
+            {!carsLoading && pagination.lastPage > 1 && (
+              <div className="mt-4 flex flex-col items-stretch justify-between gap-3 border-t border-zinc-100 pt-4 sm:flex-row sm:items-center">
+                <p className="text-xs text-zinc-500">
+                  {formatCarRangeLabel(page, cars.length, pagination.total)}
+                </p>
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    disabled={page <= 1 || carsLoading}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-xs text-zinc-600">
+                    Page {page} of {pagination.lastPage}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={page >= pagination.lastPage || carsLoading}
+                    onClick={() => setPage((p) => p + 1)}
+                    className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
