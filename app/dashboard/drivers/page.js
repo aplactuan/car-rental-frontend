@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 
 const inputClass =
@@ -56,6 +56,78 @@ function splitFullName(fullName) {
   return { first_name, last_name };
 }
 
+const DRIVERS_PER_PAGE = 10;
+
+function formatDriverRangeLabel(page, driversOnPage, total) {
+  if (total <= 0 || driversOnPage <= 0) return "";
+  const from = (page - 1) * DRIVERS_PER_PAGE + 1;
+  const to = from + driversOnPage - 1;
+  return `Showing ${from.toLocaleString()}–${to.toLocaleString()} of ${total.toLocaleString()}`;
+}
+
+function extractDriverListMeta(payload) {
+  const meta = payload?.meta;
+  if (meta && typeof meta === "object") {
+    return {
+      currentPage: Math.max(1, Number(meta.current_page) || 1),
+      lastPage: Math.max(1, Number(meta.last_page) || 1),
+      total: Math.max(0, Number(meta.total) || 0),
+    };
+  }
+
+  const list = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.data)
+      ? payload.data
+      : [];
+  return {
+    currentPage: 1,
+    lastPage: 1,
+    total: list.length,
+  };
+}
+
+function normalizeDrivers(payload) {
+  const rawDrivers = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.data)
+      ? payload.data
+      : Array.isArray(payload?.drivers)
+        ? payload.drivers
+        : [];
+
+  return rawDrivers.map((driver) => {
+    const attrs = driver?.attributes ?? {};
+
+    const pick = (keys) => {
+      const fromAttrs = readField(attrs, keys);
+      if (fromAttrs !== "") return fromAttrs;
+      return readField(driver, keys);
+    };
+
+    return {
+      id:
+        pick(["id"]) ||
+        pick(["driver_id", "driverId"]) ||
+        pick(["uuid", "driver_uuid", "driverUuid"]),
+      first_name: pick(["first_name", "firstName"]),
+      last_name: pick(["last_name", "lastName"]),
+      license_number: pick([
+        "license_number",
+        "licenseNumber",
+        "licenseNUmber",
+      ]),
+      license_expiry_date: pick([
+        "license_expiry_date",
+        "licenseExpiryDate",
+        "licenseEXpiryDate",
+      ]),
+      address: pick(["address", "full_address", "fullAddress", "email"]),
+      phone_number: pick(["phone_number", "phoneNumber", "phoneNUmber"]),
+    };
+  });
+}
+
 export default function DriversPage() {
   const [formMode, setFormMode] = useState(null);
   const [editingDriverId, setEditingDriverId] = useState("");
@@ -69,6 +141,14 @@ export default function DriversPage() {
   const [drivers, setDrivers] = useState([]);
   const [driversLoading, setDriversLoading] = useState(true);
   const [driversError, setDriversError] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    lastPage: 1,
+    total: 0,
+  });
+  const [nameSearchInput, setNameSearchInput] = useState("");
+  const [nameSearch, setNameSearch] = useState("");
   const [showImportForm, setShowImportForm] = useState(false);
   const [importFile, setImportFile] = useState(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -76,45 +156,17 @@ export default function DriversPage() {
   const [importStatus, setImportStatus] = useState("");
   const importInputRef = useRef(null);
 
-  function normalizeDrivers(payload) {
-    const rawDrivers = Array.isArray(payload)
-      ? payload
-      : Array.isArray(payload?.data)
-        ? payload.data
-        : Array.isArray(payload?.drivers)
-          ? payload.drivers
-          : [];
+  function submitNameSearch(e) {
+    e.preventDefault();
+    const trimmed = nameSearchInput.trim();
+    setNameSearch(trimmed);
+    setPage(1);
+  }
 
-    return rawDrivers.map((driver) => {
-      const attrs = driver?.attributes ?? {};
-
-      const pick = (keys) => {
-        const fromAttrs = readField(attrs, keys);
-        if (fromAttrs !== "") return fromAttrs;
-        return readField(driver, keys);
-      };
-
-      return {
-        id:
-          pick(["id"]) ||
-          pick(["driver_id", "driverId"]) ||
-          pick(["uuid", "driver_uuid", "driverUuid"]),
-        first_name: pick(["first_name", "firstName"]),
-        last_name: pick(["last_name", "lastName"]),
-        license_number: pick([
-          "license_number",
-          "licenseNumber",
-          "licenseNUmber",
-        ]),
-        license_expiry_date: pick([
-          "license_expiry_date",
-          "licenseExpiryDate",
-          "licenseEXpiryDate",
-        ]),
-        address: pick(["address", "full_address", "fullAddress", "email"]),
-        phone_number: pick(["phone_number", "phoneNumber", "phoneNUmber"]),
-      };
-    });
+  function clearNameSearch() {
+    setNameSearchInput("");
+    setNameSearch("");
+    setPage(1);
   }
 
   function resetForm() {
@@ -127,32 +179,43 @@ export default function DriversPage() {
     setEditingDriverId("");
   }
 
-  async function fetchDrivers() {
-    setDriversLoading(true);
-    setDriversError("");
-    try {
-      const res = await fetch("/api/v1/drivers", {
-        method: "GET",
-        credentials: "include",
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setDriversError(data?.error || data?.message || "Failed to load drivers.");
+  const fetchDrivers = useCallback(
+    async (pageNum = page) => {
+      setDriversLoading(true);
+      setDriversError("");
+      try {
+        const params = new URLSearchParams({
+          per_page: String(DRIVERS_PER_PAGE),
+          page: String(pageNum),
+        });
+        if (nameSearch) {
+          params.set("filter", nameSearch);
+        }
+        const res = await fetch(`/api/v1/drivers?${params}`, {
+          method: "GET",
+          credentials: "include",
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setDriversError(data?.error || data?.message || "Failed to load drivers.");
+          setDrivers([]);
+          return;
+        }
+        setDrivers(normalizeDrivers(data));
+        setPagination(extractDriverListMeta(data));
+      } catch {
+        setDriversError("Network error. Please try again.");
         setDrivers([]);
-        return;
+      } finally {
+        setDriversLoading(false);
       }
-      setDrivers(normalizeDrivers(data));
-    } catch {
-      setDriversError("Network error. Please try again.");
-      setDrivers([]);
-    } finally {
-      setDriversLoading(false);
-    }
-  }
+    },
+    [page, nameSearch],
+  );
 
   useEffect(() => {
-    fetchDrivers();
-  }, []);
+    fetchDrivers(page);
+  }, [page, fetchDrivers]);
 
   function openAddForm() {
     resetForm();
@@ -223,6 +286,7 @@ export default function DriversPage() {
         importInputRef.current.value = "";
       }
       setShowImportForm(false);
+      await fetchDrivers(page);
     } catch {
       setImportError("Network error. Please try again.");
     } finally {
@@ -481,9 +545,56 @@ export default function DriversPage() {
 
       <div className="mt-6 rounded-xl border border-zinc-200 bg-white shadow-sm">
         <div className="px-6 py-5">
-          <div className="text-sm font-semibold text-zinc-900">Driver List</div>
-          <div className="mt-1 text-xs text-zinc-500">
-            {driversLoading ? "Loading…" : `${drivers.length} drivers registered`}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <div className="text-sm font-semibold text-zinc-900">Driver List</div>
+              <div className="mt-1 text-xs text-zinc-500">
+                {driversLoading
+                  ? "Loading…"
+                  : pagination.total > 0
+                    ? nameSearch
+                      ? `${pagination.total.toLocaleString()} matching driver${pagination.total === 1 ? "" : "s"} (${DRIVERS_PER_PAGE} per page)`
+                      : `${pagination.total.toLocaleString()} drivers registered (${DRIVERS_PER_PAGE} per page)`
+                    : nameSearch
+                      ? `No matches for "${nameSearch}"`
+                      : "0 drivers registered"}
+              </div>
+            </div>
+            <form
+              className="w-full sm:max-w-md sm:flex-none"
+              onSubmit={submitNameSearch}
+            >
+              <label htmlFor="driver-name-search" className={labelClass}>
+                Search by name
+              </label>
+              <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-start">
+                <input
+                  id="driver-name-search"
+                  type="search"
+                  placeholder="First or last name"
+                  autoComplete="off"
+                  value={nameSearchInput}
+                  onChange={(e) => setNameSearchInput(e.target.value)}
+                  className={`${inputClass.replace(/^mt-1\s+/, "")} sm:min-w-0 sm:flex-1`}
+                />
+                <div className="flex shrink-0 gap-2">
+                  <button
+                    type="submit"
+                    className="rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
+                  >
+                    Search
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!nameSearch && !nameSearchInput.trim()}
+                    onClick={clearNameSearch}
+                    className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
         {driversLoading ? (
@@ -493,7 +604,9 @@ export default function DriversPage() {
         ) : drivers.length === 0 ? (
           <div className="flex items-center justify-center px-6 pb-10">
             <p className="text-sm text-zinc-500">
-              No drivers added yet. Create one to get started.
+              {nameSearch
+                ? `No drivers match "${nameSearch}". Try another search.`
+                : "No drivers added yet. Create one to get started."}
             </p>
           </div>
         ) : (
@@ -630,6 +743,34 @@ export default function DriversPage() {
                 })}
               </tbody>
             </table>
+            {!driversLoading && pagination.lastPage > 1 && (
+              <div className="mt-4 flex flex-col items-stretch justify-between gap-3 border-t border-zinc-100 pt-4 sm:flex-row sm:items-center">
+                <p className="text-xs text-zinc-500">
+                  {formatDriverRangeLabel(page, drivers.length, pagination.total)}
+                </p>
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    disabled={page <= 1 || driversLoading}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-xs text-zinc-600">
+                    Page {page} of {pagination.lastPage}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={page >= pagination.lastPage || driversLoading}
+                    onClick={() => setPage((p) => p + 1)}
+                    className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
