@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-export async function GET() {
+export async function GET(req) {
   const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL;
   if (!backendBase) {
     return NextResponse.json(
@@ -19,7 +19,12 @@ export async function GET() {
     );
   }
 
-  const url = new URL("/api/v1/customers?per_page=15", backendBase);
+  const url = new URL("/api/v1/customers", backendBase);
+  const { searchParams } = new URL(req.url);
+  searchParams.forEach((value, key) => url.searchParams.set(key, value));
+  if (!url.searchParams.has("per_page")) {
+    url.searchParams.set("per_page", "15");
+  }
 
   try {
     const res = await fetch(url.toString(), {
