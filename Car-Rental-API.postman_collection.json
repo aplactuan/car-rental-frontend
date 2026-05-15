@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "car-rental-api-collection",
 		"name": "Car Rental API",
-		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n**Setup:**\n1. Set the `base_url` variable (default: http://localhost)\n2. Run the Login request to authenticate (test@example.com / password)\n3. The token is automatically saved — all authenticated requests will use it automatically\n4. Set `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id`, `car_import_id`, `driver_import_id` from list/get responses (all IDs are UUIDs)\n\n**User Registration:** `POST /api/v1/users` is a public endpoint but requires the `allow_user_registration` feature flag to be enabled in the application configuration. Returns 403 if registration is disabled.\n\n**CSV Imports:** Both cars and drivers support queued CSV imports. Submit the file via `multipart/form-data`, then poll the status endpoint using the returned import ID.\n\n**Transactions:** Creating or updating a transaction requires a `name` string (max 255). Transaction responses include `data.attributes.name`. Listing bookings for a transaction returns newest-first (by `created_at`, then `start_date`).",
+		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | **Not used** — public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` (register) | **Not used** — public, but the server may return **403** if registration is disabled (`allow_user_registration`). |\n| `GET /api/user`, `POST /api/logout` | **Required** — Sanctum. |\n| All other `/api/v1/...` routes | **Required** — same Bearer token as above. |\n\nThis collection sets **Bearer Token** auth at the collection level (`{{token}}`). Requests that must be public override auth to **No Auth** (Login, Register User).\n\n## Setup\n1. Set `base_url` (default: `http://localhost` — add port if needed, e.g. `http://localhost:8000`).\n2. Run **Login**; token is stored automatically.\n3. Fill path variables from responses: `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id`, `car_import_id`, `driver_import_id` (UUIDs).\n\n## Optional query keys (frontend reference)\nMany `GET` endpoints accept optional keys documented on each request: pagination (`per_page`), nested `filter[...]`, `sort`, `include`, date ranges, etc. If a key is omitted, the API uses defaults described on that request.\n\n**User registration:** `POST /api/v1/users` needs `name`, `email`, `password`, `password_confirmation` — no Bearer; may still fail with 403 when registration is off.\n\n**CSV imports:** `multipart/form-data` with field `file`; then poll import status by ID.\n\n**Transactions:** create/update bodies require `name` (max 255) where applicable. Bookings list: newest first (`created_at`, then `start_date`).",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -83,7 +83,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "login"]
 						},
-						"description": "Authenticate and receive a Bearer token. The token is automatically saved to the collection variable."
+						"description": "Public endpoint — **do not** send `Authorization`. Send JSON `email` and `password`. On success, use `data.token` as `Bearer` for all `/api/v1/*` routes (except register). Postman saves `token` automatically."
 					},
 					"event": [
 						{
@@ -105,6 +105,7 @@
 				{
 					"name": "Logout",
 					"request": {
+						"description": "**Bearer required.** Revokes the current Sanctum token. After this, set a new token via Login.",
 						"method": "POST",
 						"header": [
 							{
@@ -122,6 +123,7 @@
 				{
 					"name": "Get Current User",
 					"request": {
+						"description": "**Bearer required.** Returns the authenticated user for the current token.",
 						"method": "GET",
 						"header": [
 							{
@@ -167,7 +169,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "users"]
 						},
-						"description": "Register a new user account. This is a public endpoint that does not require authentication. Requires `name`, `email`, `password`, and `password_confirmation`. Returns 403 if user registration is disabled via the `allow_user_registration` feature flag."
+						"description": "Register a new user account. **No Bearer token** — this route is public. Body: `name`, `email`, `password`, `password_confirmation`. Returns **403** when registration is disabled server-side (`allow_user_registration`). When enabled, returns success without needing any API key beyond optional rate limits."
 					}
 				}
 			]
@@ -273,23 +275,38 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/cars?per_page=10&page=1",
+							"raw": "{{base_url}}/api/v1/cars?per_page=15&make=Toyota&model=Camry&type=sedan&number_of_seats=5",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "cars"],
 							"query": [
 								{
 									"key": "per_page",
-									"value": "10",
-									"description": "Optional: items per page"
+									"value": "15",
+									"description": "Optional. 1–100, default 15."
 								},
 								{
-									"key": "page",
-									"value": "1",
-									"description": "Optional: page number (1-based)"
+									"key": "make",
+									"value": "Toyota",
+									"description": "Optional. Filter by make (string)."
+								},
+								{
+									"key": "model",
+									"value": "Camry",
+									"description": "Optional. Filter by model (string)."
+								},
+								{
+									"key": "type",
+									"value": "sedan",
+									"description": "Optional. Filter by vehicle type (string)."
+								},
+								{
+									"key": "number_of_seats",
+									"value": "5",
+									"description": "Optional. Integer minimum 1."
 								}
 							]
 						},
-						"description": "Paginated list. Response includes Laravel-style `meta` (`current_page`, `last_page`, `total`, etc.) when pagination is applied."
+						"description": "**Bearer required.** Lists available cars. All query keys are optional; omit them to list with defaults."
 					}
 				},
 				{
@@ -437,23 +454,33 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/drivers?per_page=15&filter=",
+							"raw": "{{base_url}}/api/v1/drivers?per_page=15&filter=john&start_date=2026-06-01&end_date=2026-06-30",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "drivers"],
 							"query": [
 								{
 									"key": "per_page",
 									"value": "15",
-									"description": "Optional: 1-100"
+									"description": "Optional. 1–100, default 15."
 								},
 								{
 									"key": "filter",
-									"value": "",
-									"description": "Optional: partial match on first_name OR last_name"
+									"value": "john",
+									"description": "Optional. Search string (max 100) applied to driver listing."
+								},
+								{
+									"key": "start_date",
+									"value": "2026-06-01",
+									"description": "Optional only if `end_date` is also omitted. If you use availability mode, **both** `start_date` and `end_date` are required (`end_date` must be on or after `start_date`)."
+								},
+								{
+									"key": "end_date",
+									"value": "2026-06-30",
+									"description": "Optional only if `start_date` is also omitted. **Required together with `start_date`** for drivers available in that period."
 								}
 							]
 						},
-						"description": "List drivers with pagination. Omit `filter` to return all drivers; when set (e.g. `filter=John`), results include drivers whose `first_name` or `last_name` matches the term (partial match)."
+						"description": "**Bearer required.** Default: paginated all drivers. **Date range mode:** when both `start_date` and `end_date` are sent, returns drivers available in that window (validated as a pair)."
 					}
 				},
 				{
@@ -496,6 +523,102 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "drivers", "{{driver_id}}"]
 						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Billing & bills",
+			"description": "All routes here require **Bearer** auth. Query keys below are optional unless noted.",
+			"item": [
+				{
+					"name": "Billing summary",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/billing/summary?filter[customer_id]={{customer_id}}&filter[as_of]=2026-05-01&filter[paid_at][from]=2026-01-01&filter[paid_at][to]=2026-12-31",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "billing", "summary"],
+							"query": [
+								{
+									"key": "filter[customer_id]",
+									"value": "{{customer_id}}",
+									"description": "Optional. UUID of a customer; scopes summary to that customer."
+								},
+								{
+									"key": "filter[as_of]",
+									"value": "2026-05-01",
+									"description": "Optional. Date boundary for summary."
+								},
+								{
+									"key": "filter[paid_at][from]",
+									"value": "2026-01-01",
+									"description": "Optional. Use with filter[paid_at][to]; paid_at to must be on or after from."
+								},
+								{
+									"key": "filter[paid_at][to]",
+									"value": "2026-12-31",
+									"description": "Optional. Paid-at range end."
+								}
+							]
+						},
+						"description": "**Bearer required.** Aggregated billing for the authenticated user. All `filter[...]` query keys are optional; omit `filter` entirely for an unfiltered summary."
+					}
+				},
+				{
+					"name": "List bills (all)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/bills?per_page=15&sort=-issued_at&include=transaction&filter[status]=draft,issued&filter[issued_at][from]=2026-01-01&filter[issued_at][to]=2026-12-31",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "bills"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Optional. 1–100, default 15."
+								},
+								{
+									"key": "sort",
+									"value": "-issued_at",
+									"description": "Optional. One of: issued_at, -issued_at, created_at, -created_at."
+								},
+								{
+									"key": "include",
+									"value": "transaction",
+									"description": "Optional. If set to `transaction` (comma-separated list allowed but only this token is valid), response adds `included` with related transactions."
+								},
+								{
+									"key": "filter[status]",
+									"value": "draft,issued",
+									"description": "Optional. Comma-separated: draft, issued, paid, cancelled."
+								},
+								{
+									"key": "filter[issued_at][from]",
+									"value": "2026-01-01",
+									"description": "Optional. Use with filter[issued_at][to]."
+								},
+								{
+									"key": "filter[issued_at][to]",
+									"value": "2026-12-31",
+									"description": "Optional. Must be on or after from when both set."
+								}
+							]
+						},
+						"description": "**Bearer required.** Paginated bills for the current user across all customers."
 					}
 				}
 			]
@@ -660,6 +783,56 @@
 								}
 							]
 						}
+					}
+				},
+				{
+					"name": "List customer bills",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/bills?per_page=15&sort=-issued_at&include=transaction&filter[status]=paid&filter[issued_at][from]=2026-01-01&filter[issued_at][to]=2026-12-31",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "{{customer_id}}", "bills"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Optional. 1–100, default 15."
+								},
+								{
+									"key": "sort",
+									"value": "-issued_at",
+									"description": "Optional. issued_at, -issued_at, created_at, -created_at."
+								},
+								{
+									"key": "include",
+									"value": "transaction",
+									"description": "Optional. Use `transaction` to populate JSON:API `included` with the bill's transaction."
+								},
+								{
+									"key": "filter[status]",
+									"value": "paid",
+									"description": "Optional. Comma-separated bill statuses: draft, issued, paid, cancelled."
+								},
+								{
+									"key": "filter[issued_at][from]",
+									"value": "2026-01-01",
+									"description": "Optional. Pair with filter[issued_at][to]."
+								},
+								{
+									"key": "filter[issued_at][to]",
+									"value": "2026-12-31",
+									"description": "Optional. Must be on or after from when both are set."
+								}
+							]
+						},
+						"description": "**Bearer required.** Bills for `{{customer_id}}` belonging to the authenticated user. Same optional query keys as **List bills (all)** but scoped to this customer."
 					}
 				},
 				{
@@ -903,7 +1076,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"car_id\": \"{{car_id}}\",\n    \"driver_id\": \"{{driver_id}}\",\n    \"start_date\": \"2025-03-10\",\n    \"end_date\": \"2025-03-15\",\n    \"note\": \"Customer requested specific car\"\n}"
+							"raw": "{\n    \"car_id\": \"{{car_id}}\",\n    \"driver_id\": \"{{driver_id}}\",\n    \"start_date\": \"2026-03-10\",\n    \"end_date\": \"2026-03-15\",\n    \"note\": \"Customer requested specific car\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/book",
@@ -1298,7 +1471,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"car_id\": \"{{car_id}}\",\n    \"driver_id\": \"{{driver_id}}\",\n    \"start_date\": \"2025-03-10\",\n    \"end_date\": \"2025-03-20\",\n    \"note\": \"Extended rental period\"\n}"
+							"raw": "{\n    \"car_id\": \"{{car_id}}\",\n    \"driver_id\": \"{{driver_id}}\",\n    \"start_date\": \"2026-03-10\",\n    \"end_date\": \"2026-03-20\",\n    \"note\": \"Extended rental period\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings/{{booking_id}}",
@@ -1340,7 +1513,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/availability?type=car&start=2025-03-01&end=2025-03-31",
+							"raw": "{{base_url}}/api/v1/availability?type=car&start=2026-03-01&end=2026-03-31",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "availability"],
 							"query": [
@@ -1351,16 +1524,17 @@
 								},
 								{
 									"key": "start",
-									"value": "2025-03-01",
+									"value": "2026-03-01",
 									"description": "Required: Start date"
 								},
 								{
 									"key": "end",
-									"value": "2025-03-31",
+									"value": "2026-03-31",
 									"description": "Required: End date (must be after start)"
 								}
 							]
-						}
+						},
+						"description": "**Bearer required.** `type`, `start`, and `end` are required query parameters."
 					}
 				}
 			]
