@@ -42,12 +42,11 @@ function normalizeCar(payload) {
     make: pick(["make"]),
     model: pick(["model"]),
     plate_number: pick(["plate_number", "plateNumber", "plateNUmber"]),
-    mileage: pick(["mileage"]),
     type: pick(["type"]),
-    number_of_seats: pick(["number_of_seats", "numberOfSeats"]),
+    door: pick(["door"]),
+    seats: pick(["seats", "number_of_seats", "numberOfSeats"]),
+    color: pick(["color"]),
     year: pick(["year"]),
-    created_at: pick(["created_at", "createdAt"]),
-    updated_at: pick(["updated_at", "updatedAt"]),
   };
 }
 
@@ -87,13 +86,236 @@ function formatDate(value) {
   });
 }
 
-function DetailRow({ label, value }) {
+const COLOR_SWATCHES = {
+  black: "#18181b",
+  white: "#fafafa",
+  silver: "#a1a1aa",
+  gray: "#71717a",
+  grey: "#71717a",
+  red: "#dc2626",
+  blue: "#2563eb",
+  green: "#16a34a",
+  yellow: "#ca8a04",
+  orange: "#ea580c",
+  brown: "#92400e",
+  gold: "#b45309",
+  beige: "#d6d3d1",
+  navy: "#1e3a8a",
+  purple: "#7c3aed",
+  pink: "#db2777",
+};
+
+function displayValue(value) {
+  if (value === undefined || value === null || value === "") return null;
+  return String(value);
+}
+
+function resolveSwatch(color) {
+  if (!color) return "#d4d4d8";
+  const key = String(color).trim().toLowerCase();
+  return COLOR_SWATCHES[key] ?? "#d4d4d8";
+}
+
+function SpecCard({ icon, label, value }) {
+  const shown = displayValue(value);
   return (
-    <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-      <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-        {label}
+    <div className="flex items-start gap-3 rounded-xl border border-zinc-200/80 bg-zinc-50/80 p-4 transition hover:border-teal-200 hover:bg-teal-50/40">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-teal-700 shadow-sm ring-1 ring-zinc-200/80">
+        {icon}
       </div>
-      <div className="mt-2 text-sm text-zinc-900">{value || "Not available"}</div>
+      <div className="min-w-0">
+        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+          {label}
+        </p>
+        <p className="mt-1 truncate text-base font-semibold text-zinc-900">
+          {shown ?? "—"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function CarIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      className="h-5 w-5"
+      aria-hidden
+    >
+      <path
+        d="M5 17h14M6 17l1-4h10l1 4M7 13l1.5-4h7L17 13"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="7.5" cy="17.5" r="1.5" />
+      <circle cx="16.5" cy="17.5" r="1.5" />
+    </svg>
+  );
+}
+
+function CarDetailSection({ car, carName }) {
+  const plate = displayValue(car.plate_number);
+  const type = displayValue(car.type);
+  const year = displayValue(car.year);
+  const color = displayValue(car.color);
+  const swatch = resolveSwatch(color);
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+      <div className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-teal-700 px-6 pb-8 pt-6 text-white sm:px-8">
+        <div
+          className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -bottom-12 left-1/3 h-32 w-32 rounded-full bg-teal-400/20 blur-2xl"
+          aria-hidden
+        />
+
+        <Link
+          href="/dashboard/cars"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-100 transition hover:text-white"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="h-4 w-4"
+            aria-hidden
+          >
+            <path
+              d="M15 18l-6-6 6-6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Back to car list
+        </Link>
+
+        <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/25 backdrop-blur-sm">
+              <CarIcon />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                {carName || "Unknown vehicle"}
+              </h1>
+              <p className="mt-1 text-sm text-blue-100">
+                {[type, year].filter(Boolean).join(" · ") || "Vehicle profile"}
+              </p>
+            </div>
+          </div>
+          {plate && (
+            <div className="inline-flex w-fit items-center rounded-lg border border-white/25 bg-white/10 px-4 py-2 font-mono text-sm font-semibold tracking-wider text-white backdrop-blur-sm">
+              {plate}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="px-6 py-6 sm:px-8">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          Specifications
+        </h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <SpecCard
+            label="Vehicle type"
+            value={type}
+            icon={
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                className="h-5 w-5"
+                aria-hidden
+              >
+                <path
+                  d="M4 8h16M6 8V6h12v2M8 12h8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            }
+          />
+          <SpecCard
+            label="Doors"
+            value={car.door}
+            icon={
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                className="h-5 w-5"
+                aria-hidden
+              >
+                <rect x="5" y="4" width="14" height="16" rx="1.5" />
+                <path d="M12 4v16" strokeLinecap="round" />
+              </svg>
+            }
+          />
+          <SpecCard
+            label="Seats"
+            value={car.seats}
+            icon={
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                className="h-5 w-5"
+                aria-hidden
+              >
+                <circle cx="12" cy="8" r="3" />
+                <path
+                  d="M6 20v-1a4 4 0 0 1 8 0v1"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            }
+          />
+          <SpecCard
+            label="Year"
+            value={year}
+            icon={
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                className="h-5 w-5"
+                aria-hidden
+              >
+                <rect x="4" y="5" width="16" height="15" rx="2" />
+                <path d="M8 3v4M16 3v4M4 10h16" strokeLinecap="round" />
+              </svg>
+            }
+          />
+        </div>
+
+        <div className="mt-4 flex items-center gap-4 rounded-xl border border-zinc-200 bg-gradient-to-r from-zinc-50 to-white p-4 sm:p-5">
+          <div
+            className="h-12 w-12 shrink-0 rounded-full ring-2 ring-white shadow-md"
+            style={{ backgroundColor: swatch }}
+            aria-hidden
+          />
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+              Exterior color
+            </p>
+            <p className="mt-1 text-lg font-semibold capitalize text-zinc-900">
+              {color ?? "Not specified"}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -211,53 +433,57 @@ export default async function CarDetailPage({ params }) {
 
   return (
     <div className="w-full pr-8">
-      <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <Link
-          href="/dashboard/cars"
-          className="text-sm font-medium text-teal-700 transition hover:text-teal-800"
-        >
-          Back to car list
-        </Link>
-        <h1 className="mt-4 text-3xl font-bold tracking-tight">Car Details</h1>
-        <p className="mt-2 text-sm text-zinc-500">
-          Car ID: <span className="font-medium text-zinc-900">{carId}</span>
-        </p>
-      </div>
-
-      <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-        {error ? (
-          <p className="text-sm text-red-600">{error}</p>
-        ) : car ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <DetailRow label="Car" value={carName} />
-            <DetailRow label="Plate Number" value={car.plate_number} />
-            <DetailRow
-              label="Seats"
-              value={
-                car.number_of_seats !== undefined &&
-                car.number_of_seats !== null &&
-                car.number_of_seats !== ""
-                  ? String(car.number_of_seats)
-                  : ""
-              }
-            />
-            <DetailRow
-              label="Mileage"
-              value={
-                car.mileage !== undefined && car.mileage !== null && car.mileage !== ""
-                  ? Number(car.mileage).toLocaleString()
-                  : ""
-              }
-            />
-            <DetailRow label="Year" value={car.year ? String(car.year) : ""} />
-            <DetailRow label="Type" value={car.type} />
-            <DetailRow label="Created At" value={car.created_at} />
-            <DetailRow label="Updated At" value={car.updated_at} />
-          </div>
-        ) : (
-          <p className="text-sm text-zinc-500">No car data returned.</p>
-        )}
-      </div>
+      {error ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
+          <Link
+            href="/dashboard/cars"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-700 transition hover:text-teal-800"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="h-4 w-4"
+              aria-hidden
+            >
+              <path
+                d="M15 18l-6-6 6-6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Back to car list
+          </Link>
+          <p className="mt-4 text-sm text-red-600">{error}</p>
+        </div>
+      ) : car ? (
+        <CarDetailSection car={car} carName={carName} />
+      ) : (
+        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <Link
+            href="/dashboard/cars"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-700 transition hover:text-teal-800"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="h-4 w-4"
+              aria-hidden
+            >
+              <path
+                d="M15 18l-6-6 6-6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Back to car list
+          </Link>
+          <p className="mt-4 text-sm text-zinc-500">No car data returned.</p>
+        </div>
+      )}
 
       <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
         <h2 className="text-base font-semibold text-zinc-900">Upcoming Bookings</h2>
