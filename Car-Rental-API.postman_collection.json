@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "car-rental-api-collection",
 		"name": "Car Rental API",
-		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | **Not used** — public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` (register) | **Not used** — public, but the server may return **403** if registration is disabled (`allow_user_registration`). |\n| `GET /api/user`, `POST /api/logout` | **Required** — Sanctum. |\n| All other `/api/v1/...` routes | **Required** — same Bearer token as above. |\n\nThis collection sets **Bearer Token** auth at the collection level (`{{token}}`). Requests that must be public override auth to **No Auth** (Login, Register User).\n\n## Setup\n1. Set `base_url` (default: `http://localhost` — add port if needed, e.g. `http://localhost:8000`).\n2. Run **Login**; token is stored automatically.\n3. Fill path variables from responses: `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id`, `car_import_id`, `driver_import_id` (UUIDs).\n\n## Optional query keys (frontend reference)\nMany `GET` endpoints accept optional keys documented on each request: pagination (`per_page`), nested `filter[...]`, `sort`, `include`, date ranges, etc. If a key is omitted, the API uses defaults described on that request.\n\n**User registration:** `POST /api/v1/users` needs `name`, `email`, `password`, `password_confirmation` — no Bearer; may still fail with 403 when registration is off.\n\n**CSV imports:** `multipart/form-data` with field `file`; then poll import status by ID.\n\n**Transactions:** create/update bodies require `name` (max 255) where applicable. Bookings list: newest first (`created_at`, then `start_date`).",
+		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | **Not used** — public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` (register) | **Not used** — public, but the server may return **403** if registration is disabled (`allow_user_registration`). |\n| `GET /api/user`, `POST /api/logout` | **Required** — Sanctum. |\n| All other `/api/v1/...` routes | **Required** — same Bearer token as above. |\n\nThis collection sets **Bearer Token** auth at the collection level (`{{token}}`). Requests that must be public override auth to **No Auth** (Login, Register User).\n\n## Setup\n1. Set `base_url` (default: `http://localhost` — add port if needed, e.g. `http://localhost:8000`).\n2. Run **Login**; token is stored automatically.\n3. Fill path variables from responses: `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id`, `car_import_id`, `driver_import_id` (UUIDs).\n\n## Optional query keys (frontend reference)\nMany `GET` endpoints accept optional keys documented on each request: pagination (`per_page`), nested `filter[...]`, `sort`, `include`, date ranges, etc. If a key is omitted, the API uses defaults described on that request.\n\n**User registration:** `POST /api/v1/users` needs `name`, `email`, `password`, `password_confirmation` — no Bearer; may still fail with 403 when registration is off.\n\n**CSV imports:** `multipart/form-data` with field `file`; then poll import status by ID. Sample car CSV: `samples/cars-import.csv`. Columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number` (`door` and `seats` are integers).\n\n**Transactions:** create/update bodies require `name` (max 255) where applicable. Bookings list: newest first (`created_at`, then `start_date`).",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -193,14 +193,31 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"make\": \"Toyota\",\n    \"model\": \"Camry\",\n    \"plate_number\": \"ABC-1234\",\n    \"mileage\": 50000,\n    \"type\": \"sedan\",\n    \"number_of_seats\": 5,\n    \"year\": 2022\n}"
+							"raw": "{\n    \"type\": \"Sedan\",\n    \"door\": 4,\n    \"seats\": 5,\n    \"year\": 2022,\n    \"color\": \"Black\",\n    \"make\": \"Toyota\",\n    \"model\": \"Camry\",\n    \"plate_number\": \"ABC-1234\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/cars",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "cars"]
+						},
+						"description": "**Bearer required.** Create a car. Required body fields: `type`, `door` (integer), `seats` (integer), `year` (integer), `color`, `make`, `model`, `plate_number` (unique). Response attributes use camelCase (`plateNumber`, etc.)."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const json = pm.response.json();",
+									"    if (json.data && json.data.id) {",
+									"        pm.collectionVariables.set('car_id', json.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
 						}
-					}
+					]
 				},
 				{
 					"name": "Import Cars CSV",
@@ -218,7 +235,7 @@
 								{
 									"key": "file",
 									"type": "file",
-									"src": ""
+									"src": "samples/cars-import.csv"
 								}
 							]
 						},
@@ -227,7 +244,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "cars", "import"]
 						},
-						"description": "Queue a CSV import of cars (multipart/form-data, `file` required)."
+						"description": "Queue a CSV import of cars (multipart/form-data, `file` required).\n\n**CSV header row (required):**\n`type,door,seats,year,color,make,model,plate_number`\n\n**Example row:**\n`Sedan,4,5,2022,Black,Toyota,Camry,ABC-1234`\n\n`door` and `seats` must be integers. `plate_number` must be unique across the database and within the file."
 					},
 					"event": [
 						{
@@ -275,7 +292,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/cars?per_page=15&make=Toyota&model=Camry&type=sedan&number_of_seats=5",
+							"raw": "{{base_url}}/api/v1/cars?per_page=15&type=Sedan&door=4&seats=5&year=2022&color=Black&make=Toyota&model=Camry",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "cars"],
 							"query": [
@@ -283,6 +300,31 @@
 									"key": "per_page",
 									"value": "15",
 									"description": "Optional. 1–100, default 15."
+								},
+								{
+									"key": "type",
+									"value": "Sedan",
+									"description": "Optional. Filter by vehicle type (string)."
+								},
+								{
+									"key": "door",
+									"value": "4",
+									"description": "Optional. Filter by door count (integer, min 1)."
+								},
+								{
+									"key": "seats",
+									"value": "5",
+									"description": "Optional. Filter by seat count (integer, min 1)."
+								},
+								{
+									"key": "year",
+									"value": "2022",
+									"description": "Optional. Filter by year (integer)."
+								},
+								{
+									"key": "color",
+									"value": "Black",
+									"description": "Optional. Filter by color (string)."
 								},
 								{
 									"key": "make",
@@ -295,18 +337,14 @@
 									"description": "Optional. Filter by model (string)."
 								},
 								{
-									"key": "type",
-									"value": "sedan",
-									"description": "Optional. Filter by vehicle type (string)."
-								},
-								{
-									"key": "number_of_seats",
-									"value": "5",
-									"description": "Optional. Integer minimum 1."
+									"key": "plate_number",
+									"value": "",
+									"description": "Optional. Filter by plate number (string).",
+									"disabled": true
 								}
 							]
 						},
-						"description": "**Bearer required.** Lists available cars. All query keys are optional; omit them to list with defaults."
+						"description": "**Bearer required.** Lists available cars. All query keys are optional; omit them to list with defaults. Response attributes: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plateNumber`."
 					}
 				},
 				{
@@ -323,7 +361,8 @@
 							"raw": "{{base_url}}/api/v1/cars/{{car_id}}",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "cars", "{{car_id}}"]
-						}
+						},
+						"description": "**Bearer required.** Returns one car. Attributes: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plateNumber`, `createdAt`."
 					}
 				},
 				{
@@ -342,13 +381,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"make\": \"Toyota\",\n    \"model\": \"Camry\",\n    \"plate_number\": \"ABC-1234\",\n    \"mileage\": 55000,\n    \"type\": \"sedan\",\n    \"number_of_seats\": 5,\n    \"year\": 2022\n}"
+							"raw": "{\n    \"type\": \"Sedan\",\n    \"door\": 4,\n    \"seats\": 5,\n    \"year\": 2022,\n    \"color\": \"Silver\",\n    \"make\": \"Toyota\",\n    \"model\": \"Camry\",\n    \"plate_number\": \"ABC-1234\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/cars/{{car_id}}",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "cars", "{{car_id}}"]
-						}
+						},
+						"description": "**Bearer required.** Partial update supported (`sometimes` rules). All fields optional: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number` (unique except current car)."
 					}
 				}
 			]

@@ -52,9 +52,10 @@ function normalizeCars(payload) {
       make: pick(["make"]),
       model: pick(["model"]),
       plate_number: pick(["plate_number", "plateNumber", "plateNUmber"]),
-      mileage: pick(["mileage"]) ?? 0,
       type: pick(["type"]),
-      number_of_seats: pick(["number_of_seats", "numberOfSeats"]) ?? 0,
+      seats: pick(["seats", "number_of_seats", "numberOfSeats"]) ?? 0,
+      color: pick(["color"]),
+      door: pick(["door"]) ?? 0,
       year: pick(["year"]),
     };
   });
@@ -97,9 +98,10 @@ export default function CarsPage() {
   const [make, setMake] = useState("");
   const [model, setModel] = useState("");
   const [plate_number, setPlateNumber] = useState("");
-  const [mileage, setMileage] = useState("");
   const [type, setType] = useState("");
-  const [number_of_seats, setNumberOfSeats] = useState("");
+  const [door, setDoor] = useState("");
+  const [seats, setSeats] = useState("");
+  const [color, setColor] = useState("");
   const [year, setYear] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState("");
@@ -123,9 +125,10 @@ export default function CarsPage() {
     setMake("");
     setModel("");
     setPlateNumber("");
-    setMileage("");
     setType("");
-    setNumberOfSeats("");
+    setDoor("");
+    setSeats("");
+    setColor("");
     setYear("");
     setFormError("");
     setEditingCarId("");
@@ -174,15 +177,14 @@ export default function CarsPage() {
     setMake(car.make || "");
     setModel(car.model || "");
     setPlateNumber(car.plate_number || "");
-    setMileage(
-      car.mileage !== undefined && car.mileage !== null ? String(car.mileage) : "",
-    );
     setType(car.type || "");
-    setNumberOfSeats(
-      car.number_of_seats !== undefined && car.number_of_seats !== null
-        ? String(car.number_of_seats)
-        : "",
+    setDoor(
+      car.door !== undefined && car.door !== null ? String(car.door) : "",
     );
+    setSeats(
+      car.seats !== undefined && car.seats !== null ? String(car.seats) : "",
+    );
+    setColor(car.color || "");
     setYear(car.year !== undefined && car.year !== null ? String(car.year) : "");
     setFormError("");
   }
@@ -257,9 +259,10 @@ export default function CarsPage() {
         make: make.trim(),
         model: model.trim(),
         plate_number: plate_number.trim(),
-        mileage: mileage ? Number(mileage) : 0,
         type: type.trim(),
-        number_of_seats: number_of_seats ? Number(number_of_seats) : 0,
+        door: door ? Number(door) : 0,
+        seats: seats ? Number(seats) : 0,
+        color: color.trim(),
         year: year ? Number(year) : new Date().getFullYear(),
       };
 
@@ -456,17 +459,6 @@ export default function CarsPage() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className={labelClass}>Mileage</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={mileage}
-                  onChange={(e) => setMileage(e.target.value)}
-                  className={inputClass}
-                  placeholder="e.g. 50000"
-                />
-              </div>
-              <div>
                 <label className={labelClass}>Year</label>
                 <input
                   type="number"
@@ -478,8 +470,18 @@ export default function CarsPage() {
                   placeholder="e.g. 2020"
                 />
               </div>
+              <div>
+                <label className={labelClass}>Color</label>
+                <input
+                  type="text"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className={inputClass}
+                  placeholder="e.g. Black"
+                />
+              </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
               <div>
                 <label className={labelClass}>Type</label>
                 <input
@@ -491,13 +493,25 @@ export default function CarsPage() {
                 />
               </div>
               <div>
-                <label className={labelClass}>Number of seats</label>
+                <label className={labelClass}>Doors</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="9"
+                  value={door}
+                  onChange={(e) => setDoor(e.target.value)}
+                  className={inputClass}
+                  placeholder="e.g. 4"
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Seats</label>
                 <input
                   type="number"
                   min="1"
                   max="99"
-                  value={number_of_seats}
-                  onChange={(e) => setNumberOfSeats(e.target.value)}
+                  value={seats}
+                  onChange={(e) => setSeats(e.target.value)}
                   className={inputClass}
                   placeholder="e.g. 5"
                 />
@@ -562,8 +576,9 @@ export default function CarsPage() {
                   <th className="py-3 pr-4">Make</th>
                   <th className="py-3 pr-4">Model</th>
                   <th className="py-3 pr-4">Plate</th>
+                  <th className="py-3 pr-4">Type</th>
                   <th className="py-3 pr-4">Seats</th>
-                  <th className="py-3 pr-4">Mileage</th>
+                  <th className="py-3 pr-4">Color</th>
                   <th className="py-3 pr-4">Year</th>
                   <th className="py-3">Actions</th>
                 </tr>
@@ -579,14 +594,11 @@ export default function CarsPage() {
                     </td>
                     <td className="py-4 pr-4">{car.model || "-"}</td>
                     <td className="py-4 pr-4">{car.plate_number || "-"}</td>
+                    <td className="py-4 pr-4">{car.type || "-"}</td>
                     <td className="py-4 pr-4">
-                      {car.number_of_seats ? String(car.number_of_seats) : "-"}
+                      {car.seats ? String(car.seats) : "-"}
                     </td>
-                    <td className="py-4 pr-4">
-                      {car.mileage !== undefined && car.mileage !== null && car.mileage !== ""
-                        ? Number(car.mileage).toLocaleString()
-                        : "-"}
-                    </td>
+                    <td className="py-4 pr-4">{car.color || "-"}</td>
                     <td className="py-4 pr-4">{car.year || "-"}</td>
                     <td className="py-4">
                       <div className="flex items-center gap-3">
