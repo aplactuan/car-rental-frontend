@@ -1116,7 +1116,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"car_id\": \"{{car_id}}\",\n    \"driver_id\": \"{{driver_id}}\",\n    \"start_date\": \"2026-03-10\",\n    \"end_date\": \"2026-03-15\",\n    \"note\": \"Customer requested specific car\"\n}"
+							"raw": "{\n    \"car_id\": \"{{car_id}}\",\n    \"driver_id\": \"{{driver_id}}\",\n    \"price\": 500000,\n    \"start_date\": \"2026-03-10\",\n    \"end_date\": \"2026-03-15\",\n    \"note\": \"Customer requested specific car\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/book",
@@ -1511,7 +1511,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"car_id\": \"{{car_id}}\",\n    \"driver_id\": \"{{driver_id}}\",\n    \"start_date\": \"2026-03-10\",\n    \"end_date\": \"2026-03-20\",\n    \"note\": \"Extended rental period\"\n}"
+							"raw": "{\n    \"car_id\": \"{{car_id}}\",\n    \"driver_id\": \"{{driver_id}}\",\n    \"price\": 500000,\n    \"start_date\": \"2026-03-10\",\n    \"end_date\": \"2026-03-20\",\n    \"note\": \"Extended rental period\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings/{{booking_id}}",

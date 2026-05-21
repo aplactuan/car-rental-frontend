@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const getBearerHeaders = () => {
   const token =
@@ -24,13 +24,8 @@ const normalizeBill = (payload) => {
 };
 
 const formatCurrency = (amount) => {
-  if (typeof amount !== "number") return "—";
-
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(amount);
+  if (typeof amount !== "number" || !Number.isFinite(amount)) return "—";
+  return `PHP ${Math.round(amount).toLocaleString("en-US")}`;
 };
 
 const formatDate = (dateString) => {
@@ -38,7 +33,7 @@ const formatDate = (dateString) => {
   const parsed = new Date(dateString);
   if (Number.isNaN(parsed.getTime())) return String(dateString);
 
-  return parsed.toLocaleDateString("id-ID", {
+  return parsed.toLocaleDateString("en-US", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -50,7 +45,7 @@ const formatDateTime = (dateString) => {
   const parsed = new Date(dateString);
   if (Number.isNaN(parsed.getTime())) return String(dateString);
 
-  return parsed.toLocaleString("id-ID", {
+  return parsed.toLocaleString("en-US", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -96,7 +91,87 @@ const getStatusMeta = (rawStatus) => {
   };
 };
 
-export default function BillingSection({ transactionId }) {
+const getBookingPrice = (booking) => {
+  if (!booking || typeof booking !== "object") return 0;
+
+  const candidates = [
+    booking.price,
+    booking.attributes?.price,
+    booking.data?.attributes?.price,
+  ];
+
+  for (const value of candidates) {
+    if (value === null || value === undefined || value === "") continue;
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return 0;
+};
+
+const sumBookingPrices = (bookingList) =>
+  (Array.isArray(bookingList) ? bookingList : []).reduce(
+    (sum, booking) => sum + getBookingPrice(booking),
+    0,
+  );
+
+const parseBookingsFromListResponse = (payload) => {
+  const raw = payload?.data ?? payload;
+  const list = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+  return list.map((item) => {
+    const attrs = item?.attributes ?? {};
+    return {
+      ...item,
+      attributes: attrs,
+      price: attrs.price ?? item?.price,
+    };
+  });
+};
+
+const parseBookingsFromTransactionResponse = (payload) => {
+  const bookingsData =
+    payload?.data?.relationships?.bookings?.data ??
+    payload?.relationships?.bookings?.data;
+  if (!Array.isArray(bookingsData)) return [];
+
+  const includedData = Array.isArray(payload?.included) ? payload.included : [];
+
+  return bookingsData.map((booking, index) => {
+    const includedBooking =
+      includedData.find(
+        (item) =>
+          String(item?.id) === String(booking?.id) &&
+          (!item?.type || item.type === "bookings" || item.type === "booking"),
+      ) ??
+      includedData.filter(
+        (item) => !item?.type || item.type === "bookings" || item.type === "booking",
+      )[index];
+    const includedAttributes = includedBooking?.attributes ?? {};
+    const price = includedAttributes?.price ?? booking?.attributes?.price ?? booking?.price;
+
+    return {
+      ...booking,
+      attributes: {
+        ...(booking?.attributes ?? {}),
+        ...(price !== undefined ? { price } : {}),
+      },
+      ...(price !== undefined ? { price } : {}),
+    };
+  });
+};
+
+const totalToAmountInput = (total) => {
+  const rounded = Math.round(total);
+  return Number.isFinite(rounded) && rounded > 0 ? String(rounded) : "";
+};
+
+const EMPTY_BOOKINGS = [];
+
+export default function BillingSection({
+  transactionId,
+  bookings = EMPTY_BOOKINGS,
+  className = "",
+}) {
   const [bill, setBill] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -108,6 +183,68 @@ export default function BillingSection({ transactionId }) {
   const [dueAtInput, setDueAtInput] = useState("");
   const [notesInput, setNotesInput] = useState("");
   const [actionError, setActionError] = useState("");
+  const [bookingsForTotal, setBookingsForTotal] = useState(() =>
+    Array.isArray(bookings) ? bookings : [],
+  );
+  const [isLoadingBookingTotal, setIsLoadingBookingTotal] = useState(false);
+
+  const refreshBookingsForTotal = useCallback(async () => {
+    if (!transactionId) return [];
+
+    setIsLoadingBookingTotal(true);
+    try {
+      const headers = getBearerHeaders();
+      const listRes = await fetch(
+        `/api/v1/transactions/${transactionId}/bookings?per_page=100`,
+        {
+          headers,
+          credentials: "include",
+          cache: "no-store",
+        },
+      );
+
+      if (listRes.ok) {
+        const listData = await listRes.json().catch(() => ({}));
+        const parsed = parseBookingsFromListResponse(listData);
+        if (parsed.length > 0) {
+          setBookingsForTotal(parsed);
+          return parsed;
+        }
+      }
+
+      const txRes = await fetch(`/api/v1/transactions/${transactionId}`, {
+        headers,
+        credentials: "include",
+        cache: "no-store",
+      });
+
+      if (txRes.ok) {
+        const txData = await txRes.json().catch(() => ({}));
+        const parsed = parseBookingsFromTransactionResponse(txData);
+        setBookingsForTotal(parsed);
+        return parsed;
+      }
+    } catch {
+      // Keep the last known booking list when refresh fails.
+    } finally {
+      setIsLoadingBookingTotal(false);
+    }
+
+    return [];
+  }, [transactionId]);
+
+  useEffect(() => {
+    if (!transactionId) return;
+    refreshBookingsForTotal();
+    // Only refetch when the transaction changes; avoid syncing `bookings` prop
+    // in an effect (new array references each render cause infinite updates).
+  }, [transactionId, refreshBookingsForTotal]);
+
+  const defaultBillAmount = useMemo(
+    () => sumBookingPrices(bookingsForTotal),
+    [bookingsForTotal],
+  );
+  const defaultAmountInput = totalToAmountInput(defaultBillAmount);
 
   const normalizedStatus = String(bill?.status ?? "").toLowerCase();
   const isDraftBill = normalizedStatus === "draft";
@@ -115,9 +252,9 @@ export default function BillingSection({ transactionId }) {
   const canEditDraft = Boolean(bill) && isDraftBill;
   const statusMeta = getStatusMeta(bill?.status);
 
-  const resetFormState = () => {
+  const resetFormState = (nextAmountInput = "") => {
     setFormError("");
-    setAmountInput("");
+    setAmountInput(nextAmountInput);
     setDueAtInput("");
     setNotesInput("");
     setActionError("");
@@ -188,11 +325,20 @@ export default function BillingSection({ transactionId }) {
     return () => controller.abort();
   }, [transactionId]);
 
-  const handleCreateToggle = () => {
-    setShowCreateForm((prev) => !prev);
+  const handleCreateToggle = async () => {
+    if (showCreateForm) {
+      setShowCreateForm(false);
+      setFormError("");
+      setActionError("");
+      return;
+    }
+
     setFormError("");
     setActionError("");
-    if (!showCreateForm) resetFormState();
+    const latestBookings = await refreshBookingsForTotal();
+    const total = sumBookingPrices(latestBookings);
+    resetFormState(totalToAmountInput(total));
+    setShowCreateForm(true);
   };
 
   const handleEditToggle = () => {
@@ -385,22 +531,22 @@ export default function BillingSection({ transactionId }) {
   };
 
   return (
-    <section className="mt-6 overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-      <div className="border-b border-zinc-100 bg-gradient-to-r from-amber-50/80 via-white to-zinc-50 px-6 py-5">
-        <h2 className="text-lg font-semibold tracking-tight text-zinc-900">Billing</h2>
-        <p className="mt-1 text-sm text-zinc-500">
-          Bill details for this transaction
-        </p>
+    <section
+      className={`overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100 ${className}`}
+    >
+      <div className="border-b border-zinc-100 bg-gradient-to-r from-amber-50/90 via-white to-zinc-50 px-5 py-4">
+        <h2 className="text-base font-semibold tracking-tight text-zinc-900">Billing</h2>
+        <p className="mt-0.5 text-xs text-zinc-500">Payment for this transaction</p>
       </div>
 
       {isLoading && (
-        <div className="px-6 py-8">
+        <div className="px-5 py-6">
           <p className="text-sm text-zinc-500">Loading billing details...</p>
         </div>
       )}
 
       {!isLoading && error && (
-        <div className="px-6 py-8">
+        <div className="px-5 py-6">
           <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </p>
@@ -408,8 +554,8 @@ export default function BillingSection({ transactionId }) {
       )}
 
       {!isLoading && !error && !bill && (
-        <div className="px-6 py-10">
-          <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50/60 px-6 py-10 text-center">
+        <div className="px-5 py-6">
+          <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50/60 px-4 py-8 text-center">
             <p className="text-sm font-medium text-zinc-700">
               No bill has been created yet
             </p>
@@ -446,6 +592,11 @@ export default function BillingSection({ transactionId }) {
                     required
                     className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                   />
+                  <p className="mt-1 text-xs text-zinc-500">
+                    {isLoadingBookingTotal
+                      ? "Calculating total from bookings…"
+                      : `Defaulted from ${bookingsForTotal.length} booking${bookingsForTotal.length !== 1 ? "s" : ""}: ${formatCurrency(defaultBillAmount)}`}
+                  </p>
                 </label>
                 <label className="block">
                   <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
@@ -491,15 +642,33 @@ export default function BillingSection({ transactionId }) {
       )}
 
       {!isLoading && !error && bill && (
-        <div className="px-6 py-6">
-          <div className="mb-4 flex items-center justify-end">
-            <div className="flex flex-wrap justify-end gap-2">
+        <div className="px-5 py-5">
+          <div className="mb-3 flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
+                Amount
+              </p>
+              <span
+                className={`inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${statusMeta.className}`}
+              >
+                {statusMeta.label}
+              </span>
+            </div>
+            <p className="text-2xl font-bold tracking-tight text-zinc-900">
+              {formatCurrency(bill.amount)}
+            </p>
+            <p className="text-sm text-zinc-600">
+              Due {formatDate(bill.dueAt)}
+            </p>
+          </div>
+
+          <div className="mb-4 flex flex-wrap gap-2">
               {canEditDraft ? (
                 <button
                   type="button"
                   onClick={handleEditToggle}
                   disabled={isSubmitting}
-                  className="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isEditing ? "Cancel edit" : "Edit bill"}
                 </button>
@@ -568,7 +737,6 @@ export default function BillingSection({ transactionId }) {
                   </button>
                 </>
               ) : null}
-            </div>
           </div>
 
           {isEditing ? (
@@ -633,72 +801,28 @@ export default function BillingSection({ transactionId }) {
               </div>
             </form>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-xl border border-zinc-100 bg-zinc-50/60 px-4 py-3">
-                <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">
-                  Bill ID
-                </p>
-                <p className="mt-1 break-all text-sm font-medium text-zinc-800">
+            <dl className="space-y-2.5 border-t border-zinc-100 pt-3 text-sm">
+              <div className="flex justify-between gap-3">
+                <dt className="shrink-0 text-zinc-500">Bill ID</dt>
+                <dd className="truncate text-right font-mono text-xs text-zinc-800">
                   {bill.id || "—"}
-                </p>
+                </dd>
               </div>
-
-              <div className="rounded-xl border border-zinc-100 bg-zinc-50/60 px-4 py-3">
-                <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">
-                  Amount
-                </p>
-                <p className="mt-1 text-sm font-medium text-zinc-800">
-                  {formatCurrency(bill.amount)}
-                </p>
+              <div className="flex justify-between gap-3">
+                <dt className="text-zinc-500">Created</dt>
+                <dd className="text-right text-zinc-800">{formatDateTime(bill.createdAt)}</dd>
               </div>
-
-              <div className="rounded-xl border border-zinc-100 bg-zinc-50/60 px-4 py-3">
-                <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">
-                  Due Date
-                </p>
-                <p className="mt-1 text-sm font-medium text-zinc-800">
-                  {formatDate(bill.dueAt)}
-                </p>
+              <div className="flex justify-between gap-3">
+                <dt className="text-zinc-500">Updated</dt>
+                <dd className="text-right text-zinc-800">{formatDateTime(bill.updatedAt)}</dd>
               </div>
-
-              <div className="rounded-xl border border-zinc-100 bg-zinc-50/60 px-4 py-3">
-                <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">
-                  Status
-                </p>
-                <span
-                  className={`mt-1 inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusMeta.className}`}
-                >
-                  {statusMeta.label}
-                </span>
-              </div>
-
-              <div className="rounded-xl border border-zinc-100 bg-zinc-50/60 px-4 py-3">
-                <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">
-                  Created
-                </p>
-                <p className="mt-1 text-sm font-medium text-zinc-800">
-                  {formatDateTime(bill.createdAt)}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-zinc-100 bg-zinc-50/60 px-4 py-3">
-                <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">
-                  Last Updated
-                </p>
-                <p className="mt-1 text-sm font-medium text-zinc-800">
-                  {formatDateTime(bill.updatedAt)}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-zinc-100 bg-zinc-50/60 px-4 py-3 sm:col-span-2 lg:col-span-4">
-                <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">
-                  Notes
-                </p>
-                <p className="mt-1 whitespace-pre-wrap text-sm text-zinc-700">
+              <div>
+                <dt className="text-zinc-500">Notes</dt>
+                <dd className="mt-1 whitespace-pre-wrap text-zinc-800">
                   {bill.notes?.trim() ? bill.notes : "—"}
-                </p>
+                </dd>
               </div>
-            </div>
+            </dl>
           )}
           {formError && !isEditing ? (
             <p className="mt-3 text-sm text-red-600">{formError}</p>

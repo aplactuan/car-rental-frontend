@@ -49,31 +49,56 @@ export default async function CustomerTransactionDetailPage({ params }) {
       const includedData = Array.isArray(data?.included) ? data.included : [];
       bookings = Array.isArray(bookingsData)
         ? bookingsData.map((booking, index) => {
+            const bookingIncluded = includedData.filter(
+              (item) =>
+                !item?.type || item.type === "bookings" || item.type === "booking",
+            );
             const includedBooking =
-              includedData.find((item) => String(item?.id) === String(booking?.id)) ??
-              includedData[index];
+              bookingIncluded.find((item) => String(item?.id) === String(booking?.id)) ??
+              bookingIncluded[index];
             const includedAttributes = includedBooking?.attributes ?? {};
+            const includedRelationships = includedBooking?.relationships ?? {};
+            const driverRef = includedRelationships?.driver?.data ?? null;
+            const carRef = includedRelationships?.car?.data ?? null;
             const driverAttributes =
-              includedBooking?.relationships?.driver?.data?.attributes ?? null;
+              driverRef?.attributes ??
+              includedBooking?.relationships?.driver?.data?.attributes ??
+              null;
             const carAttributes =
-              includedBooking?.relationships?.car?.data?.attributes ?? null;
+              carRef?.attributes ??
+              includedBooking?.relationships?.car?.data?.attributes ??
+              null;
             const startDate = includedAttributes?.startDate;
             const endDate = includedAttributes?.endDate;
             const note = includedAttributes?.note;
+            const price = includedAttributes?.price;
+            const driverId = driverRef?.id != null ? String(driverRef.id) : undefined;
+            const carId = carRef?.id != null ? String(carRef.id) : undefined;
 
             return {
               ...booking,
+              relationships: {
+                ...(booking?.relationships ?? {}),
+                ...(driverRef ? { driver: { data: driverRef } } : {}),
+                ...(carRef ? { car: { data: carRef } } : {}),
+              },
               attributes: {
                 ...(booking?.attributes ?? {}),
                 ...(startDate !== undefined ? { startDate } : {}),
                 ...(endDate !== undefined ? { endDate } : {}),
                 ...(note !== undefined ? { note } : {}),
+                ...(price !== undefined ? { price } : {}),
+                ...(driverId !== undefined ? { driverId } : {}),
+                ...(carId !== undefined ? { carId } : {}),
                 ...(driverAttributes ? { driver: driverAttributes } : {}),
                 ...(carAttributes ? { car: carAttributes } : {}),
               },
               ...(startDate !== undefined ? { startDate } : {}),
               ...(endDate !== undefined ? { endDate } : {}),
               ...(note !== undefined ? { note } : {}),
+              ...(price !== undefined ? { price } : {}),
+              ...(driverId !== undefined ? { driverId } : {}),
+              ...(carId !== undefined ? { carId } : {}),
               ...(driverAttributes ? { driver: driverAttributes } : {}),
               ...(carAttributes ? { car: carAttributes } : {}),
             };
