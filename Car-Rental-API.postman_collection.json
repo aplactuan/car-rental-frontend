@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "car-rental-api-collection",
 		"name": "Car Rental API",
-		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | **Not used** — public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` (register) | **Not used** — public, but the server may return **403** if registration is disabled (`allow_user_registration`). |\n| `GET /api/user`, `POST /api/logout` | **Required** — Sanctum. |\n| All other `/api/v1/...` routes | **Required** — same Bearer token as above. |\n\nThis collection sets **Bearer Token** auth at the collection level (`{{token}}`). Requests that must be public override auth to **No Auth** (Login, Register User).\n\n## Setup\n1. Set `base_url` (default: `http://localhost` — add port if needed, e.g. `http://localhost:8000`).\n2. Run **Login**; token is stored automatically.\n3. Fill path variables from responses: `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id`, `car_import_id`, `driver_import_id` (UUIDs).\n\n## Optional query keys (frontend reference)\nMany `GET` endpoints accept optional keys documented on each request: pagination (`per_page`), nested `filter[...]`, `sort`, `include`, date ranges, etc. If a key is omitted, the API uses defaults described on that request.\n\n**User registration:** `POST /api/v1/users` needs `name`, `email`, `password`, `password_confirmation` — no Bearer; may still fail with 403 when registration is off.\n\n**CSV imports:** `multipart/form-data` with field `file`; then poll import status by ID. Sample car CSV: `samples/cars-import.csv`. Columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number` (`door` and `seats` are integers).\n\n**Transactions:** create/update bodies require `name` (max 255) where applicable. Bookings list: newest first (`created_at`, then `start_date`).",
+		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | **Not used** — public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` (register) | **Not used** — public, but the server may return **403** if registration is disabled (`allow_user_registration`). |\n| `GET /api/user`, `POST /api/logout` | **Required** — Sanctum. |\n| All other `/api/v1/...` routes | **Required** — same Bearer token as above. |\n\nThis collection sets **Bearer Token** auth at the collection level (`{{token}}`). Requests that must be public override auth to **No Auth** (Login, Register User).\n\n## Setup\n1. Set `base_url` (default: `http://localhost` — add port if needed, e.g. `http://localhost:8000`).\n2. Run **Login**; token is stored automatically.\n3. Fill path variables from responses: `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id`, `car_import_id`, `driver_import_id` (UUIDs).\n\n## Optional query keys (frontend reference)\nMany `GET` endpoints accept optional keys documented on each request: pagination (`per_page`), nested `filter[...]`, `sort`, `include`, date ranges, etc. If a key is omitted, the API uses defaults described on that request.\n\n**User registration:** `POST /api/v1/users` needs `name`, `email`, `password`, `password_confirmation` — no Bearer; may still fail with 403 when registration is off.\n\n**CSV imports:** `multipart/form-data` with field `file`; then poll import status by ID. Sample car CSV: `samples/cars-import.csv`. Columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number` (`door` and `seats` are integers).\n\n**Transactions:** create/update bodies require `name` (max 255) where applicable. Optional `has_bill` query (`0`, `1`, `true`, `false`) on list transaction endpoints filters by whether a bill exists. Bookings list: newest first (`created_at`, then `start_date`).\n\n**Bills:** `billNumber` and `invoiceNumber` are assigned automatically on create (format `INV-YYMM#####` per month). Do not send them in the request body.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -418,8 +418,25 @@
 							"raw": "{{base_url}}/api/v1/drivers",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "drivers"]
+						},
+						"description": "**Bearer required.** Create a driver. Required: `first_name`, `last_name`, `license_number` (unique), `license_expiry_date`, `address`, `phone_number`."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const json = pm.response.json();",
+									"    if (json.data && json.data.id) {",
+									"        pm.collectionVariables.set('driver_id', json.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
 						}
-					}
+					]
 				},
 				{
 					"name": "Import Drivers CSV",
@@ -446,7 +463,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "drivers", "import"]
 						},
-						"description": "Queue a CSV import of drivers (multipart/form-data, `file` required)."
+						"description": "Queue a CSV import of drivers (multipart/form-data, `file` required).\n\n**CSV header row (required):**\n`first_name,last_name,license_number,license_expiry_date,address,phone_number`\n\n**Example row:**\n`John,Doe,DL-12345678,2027-12-31,123 Main St,+1234567890`\n\n`license_number` must be unique across the database and within the file."
 					},
 					"event": [
 						{
@@ -622,7 +639,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/bills?per_page=15&sort=-issued_at&include=transaction&filter[status]=draft,issued&filter[issued_at][from]=2026-01-01&filter[issued_at][to]=2026-12-31",
+							"raw": "{{base_url}}/api/v1/bills?per_page=15&sort=-issued_at&include=transaction&filter[status]=draft,issued&filter[invoice_number]=260500123&filter[issued_at][from]=2026-01-01&filter[issued_at][to]=2026-12-31",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "bills"],
 							"query": [
@@ -647,6 +664,11 @@
 									"description": "Optional. Comma-separated: draft, issued, paid, cancelled."
 								},
 								{
+									"key": "filter[invoice_number]",
+									"value": "260500123",
+									"description": "Optional. Partial match against the bill invoice number, for example `INV-260500123`."
+								},
+								{
 									"key": "filter[issued_at][from]",
 									"value": "2026-01-01",
 									"description": "Optional. Use with filter[issued_at][to]."
@@ -658,7 +680,7 @@
 								}
 							]
 						},
-						"description": "**Bearer required.** Paginated bills for the current user across all customers."
+						"description": "**Bearer required.** Paginated bills for the current user across all customers. Response attributes include `billNumber`, `invoiceNumber`, `amount`, `status`, `issuedAt`, `dueAt`, `paidAt`. Supports partial invoice lookup with `filter[invoice_number]`."
 					}
 				}
 			]
@@ -689,8 +711,24 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "customers"]
 						},
-						"description": "Create a customer. Type must be 'personal' or 'business'."
-					}
+						"description": "**Bearer required.** Create a customer. Required: `name`, `type` (`personal` or `business`)."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const json = pm.response.json();",
+									"    if (json.data && json.data.id) {",
+									"        pm.collectionVariables.set('customer_id', json.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
 				},
 				{
 					"name": "List Customers",
@@ -798,8 +836,24 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "customers", "{{customer_id}}", "transactions"]
 						},
-						"description": "Create a transaction for the customer in the URL. JSON body must include required `name` (string, max 255)."
-					}
+						"description": "**Bearer required.** Create a transaction for the customer in the URL. Body must include `name` (string, max 255)."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const json = pm.response.json();",
+									"    if (json.data && json.data.id) {",
+									"        pm.collectionVariables.set('transaction_id', json.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
 				},
 				{
 					"name": "List Customer Transactions",
@@ -812,17 +866,23 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions?per_page=15",
+							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions?per_page=15&has_bill=1",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "customers", "{{customer_id}}", "transactions"],
 							"query": [
 								{
 									"key": "per_page",
 									"value": "15",
-									"description": "Optional: 1-100"
+									"description": "Optional. 1–100, default 15."
+								},
+								{
+									"key": "has_bill",
+									"value": "1",
+									"description": "Optional. `0`, `1`, `true`, or `false` — filter by whether the transaction has a bill."
 								}
 							]
-						}
+						},
+						"description": "**Bearer required.** Paginated transactions for `{{customer_id}}`. Optional `has_bill` filters by bill presence."
 					}
 				},
 				{
@@ -836,7 +896,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/bills?per_page=15&sort=-issued_at&include=transaction&filter[status]=paid&filter[issued_at][from]=2026-01-01&filter[issued_at][to]=2026-12-31",
+							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/bills?per_page=15&sort=-issued_at&include=transaction&filter[status]=paid&filter[invoice_number]=260500321&filter[issued_at][from]=2026-01-01&filter[issued_at][to]=2026-12-31",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "customers", "{{customer_id}}", "bills"],
 							"query": [
@@ -861,6 +921,11 @@
 									"description": "Optional. Comma-separated bill statuses: draft, issued, paid, cancelled."
 								},
 								{
+									"key": "filter[invoice_number]",
+									"value": "260500321",
+									"description": "Optional. Partial match against the bill invoice number, for example `INV-260500321`."
+								},
+								{
 									"key": "filter[issued_at][from]",
 									"value": "2026-01-01",
 									"description": "Optional. Pair with filter[issued_at][to]."
@@ -872,7 +937,7 @@
 								}
 							]
 						},
-						"description": "**Bearer required.** Bills for `{{customer_id}}` belonging to the authenticated user. Same optional query keys as **List bills (all)** but scoped to this customer."
+						"description": "**Bearer required.** Bills for `{{customer_id}}` belonging to the authenticated user. Same optional query keys as **List bills (all)**, including partial `filter[invoice_number]` search, but scoped to this customer."
 					}
 				},
 				{
@@ -963,8 +1028,24 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "transactions"]
 						},
-						"description": "Requires `customer_id` (UUID) and `name` (string, max 255)."
-					}
+						"description": "**Bearer required.** Requires `customer_id` (UUID) and `name` (string, max 255)."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const json = pm.response.json();",
+									"    if (json.data && json.data.id) {",
+									"        pm.collectionVariables.set('transaction_id', json.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
 				},
 				{
 					"name": "List Transactions",
@@ -977,17 +1058,23 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/transactions?per_page=15",
+							"raw": "{{base_url}}/api/v1/transactions?per_page=15&has_bill=0",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "transactions"],
 							"query": [
 								{
 									"key": "per_page",
 									"value": "15",
-									"description": "Optional: 1-100"
+									"description": "Optional. 1–100, default 15."
+								},
+								{
+									"key": "has_bill",
+									"value": "0",
+									"description": "Optional. `0`, `1`, `true`, or `false` — filter by whether the transaction has a bill."
 								}
 							]
-						}
+						},
+						"description": "**Bearer required.** Paginated transactions for the authenticated user. Optional `has_bill` filters by bill presence."
 					}
 				},
 				{
@@ -1031,7 +1118,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill"]
 						},
-						"description": "Create a bill for a transaction. Only one bill is allowed per transaction."
+						"description": "**Bearer required.** Create a bill for a transaction. Only one bill per transaction. Body: required `amount` (integer, min 1); optional `notes`, `due_at`. Response includes auto-generated `billNumber` and `invoiceNumber` (`INV-YYMM#####`, incremented per month)."
 					}
 				},
 				{
@@ -1048,7 +1135,8 @@
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bill",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill"]
-						}
+						},
+						"description": "**Bearer required.** Returns the bill for the transaction. Attributes include `billNumber`, `invoiceNumber`, `amount`, `status`, `notes`, `issuedAt`, `dueAt`, `paidAt`."
 					}
 				},
 				{
@@ -1074,7 +1162,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill"]
 						},
-						"description": "Allowed status transitions: draft->issued/cancelled, issued->paid/cancelled."
+						"description": "**Bearer required.** Partial update. Optional: `status` (`issued`, `paid`, `cancelled`), `amount`, `notes`, `due_at`. Status transitions: draft→issued/cancelled, issued→paid/cancelled. `billNumber` and `invoiceNumber` are read-only."
 					}
 				},
 				{
@@ -1122,8 +1210,25 @@
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/book",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "transactions", "{{transaction_id}}", "book"]
+						},
+						"description": "**Bearer required.** Create a booking. Required: `car_id`, `driver_id`, `price` (integer, min 0), `start_date`, `end_date` (≥ start_date). Optional: `note`."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const json = pm.response.json();",
+									"    if (json.data && json.data.id) {",
+									"        pm.collectionVariables.set('booking_id', json.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
 						}
-					}
+					]
 				},
 				{
 					"name": "List Bookings",

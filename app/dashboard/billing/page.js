@@ -205,6 +205,7 @@ function normalizeBills(payload, customerNameFallback = "", customerLookup = {})
 
     return {
       id: pick(["id"]),
+      invoiceNumber: String(pick(["invoice_number", "invoiceNumber"]) || ""),
       amount:
         typeof attrs?.amount === "number"
           ? attrs.amount
@@ -220,6 +221,19 @@ function normalizeBills(payload, customerNameFallback = "", customerLookup = {})
       customerName: customerName ? String(customerName) : "",
     };
   });
+}
+
+function buildBillsListParams({ page, invoiceNumber }) {
+  const params = {
+    per_page: String(BILLS_PER_PAGE),
+    page: String(page),
+    sort: "-issued_at",
+  };
+  const trimmed = String(invoiceNumber || "").trim();
+  if (trimmed) {
+    params["filter[invoice_number]"] = trimmed;
+  }
+  return params;
 }
 
 async function fetchBillsPayload(urlBase, baseParams) {
@@ -284,18 +298,14 @@ async function fetchTotalAmountForStatus(base, statusFilter) {
 
 function formatCurrency(amount) {
   if (typeof amount !== "number" || !Number.isFinite(amount)) return "—";
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(amount);
+  return `PHP ${Math.round(amount).toLocaleString("en-US")}`;
 }
 
 function formatDate(dateString) {
   if (!dateString) return "—";
   const parsed = new Date(dateString);
   if (Number.isNaN(parsed.getTime())) return String(dateString);
-  return parsed.toLocaleDateString("id-ID", {
+  return parsed.toLocaleDateString("en-US", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -336,6 +346,22 @@ export default function BillingReportPage() {
   const [unpaidAmountTotal, setUnpaidAmountTotal] = useState(0);
   const [paidAmountTotal, setPaidAmountTotal] = useState(0);
   const [amountsLoading, setAmountsLoading] = useState(true);
+
+  const [invoiceSearchInput, setInvoiceSearchInput] = useState("");
+  const [invoiceSearch, setInvoiceSearch] = useState("");
+
+  function submitInvoiceSearch(e) {
+    e.preventDefault();
+    const trimmed = invoiceSearchInput.trim();
+    setInvoiceSearch(trimmed);
+    setPage(1);
+  }
+
+  function clearInvoiceSearch() {
+    setInvoiceSearchInput("");
+    setInvoiceSearch("");
+    setPage(1);
+  }
 
   const customerNameFallback = useMemo(() => {
     if (!customerId) return "";
@@ -396,11 +422,10 @@ export default function BillingReportPage() {
     setBillsError("");
     try {
       const base = billsEndpoint(customerId);
-      const { res, data } = await fetchBillsPayload(base, {
-        per_page: String(BILLS_PER_PAGE),
-        page: String(page),
-        sort: "-issued_at",
-      });
+      const { res, data } = await fetchBillsPayload(
+        base,
+        buildBillsListParams({ page, invoiceNumber: invoiceSearch }),
+      );
 
       if (!res.ok) {
         setBillsError(data?.error || data?.message || "Failed to load bills.");
@@ -415,7 +440,7 @@ export default function BillingReportPage() {
     } finally {
       setBillsLoading(false);
     }
-  }, [customerId, page, customerNameFallback, customerLookup]);
+  }, [customerId, page, invoiceSearch, customerNameFallback, customerLookup]);
 
   useEffect(() => {
     fetchCustomers();
@@ -464,33 +489,71 @@ export default function BillingReportPage() {
       </div>
 
       <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
-        <label className={labelClass} htmlFor="billing-customer">
-          Filter by customer
-        </label>
-        <select
-          id="billing-customer"
-          className={inputClass}
-          value={customerId}
-          disabled={customersLoading}
-          onChange={(e) => {
-            setPage(1);
-            setCustomerId(e.target.value);
-          }}
-        >
-          <option value="">All customers</option>
-          {customers.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name || c.id}
-            </option>
-          ))}
-        </select>
-        <p className="mt-2 text-xs text-zinc-500">
-          Uses <code className="rounded bg-zinc-100 px-1">GET /api/v1/bills</code> for all customers,
-          or{" "}
-          <code className="rounded bg-zinc-100 px-1">
-            GET /api/v1/customers/:customer_id/bills
-          </code>{" "}
-          when a customer is selected (per your API collection).
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label className={labelClass} htmlFor="billing-customer">
+              Filter by customer
+            </label>
+            <select
+              id="billing-customer"
+              className={inputClass}
+              value={customerId}
+              disabled={customersLoading}
+              onChange={(e) => {
+                setPage(1);
+                setCustomerId(e.target.value);
+              }}
+            >
+              <option value="">All customers</option>
+              {customers.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name || c.id}
+                </option>
+              ))}
+            </select>
+          </div>
+          <form onSubmit={submitInvoiceSearch}>
+            <label className={labelClass} htmlFor="billing-invoice-search">
+              Search by invoice number
+            </label>
+            <p className="mt-0.5 text-xs text-zinc-500">
+              Partial match via <code className="rounded bg-zinc-100 px-1">filter[invoice_number]</code>{" "}
+              (e.g. <span className="font-mono">260500123</span> or{" "}
+              <span className="font-mono">INV-260500123</span>).
+            </p>
+            <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-start">
+              <input
+                id="billing-invoice-search"
+                type="search"
+                placeholder="260500123 or INV-260500123"
+                autoComplete="off"
+                value={invoiceSearchInput}
+                onChange={(e) => setInvoiceSearchInput(e.target.value)}
+                className={`${inputClass.replace(/^mt-1\s+/, "")} font-mono sm:min-w-0 sm:flex-1`}
+              />
+              <div className="flex shrink-0 gap-2">
+                <button
+                  type="submit"
+                  className="rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800"
+                >
+                  Search
+                </button>
+                <button
+                  type="button"
+                  disabled={!invoiceSearch && !invoiceSearchInput.trim()}
+                  onClick={clearInvoiceSearch}
+                  className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <p className="mt-3 text-xs text-zinc-500">
+          Bills load from <code className="rounded bg-zinc-100 px-1">GET /api/v1/bills</code> or{" "}
+          <code className="rounded bg-zinc-100 px-1">GET /api/v1/customers/:customer_id/bills</code>{" "}
+          when a customer is selected.
         </p>
       </div>
 
@@ -499,11 +562,15 @@ export default function BillingReportPage() {
           <div className="text-sm font-semibold text-zinc-900">All bills</div>
           <div className="mt-1 text-xs text-zinc-500">
             All statuses (draft, issued, paid, cancelled). Sorted by issue date (newest first).{" "}
-            {pagination.total > 0
-              ? `${pagination.total.toLocaleString()} record${pagination.total === 1 ? "" : "s"}`
-              : billsLoading
-                ? "Loading…"
-                : "No records"}
+            {billsLoading
+              ? "Loading…"
+              : invoiceSearch
+                ? pagination.total > 0
+                  ? `${pagination.total.toLocaleString()} match${pagination.total === 1 ? "" : "es"} for "${invoiceSearch}"`
+                  : `No matches for "${invoiceSearch}"`
+                : pagination.total > 0
+                  ? `${pagination.total.toLocaleString()} record${pagination.total === 1 ? "" : "s"}`
+                  : "No records"}
           </div>
         </div>
 
@@ -515,7 +582,7 @@ export default function BillingReportPage() {
           <table className="min-w-full text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-100 text-xs uppercase tracking-wide text-zinc-500">
-                <th className="px-4 py-3 font-medium">Bill</th>
+                <th className="px-4 py-3 font-medium">Invoice number</th>
                 <th className="px-4 py-3 font-medium">Customer</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Amount</th>
@@ -535,7 +602,9 @@ export default function BillingReportPage() {
               {!billsLoading && bills.length === 0 && !billsError && (
                 <tr>
                   <td colSpan={7} className="px-4 py-10 text-center text-sm text-zinc-500">
-                    No bills found.
+                    {invoiceSearch
+                      ? `No bills match "${invoiceSearch}". Try another invoice number.`
+                      : "No bills found."}
                   </td>
                 </tr>
               )}
@@ -543,7 +612,7 @@ export default function BillingReportPage() {
                 bills.map((row) => (
                   <tr key={row.id} className="border-b border-zinc-50 last:border-0">
                     <td className="max-w-[10rem] break-all px-4 py-3 font-mono text-xs text-zinc-700">
-                      {row.id ? String(row.id) : "—"}
+                      {row.invoiceNumber || "—"}
                     </td>
                     <td className="max-w-[12rem] px-4 py-3 text-zinc-800">
                       {row.customerName ? (
@@ -582,7 +651,7 @@ export default function BillingReportPage() {
           </table>
         </div>
 
-        {!billsLoading && pagination.lastPage > 1 && (
+        {!billsLoading && (
           <div className="flex flex-col items-stretch justify-between gap-3 border-t border-zinc-100 px-6 py-4 sm:flex-row sm:items-center">
             <p className="text-xs text-zinc-500">
               {formatBillRangeLabel(page, bills.length, pagination.total)}
