@@ -249,7 +249,9 @@ export default function BillingSection({
   const normalizedStatus = String(bill?.status ?? "").toLowerCase();
   const isDraftBill = normalizedStatus === "draft";
   const isIssuedBill = normalizedStatus === "issued";
+  const isPaidBill = normalizedStatus === "paid";
   const canEditDraft = Boolean(bill) && isDraftBill;
+  const canPrintInvoice = Boolean(bill) && (isIssuedBill || isPaidBill);
   const statusMeta = getStatusMeta(bill?.status);
 
   const resetFormState = (nextAmountInput = "") => {
@@ -663,6 +665,17 @@ export default function BillingSection({
           </div>
 
           <div className="mb-4 flex flex-wrap gap-2">
+              {canPrintInvoice ? (
+                <a
+                  href={`/invoice/${transactionId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
+                >
+                  Print Invoice
+                </a>
+              ) : null}
+
               {canEditDraft ? (
                 <button
                   type="button"

@@ -589,19 +589,20 @@ export default function BillingReportPage() {
                 <th className="px-4 py-3 font-medium">Issued</th>
                 <th className="px-4 py-3 font-medium">Paid</th>
                 <th className="px-4 py-3 font-medium">Transaction</th>
+                <th className="px-4 py-3 font-medium"></th>
               </tr>
             </thead>
             <tbody>
               {billsLoading && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-zinc-500">
+                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-zinc-500">
                     Loading bills…
                   </td>
                 </tr>
               )}
               {!billsLoading && bills.length === 0 && !billsError && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-zinc-500">
+                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-zinc-500">
                     {invoiceSearch
                       ? `No bills match "${invoiceSearch}". Try another invoice number.`
                       : "No bills found."}
@@ -644,6 +645,18 @@ export default function BillingReportPage() {
                       ) : (
                         <span className="text-zinc-400">—</span>
                       )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {row.transactionId && (row.status === "issued" || row.status === "paid") ? (
+                        <a
+                          href={`/invoice/${encodeURIComponent(row.transactionId)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="whitespace-nowrap rounded-lg border border-zinc-300 bg-white px-3 py-1 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50"
+                        >
+                          Print
+                        </a>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
