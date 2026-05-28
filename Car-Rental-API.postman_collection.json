@@ -1140,6 +1140,52 @@
 					}
 				},
 				{
+					"name": "Get Invoice (Printable payload)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bill/invoice",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill", "invoice"]
+						},
+						"description": "**Bearer required.** Returns an invoice-shaped payload for the transaction bill including `transaction`, optional `customer`, and `bookings` with embedded `car` and `driver` data."
+					},
+					"response": [
+						{
+							"name": "200 OK (example)",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bill/invoice",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill", "invoice"]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n  \"invoiceNumber\": \"INV-20260527-0001\",\n  \"billNumber\": \"INV-20260527-0001\",\n  \"status\": \"issued\",\n  \"issuedAt\": \"2026-05-27T06:00:00+00:00\",\n  \"dueAt\": \"2026-06-03T00:00:00+00:00\",\n  \"paidAt\": null,\n  \"amount\": 1500000,\n  \"notes\": \"Initial invoice\",\n  \"transaction\": {\n    \"name\": \"Corporate fleet deal\"\n  },\n  \"customer\": {\n    \"name\": \"Jane Smith\",\n    \"type\": \"business\"\n  },\n  \"bookings\": [\n    {\n      \"startDate\": \"2026-03-10 00:00:00\",\n      \"endDate\": \"2026-03-15 00:00:00\",\n      \"price\": 500000,\n      \"note\": \"Customer requested specific car\",\n      \"car\": {\n        \"make\": \"Toyota\",\n        \"model\": \"Camry\",\n        \"plateNumber\": \"ABC-1234\"\n      },\n      \"driver\": {\n        \"firstName\": \"John\",\n        \"lastName\": \"Doe\"\n      }\n    }\n  ]\n}"
+						}
+					]
+				},
+				{
 					"name": "Update Bill",
 					"request": {
 						"method": "PATCH",
