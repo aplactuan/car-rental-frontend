@@ -64,6 +64,41 @@ function combineDateAndTime(date, time, fallbackTime) {
   return `${date}T${resolvedTime}`;
 }
 
+function formatDatePart(value) {
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
+}
+
+function getDefaultBookingSchedule(bookings) {
+  const latestBooking = [...(bookings ?? [])]
+    .filter(Boolean)
+    .sort((a, b) => {
+      const left = new Date(b?.apiEnd || b?.endDate || b?.endTime || b?.apiStart || b?.startDate || b?.startTime || 0).getTime();
+      const right = new Date(a?.apiEnd || a?.endDate || a?.endTime || a?.apiStart || a?.startDate || a?.startTime || 0).getTime();
+      return left - right;
+    })[0];
+
+  const latestStart = toDatetimeLocalValue(
+    latestBooking?.apiStart || latestBooking?.startDate || latestBooking?.startTime,
+  );
+  const latestEnd = toDatetimeLocalValue(
+    latestBooking?.apiEnd || latestBooking?.endDate || latestBooking?.endTime,
+  );
+
+  if (latestStart && latestEnd) {
+    return { startTime: latestStart, endTime: latestEnd };
+  }
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const date = formatDatePart(tomorrow);
+
+  return {
+    startTime: `${date}T08:00`,
+    endTime: `${date}T17:00`,
+  };
+}
+
 function formatScheduleLabel(value) {
   if (!value) return "—";
   const parsed = new Date(value);
@@ -319,6 +354,9 @@ export default function BookingListSection({
   const beginAdd = () => {
     setEditingId(null);
     resetFormFields();
+    const defaults = getDefaultBookingSchedule(bookingsRef.current);
+    setStartTime(defaults.startTime);
+    setEndTime(defaults.endTime);
     setShowForm(true);
   };
 
