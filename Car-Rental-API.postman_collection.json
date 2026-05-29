@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "car-rental-api-collection",
 		"name": "Car Rental API",
-		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | **Not used** — public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` (register) | **Not used** — public, but the server may return **403** if registration is disabled (`allow_user_registration`). |\n| `GET /api/user`, `POST /api/logout` | **Required** — Sanctum. |\n| All other `/api/v1/...` routes | **Required** — same Bearer token as above. |\n\nThis collection sets **Bearer Token** auth at the collection level (`{{token}}`). Requests that must be public override auth to **No Auth** (Login, Register User).\n\n## Setup\n1. Set `base_url` (default: `http://localhost` — add port if needed, e.g. `http://localhost:8000`).\n2. Run **Login**; token is stored automatically.\n3. Fill path variables from responses: `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id`, `car_import_id`, `driver_import_id` (UUIDs).\n\n## Optional query keys (frontend reference)\nMany `GET` endpoints accept optional keys documented on each request: pagination (`per_page`), nested `filter[...]`, `sort`, `include`, date ranges, etc. If a key is omitted, the API uses defaults described on that request.\n\n**User registration:** `POST /api/v1/users` needs `name`, `email`, `password`, `password_confirmation` — no Bearer; may still fail with 403 when registration is off.\n\n**CSV imports:** `multipart/form-data` with field `file`; then poll import status by ID. Sample car CSV: `samples/cars-import.csv`. Columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number` (`door` and `seats` are integers).\n\n**Transactions:** create/update bodies require `name` (max 255) where applicable. Optional `has_bill` query (`0`, `1`, `true`, `false`) on list transaction endpoints filters by whether a bill exists. Bookings list: newest first (`created_at`, then `start_date`).\n\n**Bills:** `billNumber` and `invoiceNumber` are assigned automatically on create (format `INV-YYMM#####` per month). Do not send them in the request body.",
+		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | **Not used** — public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` (register) | **Not used** — public, but the server may return **403** if registration is disabled (`allow_user_registration`). |\n| `GET /api/user`, `POST /api/logout` | **Required** — Sanctum. |\n| All other `/api/v1/...` routes | **Required** — same Bearer token as above. |\n\nThis collection sets **Bearer Token** auth at the collection level (`{{token}}`). Requests that must be public override auth to **No Auth** (Login, Register User).\n\n## Setup\n1. Set `base_url` (default: `http://localhost` — add port if needed, e.g. `http://localhost:8000`).\n2. Run **Login**; token is stored automatically.\n3. Fill path variables from responses: `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id`, `car_import_id`, `driver_import_id` (UUIDs).\n\n## Optional query keys (frontend reference)\nMany `GET` endpoints accept optional keys documented on each request: pagination (`per_page`), nested `filter[...]`, `sort`, `include`, date ranges, etc. If a key is omitted, the API uses defaults described on that request.\n\n**User registration:** `POST /api/v1/users` needs `name`, `email`, `password`, `password_confirmation` — no Bearer; may still fail with 403 when registration is off.\n\n**CSV imports:** `multipart/form-data` with field `file`; then poll import status by ID. Sample car CSV: `samples/cars-import.csv`. Columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number` (`door` and `seats` are integers).\n\n**Transactions:** create/update bodies require `name` (max 255) where applicable. Optional `has_bill` query (`0`, `1`, `true`, `false`) on list transaction endpoints filters by whether a bill exists. **Bookings:** `GET /api/v1/bookings` lists all bookings for the authenticated user (paginated, optional `status`: `completed`, `today`, `ongoing`, `incoming`). Per-transaction `GET .../bookings` uses `status` (`upcoming`/`previous`), `period`, `car_id`, `driver_id`; newest first (`created_at`, then `start_date`).\n\n**Bills:** `billNumber` and `invoiceNumber` are assigned automatically on create (format `INV-YYMM#####` per month). Do not send them in the request body.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -1234,6 +1234,152 @@
 		{
 			"name": "Bookings",
 			"item": [
+				{
+					"name": "List All Bookings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/bookings?per_page=15&status=incoming",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "bookings"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Optional. 1–100, default 15."
+								},
+								{
+									"key": "status",
+									"value": "incoming",
+									"description": "Optional: completed, today, ongoing, or incoming"
+								}
+							]
+						},
+						"description": "**Bearer required.** Paginated bookings across all of the authenticated user's transactions. Ordered by `start_date` descending. Optional `status`: `completed` (end_date < now), `today` (start_date is today), `ongoing` (start_date <= now and end_date >= now), `incoming` (start_date > now)."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const json = pm.response.json();",
+									"    if (json.data && json.data.length > 0 && json.data[0].id) {",
+									"        pm.collectionVariables.set('booking_id', json.data[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "List Completed Bookings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/bookings?status=completed",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "bookings"],
+							"query": [
+								{
+									"key": "status",
+									"value": "completed",
+									"description": "Bookings where end_date is before now"
+								}
+							]
+						},
+						"description": "**Bearer required.** Bookings that have ended (end_date < now)."
+					}
+				},
+				{
+					"name": "List Today Bookings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/bookings?status=today",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "bookings"],
+							"query": [
+								{
+									"key": "status",
+									"value": "today",
+									"description": "Bookings whose start_date falls on today"
+								}
+							]
+						},
+						"description": "**Bearer required.** Bookings scheduled to start today."
+					}
+				},
+				{
+					"name": "List Ongoing Bookings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/bookings?status=ongoing",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "bookings"],
+							"query": [
+								{
+									"key": "status",
+									"value": "ongoing",
+									"description": "Bookings in progress (start_date <= now and end_date >= now)"
+								}
+							]
+						},
+						"description": "**Bearer required.** Bookings currently in progress."
+					}
+				},
+				{
+					"name": "List Incoming Bookings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/bookings?status=incoming",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "bookings"],
+							"query": [
+								{
+									"key": "status",
+									"value": "incoming",
+									"description": "Bookings that have not started yet (start_date > now)"
+								}
+							]
+						},
+						"description": "**Bearer required.** Upcoming bookings that have not started yet."
+					}
+				},
 				{
 					"name": "Add Booking",
 					"request": {
