@@ -11,11 +11,31 @@ const getBearerHeaders = () => {
 const normalizeBill = (payload) => {
   const source = payload?.data ?? payload ?? {};
   const attributes = source?.attributes ?? source;
+  const toNumber = (value) => {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (value === null || value === undefined || value === "") return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
 
   return {
     id: source?.id ?? attributes?.id ?? null,
-    amount: attributes?.amount ?? null,
+    amount: toNumber(attributes?.amount),
+    amountPaid: toNumber(
+      attributes?.amountPaid ??
+        attributes?.amount_paid ??
+        attributes?.paidAmount ??
+        attributes?.paid_amount,
+    ),
+    remainingBalance: toNumber(
+      attributes?.remainingBalance ??
+        attributes?.remaining_balance ??
+        attributes?.balance ??
+        attributes?.amountDue ??
+        attributes?.amount_due,
+    ),
     dueAt: attributes?.dueAt ?? attributes?.due_at ?? null,
+    paidAt: attributes?.paidAt ?? attributes?.paid_at ?? null,
     notes: attributes?.notes ?? "",
     status: attributes?.status ?? null,
     createdAt: attributes?.createdAt ?? attributes?.created_at ?? null,
@@ -78,6 +98,13 @@ const getStatusMeta = (rawStatus) => {
     };
   }
 
+  if (status === "partially_paid") {
+    return {
+      label: "Partially paid",
+      className: "bg-indigo-100 text-indigo-700 border-indigo-200",
+    };
+  }
+
   if (status === "cancelled") {
     return {
       label: "Cancelled",
@@ -89,6 +116,49 @@ const getStatusMeta = (rawStatus) => {
     label: rawStatus ? String(rawStatus) : "Unknown",
     className: "bg-zinc-100 text-zinc-700 border-zinc-200",
   };
+};
+
+const PAYMENT_METHOD_OPTIONS = [
+  { value: "bank_transfer", label: "Bank transfer" },
+  { value: "cash", label: "Cash" },
+  { value: "gcash", label: "GCash" },
+];
+
+const MAX_PROOF_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+const ALLOWED_PROOF_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+]);
+
+const normalizePayment = (record) => {
+  const source = record?.data ?? record ?? {};
+  const attrs = source?.attributes ?? source;
+  const amountRaw = attrs?.amount;
+  const amount =
+    typeof amountRaw === "number"
+      ? amountRaw
+      : amountRaw != null
+        ? Number(amountRaw)
+        : null;
+
+  return {
+    id: source?.id ?? attrs?.id ?? null,
+    amount: Number.isFinite(amount) ? amount : null,
+    method: attrs?.method ?? "",
+    referenceNumber: attrs?.referenceNumber ?? attrs?.reference_number ?? "",
+    notes: attrs?.notes ?? "",
+    proofImageUrl: attrs?.proofImageUrl ?? attrs?.proof_image_url ?? "",
+    paidAt: attrs?.paidAt ?? attrs?.paid_at ?? null,
+    createdAt: attrs?.createdAt ?? attrs?.created_at ?? null,
+  };
+};
+
+const normalizePayments = (payload) => {
+  const raw = payload?.data ?? payload;
+  const list = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+  return list.map((item) => normalizePayment(item)).filter((item) => item.id);
 };
 
 const getBookingPrice = (booking) => {
@@ -183,6 +253,16 @@ export default function BillingSection({
   const [dueAtInput, setDueAtInput] = useState("");
   const [notesInput, setNotesInput] = useState("");
   const [actionError, setActionError] = useState("");
+  const [payments, setPayments] = useState([]);
+  const [isLoadingPayments, setIsLoadingPayments] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+  const [deletingPaymentId, setDeletingPaymentId] = useState(null);
+  const [paymentAmountInput, setPaymentAmountInput] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("bank_transfer");
+  const [paymentReferenceInput, setPaymentReferenceInput] = useState("");
+  const [paymentNotesInput, setPaymentNotesInput] = useState("");
+  const [paymentProofFile, setPaymentProofFile] = useState(null);
   const [bookingsForTotal, setBookingsForTotal] = useState(() =>
     Array.isArray(bookings) ? bookings : [],
   );
@@ -244,15 +324,41 @@ export default function BillingSection({
     () => sumBookingPrices(bookingsForTotal),
     [bookingsForTotal],
   );
-  const defaultAmountInput = totalToAmountInput(defaultBillAmount);
 
   const normalizedStatus = String(bill?.status ?? "").toLowerCase();
   const isDraftBill = normalizedStatus === "draft";
   const isIssuedBill = normalizedStatus === "issued";
+  const isPartiallyPaidBill = normalizedStatus === "partially_paid";
   const isPaidBill = normalizedStatus === "paid";
   const canEditDraft = Boolean(bill) && isDraftBill;
-  const canPrintInvoice = Boolean(bill) && (isIssuedBill || isPaidBill);
+  const canRecordPayment = Boolean(bill) && (isIssuedBill || isPartiallyPaidBill);
+  const canPrintInvoice =
+    Boolean(bill) && (isIssuedBill || isPartiallyPaidBill || isPaidBill);
   const statusMeta = getStatusMeta(bill?.status);
+
+  const totalPaidAmount = useMemo(() => {
+    if (typeof bill?.amountPaid === "number" && Number.isFinite(bill.amountPaid)) {
+      return bill.amountPaid;
+    }
+    return payments.reduce((sum, item) => {
+      const next = Number(item?.amount);
+      return sum + (Number.isFinite(next) ? next : 0);
+    }, 0);
+  }, [bill?.amountPaid, payments]);
+
+  const remainingBalance = useMemo(() => {
+    if (
+      typeof bill?.remainingBalance === "number" &&
+      Number.isFinite(bill.remainingBalance)
+    ) {
+      return Math.max(0, bill.remainingBalance);
+    }
+
+    if (typeof bill?.amount === "number" && Number.isFinite(bill.amount)) {
+      return Math.max(0, bill.amount - totalPaidAmount);
+    }
+    return 0;
+  }, [bill?.amount, bill?.remainingBalance, totalPaidAmount]);
 
   const resetFormState = (nextAmountInput = "") => {
     setFormError("");
@@ -260,6 +366,15 @@ export default function BillingSection({
     setDueAtInput("");
     setNotesInput("");
     setActionError("");
+  };
+
+  const resetPaymentForm = (nextAmount = "") => {
+    setPaymentAmountInput(nextAmount);
+    setPaymentMethod("bank_transfer");
+    setPaymentReferenceInput("");
+    setPaymentNotesInput("");
+    setPaymentProofFile(null);
+    setPaymentError("");
   };
 
   const syncFormFromBill = (nextBill) => {
@@ -278,54 +393,138 @@ export default function BillingSection({
     setNotesInput(nextBill?.notes ? String(nextBill.notes) : "");
   };
 
-  useEffect(() => {
+  const syncPaymentAmountFromBill = useCallback(
+    (nextBill) => {
+      const amountTotal =
+        typeof nextBill?.amount === "number" && Number.isFinite(nextBill.amount)
+          ? nextBill.amount
+          : null;
+      const paidAmount =
+        typeof nextBill?.amountPaid === "number" && Number.isFinite(nextBill.amountPaid)
+          ? nextBill.amountPaid
+          : null;
+      const explicitRemaining =
+        typeof nextBill?.remainingBalance === "number" &&
+        Number.isFinite(nextBill.remainingBalance)
+          ? nextBill.remainingBalance
+          : null;
+
+      const fallbackRemaining =
+        amountTotal != null && paidAmount != null ? amountTotal - paidAmount : null;
+      const computedRemaining =
+        explicitRemaining != null ? explicitRemaining : fallbackRemaining;
+
+      const normalizedRemaining =
+        computedRemaining != null && Number.isFinite(computedRemaining)
+          ? Math.max(0, Math.round(computedRemaining))
+          : 0;
+
+      setPaymentAmountInput(normalizedRemaining > 0 ? String(normalizedRemaining) : "");
+    },
+    [setPaymentAmountInput],
+  );
+
+  const fetchBill = useCallback(
+    async (signal) => {
+      if (!transactionId) return { bill: null, notFound: false };
+
+      const response = await fetch(`/api/v1/transactions/${transactionId}/bill`, {
+        method: "GET",
+        headers: getBearerHeaders(),
+        credentials: "include",
+        signal,
+      });
+
+      if (response.status === 404) {
+        return { bill: null, notFound: true };
+      }
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const message = data?.error ?? data?.message ?? "Failed to load bill.";
+        throw new Error(message);
+      }
+
+      return { bill: normalizeBill(data), notFound: false };
+    },
+    [transactionId],
+  );
+
+  const fetchPayments = useCallback(async () => {
+    if (!transactionId) {
+      setPayments([]);
+      return [];
+    }
+
+    setIsLoadingPayments(true);
+    setPaymentError("");
+    try {
+      const response = await fetch(`/api/v1/transactions/${transactionId}/bill/payments`, {
+        method: "GET",
+        headers: getBearerHeaders(),
+        credentials: "include",
+      });
+
+      if (response.status === 404) {
+        setPayments([]);
+        return [];
+      }
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setPaymentError(data?.error ?? data?.message ?? "Failed to load payments.");
+        setPayments([]);
+        return [];
+      }
+
+      const normalized = normalizePayments(data);
+      setPayments(normalized);
+      return normalized;
+    } catch {
+      setPaymentError("Network error while loading payments.");
+      setPayments([]);
+      return [];
+    } finally {
+      setIsLoadingPayments(false);
+    }
+  }, [transactionId]);
+
+  const refreshBillingData = useCallback(async () => {
     if (!transactionId) {
       setIsLoading(false);
       setError("Transaction ID is missing.");
-      return;
+      setBill(null);
+      setPayments([]);
+      return null;
     }
 
-    const controller = new AbortController();
+    setIsLoading(true);
+    setError("");
 
-    const fetchBill = async () => {
-      setIsLoading(true);
-      setError("");
-
-      try {
-        const response = await fetch(`/api/v1/transactions/${transactionId}/bill`, {
-          method: "GET",
-          headers: getBearerHeaders(),
-          credentials: "include",
-          signal: controller.signal,
-        });
-
-        if (response.status === 404) {
-          setBill(null);
-          return;
-        }
-
-        const data = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-          setError(data?.error ?? data?.message ?? "Failed to load bill.");
-          return;
-        }
-
-        const normalizedBill = normalizeBill(data);
-        setBill(normalizedBill);
-        syncFormFromBill(normalizedBill);
-      } catch (requestError) {
-        if (requestError?.name === "AbortError") return;
-        setError("Network error. Please try again.");
-      } finally {
-        setIsLoading(false);
+    try {
+      const billResult = await fetchBill();
+      if (billResult.notFound || !billResult.bill) {
+        setBill(null);
+        setPayments([]);
+        return null;
       }
-    };
 
-    fetchBill();
+      setBill(billResult.bill);
+      syncFormFromBill(billResult.bill);
+      syncPaymentAmountFromBill(billResult.bill);
+      await fetchPayments();
+      return billResult.bill;
+    } catch (requestError) {
+      setError(requestError?.message || "Network error. Please try again.");
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchBill, fetchPayments, syncPaymentAmountFromBill, transactionId]);
 
-    return () => controller.abort();
-  }, [transactionId]);
+  useEffect(() => {
+    refreshBillingData();
+  }, [refreshBillingData]);
 
   const handleCreateToggle = async () => {
     if (showCreateForm) {
@@ -411,6 +610,8 @@ export default function BillingSection({
       const normalizedBill = normalizeBill(data);
       setBill(normalizedBill);
       syncFormFromBill(normalizedBill);
+      syncPaymentAmountFromBill(normalizedBill);
+      setPayments([]);
       setShowCreateForm(false);
       setError("");
     } catch {
@@ -453,6 +654,7 @@ export default function BillingSection({
       const normalizedBill = normalizeBill(data);
       setBill(normalizedBill);
       syncFormFromBill(normalizedBill);
+      syncPaymentAmountFromBill(normalizedBill);
       setIsEditing(false);
       setError("");
     } catch {
@@ -491,6 +693,16 @@ export default function BillingSection({
       const normalizedBill = normalizeBill(data);
       setBill(normalizedBill);
       syncFormFromBill(normalizedBill);
+      syncPaymentAmountFromBill(normalizedBill);
+      if (
+        String(normalizedBill?.status ?? "").toLowerCase() === "issued" ||
+        String(normalizedBill?.status ?? "").toLowerCase() === "partially_paid" ||
+        String(normalizedBill?.status ?? "").toLowerCase() === "paid"
+      ) {
+        await fetchPayments();
+      } else {
+        setPayments([]);
+      }
       setIsEditing(false);
       setError("");
     } catch {
@@ -521,14 +733,127 @@ export default function BillingSection({
       }
 
       setBill(null);
+      setPayments([]);
       setIsEditing(false);
       setShowCreateForm(false);
       resetFormState();
+      resetPaymentForm();
       setError("");
     } catch {
       setActionError("Network error. Please try again.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const buildPaymentPayload = () => {
+    const amountRaw = paymentAmountInput.trim();
+    const amount = Number(amountRaw);
+    const referenceNumber = paymentReferenceInput.trim();
+    const notes = paymentNotesInput.trim();
+
+    if (!amountRaw) return { error: "Payment amount is required." };
+    if (!Number.isInteger(amount) || amount <= 0) {
+      return { error: "Payment amount must be a positive whole number." };
+    }
+    if (amount > remainingBalance) {
+      return {
+        error: `Payment amount cannot exceed remaining balance (${formatCurrency(remainingBalance)}).`,
+      };
+    }
+    if (!paymentMethod) return { error: "Payment method is required." };
+    if (!referenceNumber) return { error: "Reference number is required." };
+
+    if (!paymentProofFile) return { error: "Proof image is required." };
+    if (!ALLOWED_PROOF_IMAGE_TYPES.has(paymentProofFile.type)) {
+      return {
+        error: "Proof image must be a JPG, PNG, or WEBP file.",
+      };
+    }
+    if (paymentProofFile.size > MAX_PROOF_IMAGE_SIZE_BYTES) {
+      return { error: "Proof image must not exceed 10 MB." };
+    }
+
+    const payload = new FormData();
+    payload.set("amount", String(amount));
+    payload.set("method", paymentMethod);
+    payload.set("reference_number", referenceNumber);
+    payload.set("proof_image", paymentProofFile);
+    if (notes) payload.set("notes", notes);
+    return { payload };
+  };
+
+  const handlePaymentSubmit = async (event) => {
+    event.preventDefault();
+    if (!transactionId || !canRecordPayment || isSubmittingPayment) return;
+
+    const { payload, error: payloadError } = buildPaymentPayload();
+    if (payloadError) {
+      setPaymentError(payloadError);
+      return;
+    }
+
+    setPaymentError("");
+    setActionError("");
+    setIsSubmittingPayment(true);
+    try {
+      const response = await fetch(`/api/v1/transactions/${transactionId}/bill/payments`, {
+        method: "POST",
+        headers: getBearerHeaders(),
+        credentials: "include",
+        body: payload,
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setPaymentError(data?.error ?? data?.message ?? "Failed to record payment.");
+        return;
+      }
+
+      const refreshedBill = await refreshBillingData();
+      syncPaymentAmountFromBill(refreshedBill);
+      setPaymentMethod("bank_transfer");
+      setPaymentReferenceInput("");
+      setPaymentNotesInput("");
+      setPaymentProofFile(null);
+    } catch {
+      setPaymentError("Network error while submitting payment.");
+    } finally {
+      setIsSubmittingPayment(false);
+    }
+  };
+
+  const handleDeletePayment = async (paymentId) => {
+    if (!transactionId || !paymentId || deletingPaymentId) return;
+    if (!window.confirm("Delete this payment record?")) return;
+
+    setPaymentError("");
+    setActionError("");
+    setDeletingPaymentId(paymentId);
+    try {
+      const response = await fetch(
+        `/api/v1/transactions/${transactionId}/bill/payments/${paymentId}`,
+        {
+          method: "DELETE",
+          headers: getBearerHeaders(),
+          credentials: "include",
+        },
+      );
+      let data = {};
+      if (response.status !== 204) {
+        data = await response.json().catch(() => ({}));
+      }
+
+      if (!response.ok) {
+        setPaymentError(data?.error ?? data?.message ?? "Failed to delete payment.");
+        return;
+      }
+
+      await refreshBillingData();
+    } catch {
+      setPaymentError("Network error while deleting payment.");
+    } finally {
+      setDeletingPaymentId(null);
     }
   };
 
@@ -659,6 +984,10 @@ export default function BillingSection({
             <p className="text-2xl font-bold tracking-tight text-zinc-900">
               {formatCurrency(bill.amount)}
             </p>
+            <div className="space-y-1 text-sm text-zinc-600">
+              <p>Paid: {formatCurrency(totalPaidAmount)}</p>
+              <p>Remaining: {formatCurrency(remainingBalance)}</p>
+            </div>
             <p className="text-sm text-zinc-600">
               Due {formatDate(bill.dueAt)}
             </p>
@@ -723,18 +1052,8 @@ export default function BillingSection({
                 </>
               ) : null}
 
-              {isIssuedBill ? (
+              {(isIssuedBill || isPartiallyPaidBill) ? (
                 <>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleStatusChange("paid", "Mark this issued bill as paid?")
-                    }
-                    disabled={isSubmitting}
-                    className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Mark paid
-                  </button>
                   <button
                     type="button"
                     onClick={() =>
@@ -751,6 +1070,164 @@ export default function BillingSection({
                 </>
               ) : null}
           </div>
+
+          {canRecordPayment ? (
+            <form
+              onSubmit={handlePaymentSubmit}
+              className="mb-4 rounded-2xl border border-zinc-200 bg-zinc-50/40 p-5"
+            >
+              <h3 className="text-sm font-semibold text-zinc-900">Record payment</h3>
+              <p className="mt-1 text-xs text-zinc-500">
+                Add an installment payment. Bill status updates automatically based on
+                total payments.
+              </p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Amount
+                  </span>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={paymentAmountInput}
+                    onChange={(event) => setPaymentAmountInput(event.target.value)}
+                    disabled={isSubmittingPayment || isSubmitting}
+                    required
+                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                  />
+                  <p className="mt-1 text-xs text-zinc-500">
+                    Max: {formatCurrency(remainingBalance)}
+                  </p>
+                </label>
+                <label className="block">
+                  <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Method
+                  </span>
+                  <select
+                    value={paymentMethod}
+                    onChange={(event) => setPaymentMethod(event.target.value)}
+                    disabled={isSubmittingPayment || isSubmitting}
+                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                  >
+                    {PAYMENT_METHOD_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Reference number
+                  </span>
+                  <input
+                    type="text"
+                    value={paymentReferenceInput}
+                    onChange={(event) => setPaymentReferenceInput(event.target.value)}
+                    disabled={isSubmittingPayment || isSubmitting}
+                    required
+                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Proof image
+                  </span>
+                  <input
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                    onChange={(event) =>
+                      setPaymentProofFile(event.target.files?.[0] ?? null)
+                    }
+                    disabled={isSubmittingPayment || isSubmitting}
+                    required
+                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                  />
+                </label>
+              </div>
+              <label className="mt-4 block">
+                <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  Notes
+                </span>
+                <textarea
+                  value={paymentNotesInput}
+                  onChange={(event) => setPaymentNotesInput(event.target.value)}
+                  disabled={isSubmittingPayment || isSubmitting}
+                  rows={3}
+                  className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                />
+              </label>
+              {paymentError ? (
+                <p className="mt-3 text-sm text-red-600">{paymentError}</p>
+              ) : null}
+              <div className="mt-4 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isSubmittingPayment || isSubmitting || remainingBalance <= 0}
+                  className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSubmittingPayment ? "Saving payment..." : "Save payment"}
+                </button>
+              </div>
+            </form>
+          ) : null}
+
+          {bill ? (
+            <div className="mb-4 rounded-xl border border-zinc-200 bg-white">
+              <div className="border-b border-zinc-100 px-4 py-3">
+                <h3 className="text-sm font-semibold text-zinc-900">Payment history</h3>
+              </div>
+              {isLoadingPayments ? (
+                <p className="px-4 py-4 text-sm text-zinc-500">Loading payments...</p>
+              ) : payments.length === 0 ? (
+                <p className="px-4 py-4 text-sm text-zinc-500">
+                  No recorded payments yet.
+                </p>
+              ) : (
+                <div className="divide-y divide-zinc-100">
+                  {payments.map((payment) => (
+                    <div
+                      key={payment.id}
+                      className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold text-zinc-900">
+                          {formatCurrency(payment.amount)} •{" "}
+                          {String(payment.method || "").replaceAll("_", " ") || "—"}
+                        </p>
+                        <p className="text-xs text-zinc-600">
+                          Ref: {payment.referenceNumber || "—"} • Paid{" "}
+                          {formatDateTime(payment.paidAt || payment.createdAt)}
+                        </p>
+                        {payment.notes ? (
+                          <p className="text-xs text-zinc-600">{payment.notes}</p>
+                        ) : null}
+                        {payment.proofImageUrl ? (
+                          <a
+                            href={payment.proofImageUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex text-xs font-semibold text-blue-700 hover:underline"
+                          >
+                            View proof image
+                          </a>
+                        ) : null}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePayment(payment.id)}
+                        disabled={Boolean(deletingPaymentId) || isSubmittingPayment}
+                        className="w-fit rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {deletingPaymentId === payment.id ? "Deleting..." : "Delete"}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : null}
 
           {isEditing ? (
             <form
@@ -842,6 +1319,9 @@ export default function BillingSection({
           ) : null}
           {actionError ? (
             <p className="mt-3 text-sm text-red-600">{actionError}</p>
+          ) : null}
+          {paymentError && !canRecordPayment ? (
+            <p className="mt-3 text-sm text-red-600">{paymentError}</p>
           ) : null}
           {!canEditDraft ? (
             <p className="mt-3 text-sm text-zinc-500">

@@ -29,8 +29,30 @@ const formatDate = (dateString) => {
 const STATUS_STYLES = {
   draft: "bg-zinc-100 text-zinc-700 border-zinc-300",
   issued: "bg-blue-100 text-blue-700 border-blue-300",
+  partially_paid: "bg-indigo-100 text-indigo-700 border-indigo-300",
   paid: "bg-emerald-100 text-emerald-700 border-emerald-300",
   cancelled: "bg-amber-100 text-amber-700 border-amber-300",
+};
+
+const normalizePayment = (record) => {
+  const source = record?.data ?? record ?? {};
+  const attrs = source?.attributes ?? source;
+  const parsedAmount = Number(attrs?.amount);
+  return {
+    id: source?.id ?? attrs?.id ?? null,
+    amount: Number.isFinite(parsedAmount) ? parsedAmount : null,
+    method: attrs?.method ?? "",
+    referenceNumber: attrs?.referenceNumber ?? attrs?.reference_number ?? "",
+    notes: attrs?.notes ?? "",
+    proofImageUrl: attrs?.proofImageUrl ?? attrs?.proof_image_url ?? "",
+    paidAt: attrs?.paidAt ?? attrs?.paid_at ?? attrs?.createdAt ?? attrs?.created_at ?? null,
+  };
+};
+
+const normalizePayments = (payload) => {
+  const raw = payload?.data ?? payload;
+  const list = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+  return list.map((item) => normalizePayment(item)).filter((item) => item.id);
 };
 
 export default function InvoicePrintPage() {
@@ -38,6 +60,7 @@ export default function InvoicePrintPage() {
   const transactionId = params?.transaction_id;
 
   const [invoice, setInvoice] = useState(null);
+  const [payments, setPayments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -48,20 +71,33 @@ export default function InvoicePrintPage() {
       setIsLoading(true);
       setError("");
       try {
-        const res = await fetch(
-          `/api/v1/transactions/${transactionId}/bill/invoice`,
-          {
-            headers: getBearerHeaders(),
+        const headers = getBearerHeaders();
+        const [invoiceRes, paymentsRes] = await Promise.all([
+          fetch(`/api/v1/transactions/${transactionId}/bill/invoice`, {
+            headers,
             credentials: "include",
             cache: "no-store",
-          },
-        );
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          setError(data?.error ?? data?.message ?? "Failed to load invoice.");
+          }),
+          fetch(`/api/v1/transactions/${transactionId}/bill/payments`, {
+            headers,
+            credentials: "include",
+            cache: "no-store",
+          }),
+        ]);
+
+        const invoiceData = await invoiceRes.json().catch(() => ({}));
+        if (!invoiceRes.ok) {
+          setError(invoiceData?.error ?? invoiceData?.message ?? "Failed to load invoice.");
           return;
         }
-        setInvoice(data);
+        setInvoice(invoiceData);
+
+        if (paymentsRes.ok) {
+          const paymentsData = await paymentsRes.json().catch(() => ({}));
+          setPayments(normalizePayments(paymentsData));
+        } else {
+          setPayments([]);
+        }
       } catch {
         setError("Network error. Please try again.");
       } finally {
@@ -79,6 +115,14 @@ export default function InvoicePrintPage() {
     const n = Number(b?.price ?? 0);
     return sum + (Number.isFinite(n) ? n : 0);
   }, 0);
+  const totalPaid = payments.reduce((sum, payment) => {
+    const amount = Number(payment?.amount);
+    return sum + (Number.isFinite(amount) ? amount : 0);
+  }, 0);
+  const remainingAmount =
+    typeof invoice?.amount === "number" && Number.isFinite(invoice.amount)
+      ? Math.max(0, invoice.amount - totalPaid)
+      : null;
 
   return (
     <div className="min-h-screen bg-zinc-100 print:bg-white">
@@ -144,7 +188,7 @@ export default function InvoicePrintPage() {
               <span
                 className={`mt-2 inline-flex rounded-full border px-3 py-0.5 text-xs font-bold uppercase tracking-wide ${statusStyle}`}
               >
-                {status || "—"}
+                {status ? status.replaceAll("_", " ") : "—"}
               </span>
             </div>
           </div>
@@ -291,7 +335,58 @@ export default function InvoicePrintPage() {
                   {formatCurrency(invoice.amount)}
                 </span>
               </div>
+              <div className="flex items-center gap-8 text-zinc-700">
+                <span>Paid so far</span>
+                <span className="w-36 text-right font-mono">
+                  {formatCurrency(totalPaid)}
+                </span>
+              </div>
+              <div className="flex items-center gap-8 text-zinc-700">
+                <span>Remaining</span>
+                <span className="w-36 text-right font-mono">
+                  {formatCurrency(remainingAmount)}
+                </span>
+              </div>
             </div>
+          </div>
+
+          <div className="border-t border-zinc-100 px-10 py-5 print:px-8">
+            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
+              Payments
+            </p>
+            {payments.length === 0 ? (
+              <p className="mt-2 text-sm text-zinc-500">No recorded payments yet.</p>
+            ) : (
+              <div className="mt-2 space-y-2">
+                {payments.map((payment) => (
+                  <div
+                    key={payment.id}
+                    className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm"
+                  >
+                    <p className="font-semibold text-zinc-900">
+                      {formatCurrency(payment.amount)} •{" "}
+                      {payment.method ? payment.method.replaceAll("_", " ") : "—"}
+                    </p>
+                    <p className="text-xs text-zinc-600">
+                      Ref {payment.referenceNumber || "—"} • {formatDate(payment.paidAt)}
+                    </p>
+                    {payment.notes ? (
+                      <p className="text-xs text-zinc-600">{payment.notes}</p>
+                    ) : null}
+                    {payment.proofImageUrl ? (
+                      <a
+                        href={payment.proofImageUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold text-blue-700 hover:underline"
+                      >
+                        View proof image
+                      </a>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Notes */}

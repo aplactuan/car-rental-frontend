@@ -212,6 +212,24 @@ function normalizeBills(payload, customerNameFallback = "", customerLookup = {})
           : attrs?.amount != null
             ? Number(attrs.amount)
             : null,
+      amountPaid:
+        typeof attrs?.amountPaid === "number"
+          ? attrs.amountPaid
+          : attrs?.amount_paid != null
+            ? Number(attrs.amount_paid)
+            : attrs?.paidAmount != null
+              ? Number(attrs.paidAmount)
+              : null,
+      remainingBalance:
+        typeof attrs?.remainingBalance === "number"
+          ? attrs.remainingBalance
+          : attrs?.remaining_balance != null
+            ? Number(attrs.remaining_balance)
+            : attrs?.balance != null
+              ? Number(attrs.balance)
+              : attrs?.amount_due != null
+                ? Number(attrs.amount_due)
+                : null,
       status: String(pick(["status"]) || "").toLowerCase(),
       issuedAt: pick(["issued_at", "issuedAt"]),
       paidAt: pick(["paid_at", "paidAt"]),
@@ -316,6 +334,7 @@ function statusBadgeClass(status) {
   const s = String(status || "").toLowerCase();
   if (s === "draft") return "bg-zinc-100 text-zinc-700 border-zinc-200";
   if (s === "issued") return "bg-blue-100 text-blue-700 border-blue-200";
+  if (s === "partially_paid") return "bg-indigo-100 text-indigo-700 border-indigo-200";
   if (s === "paid") return "bg-emerald-100 text-emerald-700 border-emerald-200";
   if (s === "cancelled") return "bg-amber-100 text-amber-700 border-amber-200";
   return "bg-zinc-100 text-zinc-700 border-zinc-200";
@@ -403,7 +422,7 @@ export default function BillingReportPage() {
 
     try {
       const [unpaidSum, paidSum] = await Promise.all([
-        fetchTotalAmountForStatus(base, "draft,issued"),
+        fetchTotalAmountForStatus(base, "draft,issued,partially_paid"),
         fetchTotalAmountForStatus(base, "paid"),
       ]);
 
@@ -474,7 +493,7 @@ export default function BillingReportPage() {
             {amountsLoading ? "…" : formatCurrency(unpaidAmountTotal)}
           </div>
           <p className="mt-1 text-xs text-zinc-500">
-            Sum of amounts for draft and issued bills (not yet paid).
+            Sum of amounts for draft, issued, and partially paid bills (outstanding).
           </p>
         </div>
         <div className="rounded-xl border border-zinc-200 bg-white p-5 text-left shadow-sm">
@@ -561,7 +580,7 @@ export default function BillingReportPage() {
         <div className="border-b border-zinc-100 px-6 py-4">
           <div className="text-sm font-semibold text-zinc-900">All bills</div>
           <div className="mt-1 text-xs text-zinc-500">
-            All statuses (draft, issued, paid, cancelled). Sorted by issue date (newest first).{" "}
+            All statuses (draft, issued, partially paid, paid, cancelled). Sorted by issue date (newest first).{" "}
             {billsLoading
               ? "Loading…"
               : invoiceSearch
@@ -586,6 +605,8 @@ export default function BillingReportPage() {
                 <th className="px-4 py-3 font-medium">Customer</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Amount</th>
+                <th className="px-4 py-3 font-medium">Paid so far</th>
+                <th className="px-4 py-3 font-medium">Remaining</th>
                 <th className="px-4 py-3 font-medium">Issued</th>
                 <th className="px-4 py-3 font-medium">Paid</th>
                 <th className="px-4 py-3 font-medium">Transaction</th>
@@ -595,14 +616,14 @@ export default function BillingReportPage() {
             <tbody>
               {billsLoading && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-zinc-500">
+                  <td colSpan={10} className="px-4 py-10 text-center text-sm text-zinc-500">
                     Loading bills…
                   </td>
                 </tr>
               )}
               {!billsLoading && bills.length === 0 && !billsError && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-zinc-500">
+                  <td colSpan={10} className="px-4 py-10 text-center text-sm text-zinc-500">
                     {invoiceSearch
                       ? `No bills match "${invoiceSearch}". Try another invoice number.`
                       : "No bills found."}
@@ -628,10 +649,16 @@ export default function BillingReportPage() {
                       <span
                         className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${statusBadgeClass(row.status)}`}
                       >
-                        {row.status || "—"}
+                        {row.status ? row.status.replaceAll("_", " ") : "—"}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-zinc-800">{formatCurrency(row.amount)}</td>
+                    <td className="px-4 py-3 text-zinc-800">
+                      {formatCurrency(row.amountPaid)}
+                    </td>
+                    <td className="px-4 py-3 text-zinc-800">
+                      {formatCurrency(row.remainingBalance)}
+                    </td>
                     <td className="px-4 py-3 text-zinc-600">{formatDate(row.issuedAt)}</td>
                     <td className="px-4 py-3 text-zinc-600">{formatDate(row.paidAt)}</td>
                     <td className="px-4 py-3">
@@ -647,7 +674,10 @@ export default function BillingReportPage() {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      {row.transactionId && (row.status === "issued" || row.status === "paid") ? (
+                      {row.transactionId &&
+                      (row.status === "issued" ||
+                        row.status === "partially_paid" ||
+                        row.status === "paid") ? (
                         <a
                           href={`/invoice/${encodeURIComponent(row.transactionId)}`}
                           target="_blank"
