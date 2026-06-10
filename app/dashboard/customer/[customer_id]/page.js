@@ -82,6 +82,13 @@ function toBillStatusMeta(rawStatus) {
     };
   }
 
+  if (status === "partially_paid") {
+    return {
+      label: "Partially paid",
+      className: "bg-indigo-100 text-indigo-700",
+    };
+  }
+
   if (status === "cancelled") {
     return {
       label: "Cancelled",
@@ -140,6 +147,7 @@ export default async function CustomerDetailPage({ params }) {
     noBill: 0,
     draft: 0,
     issued: 0,
+    partiallyPaid: 0,
     paid: 0,
     cancelled: 0,
   };
@@ -251,6 +259,10 @@ export default async function CustomerDetailPage({ params }) {
               billingSummary.paid += 1;
               return;
             }
+            if (normalizedStatus === "partially_paid") {
+              billingSummary.partiallyPaid += 1;
+              return;
+            }
             if (normalizedStatus === "cancelled") {
               billingSummary.cancelled += 1;
               return;
@@ -328,6 +340,9 @@ export default async function CustomerDetailPage({ params }) {
               </div>
               <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-700">
                 Issued: {billingSummary.issued}
+              </div>
+              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-700">
+                Partially paid: {billingSummary.partiallyPaid}
               </div>
               <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-700">
                 Paid: {billingSummary.paid}
