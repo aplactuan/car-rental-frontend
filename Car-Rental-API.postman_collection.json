@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "car-rental-api-collection",
 		"name": "Car Rental API",
-		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | **Not used** — public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` (register) | **Not used** — public, but the server may return **403** if registration is disabled (`allow_user_registration`). |\n| `GET /api/user`, `POST /api/logout` | **Required** — Sanctum. |\n| All other `/api/v1/...` routes | **Required** — same Bearer token as above. |\n\nThis collection sets **Bearer Token** auth at the collection level (`{{token}}`). Requests that must be public override auth to **No Auth** (Login, Register User).\n\n## Setup\n1. Set `base_url` (default: `http://localhost` — add port if needed, e.g. `http://localhost:8000`).\n2. Run **Login**; token is stored automatically.\n3. Fill path variables from responses: `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id`, `car_import_id`, `driver_import_id`, `bill_payment_id` (UUIDs).\n\n## Optional query keys (frontend reference)\nMany `GET` endpoints accept optional keys documented on each request: pagination (`per_page`), nested `filter[...]`, `sort`, `include`, date ranges, etc. If a key is omitted, the API uses defaults described on that request.\n\n**User registration:** `POST /api/v1/users` needs `name`, `email`, `password`, `password_confirmation` — no Bearer; may still fail with 403 when registration is off.\n\n**CSV imports:** `multipart/form-data` with field `file`; then poll import status by ID. Sample car CSV: `samples/cars-import.csv`. Columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number` (`door` and `seats` are integers).\n\n**Transactions:** create/update bodies require `name` (max 255) where applicable. Optional `has_bill` query (`0`, `1`, `true`, `false`) on list transaction endpoints filters by whether a bill exists. **Bookings:** `GET /api/v1/bookings` lists all bookings for the authenticated user (paginated, optional `status`: `completed`, `today`, `ongoing`, `incoming`). Per-transaction `GET .../bookings` uses `status` (`upcoming`/`previous`), `period`, `car_id`, `driver_id`; newest first (`created_at`, then `start_date`).\n\n**Bills:** `billNumber` and `invoiceNumber` are assigned automatically on create (format `INV-YYMM#####` per month). Do not send them in the request body. Bill statuses: `draft`, `issued`, `partially_paid`, `paid`, `cancelled`.\n\n**Bill Payments (installments):** `POST .../bill/payments` records a single payment against a bill (multipart/form-data: `amount`, `method`, `reference_number`, `proof_image` required; `notes` optional). Accepted `method` values: `bank_transfer`, `cash`, `gcash`. Payment is only allowed when bill status is `issued` or `partially_paid`. The bill status is recomputed automatically after each payment or deletion: `issued` → `partially_paid` (partial) → `paid` (fully paid). Deleting a payment reverses the computation.",
+		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | **Not used** — public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` (register) | **Not used** — public, but the server may return **403** if registration is disabled (`allow_user_registration`). |\n| `GET /api/user`, `POST /api/logout` | **Required** — Sanctum. |\n| All other `/api/v1/...` routes | **Required** — same Bearer token as above. |\n\nThis collection sets **Bearer Token** auth at the collection level (`{{token}}`). Requests that must be public override auth to **No Auth** (Login, Register User).\n\n## Setup\n1. Set `base_url` (default: `http://localhost` — add port if needed, e.g. `http://localhost:8000`).\n2. Run **Login**; token is stored automatically.\n3. Fill path variables from responses: `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id`, `car_import_id`, `driver_import_id`, `bill_payment_id` (UUIDs).\n\n## Optional query keys (frontend reference)\nMany `GET` endpoints accept optional keys documented on each request: pagination (`per_page`), nested `filter[...]`, `sort`, `include`, date ranges, etc. If a key is omitted, the API uses defaults described on that request.\n\n**User registration:** `POST /api/v1/users` needs `name`, `email`, `password`, `password_confirmation` — no Bearer; may still fail with 403 when registration is off.\n\n**CSV imports:** `multipart/form-data` with field `file`; then poll import status by ID. Sample car CSV: `samples/cars-import.csv`. Columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number` (`door` and `seats` are integers).\n\n**Transactions:** create/update bodies require `name` (max 255) where applicable. Optional `has_bill` query (`0`, `1`, `true`, `false`) on list transaction endpoints filters by whether a bill exists. **Bookings:** `GET /api/v1/bookings` lists all bookings for the authenticated user (paginated, optional `status`: `completed`, `today`, `ongoing`, `incoming`). Per-transaction `GET .../bookings` uses `status` (`upcoming`/`previous`), `period`, `car_id`, `driver_id`; newest first (`created_at`, then `start_date`).\n\n**Bills:** `billNumber` and `invoiceNumber` are assigned automatically on create (format `INV-YYMM#####` per month). Do not send them in the request body. Bill statuses: `draft`, `issued`, `partially_paid`, `paid`, `cancelled`. Bill JSON attributes include `amountPaid` (sum of recorded payments) and `remainingBalance` (`amount` minus `amountPaid`, never below 0).\n\n**Billing summary:** `GET /api/v1/billing/summary` returns `totalPaid` (sum of fully paid bill amounts) and `totalUnpaid` (outstanding balance on `issued` and `partially_paid` bills) for the authenticated rental company.\n\n**Bill Payments (installments):** `POST .../bill/payments` records a single payment against a bill (multipart/form-data: `amount`, `method`, `reference_number`, `proof_image` required; `notes` optional). Accepted `method` values: `bank_transfer`, `cash`, `gcash`. Payment is only allowed when bill status is `issued` or `partially_paid`. The bill status is recomputed automatically after each payment or deletion: `issued` → `partially_paid` (partial) → `paid` (fully paid). Deleting a payment reverses the computation.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -615,21 +615,21 @@
 								{
 									"key": "filter[as_of]",
 									"value": "2026-05-01",
-									"description": "Optional. Date boundary for summary."
+									"description": "Optional. Limits `totalUnpaid` to bills issued on or before this date."
 								},
 								{
 									"key": "filter[paid_at][from]",
 									"value": "2026-01-01",
-									"description": "Optional. Use with filter[paid_at][to]; paid_at to must be on or after from."
+									"description": "Optional. Use with filter[paid_at][to]; limits `totalPaid` to bills paid on or after this date. `paid_at` to must be on or after from."
 								},
 								{
 									"key": "filter[paid_at][to]",
 									"value": "2026-12-31",
-									"description": "Optional. Paid-at range end."
+									"description": "Optional. Limits `totalPaid` to bills paid on or before this date."
 								}
 							]
 						},
-						"description": "**Bearer required.** Aggregated billing for the authenticated user. All `filter[...]` query keys are optional; omit `filter` entirely for an unfiltered summary."
+						"description": "**Bearer required.** Aggregated billing for the authenticated user. Response `data.attributes`: `totalPaid` (integer, sum of amounts on `paid` bills) and `totalUnpaid` (integer, outstanding balance on `issued` and `partially_paid` bills). All `filter[...]` query keys are optional; omit `filter` entirely for an unfiltered summary."
 					}
 				},
 				{
@@ -684,7 +684,7 @@
 								}
 							]
 						},
-						"description": "**Bearer required.** Paginated bills for the current user across all customers. Response attributes include `billNumber`, `invoiceNumber`, `amount`, `status`, `issuedAt`, `dueAt`, `paidAt`. Supports partial invoice lookup with `filter[invoice_number]`."
+						"description": "**Bearer required.** Paginated bills for the current user across all customers. Response attributes include `billNumber`, `invoiceNumber`, `amount`, `amountPaid`, `remainingBalance`, `status`, `issuedAt`, `dueAt`, `paidAt`. `amountPaid` is the sum of recorded payments; `remainingBalance` is `amount` minus `amountPaid` (never below 0). Supports partial invoice lookup with `filter[invoice_number]`."
 					}
 				}
 			]
@@ -941,7 +941,7 @@
 								}
 							]
 						},
-						"description": "**Bearer required.** Bills for `{{customer_id}}` belonging to the authenticated user. Same optional query keys as **List bills (all)**, including partial `filter[invoice_number]` search, but scoped to this customer."
+						"description": "**Bearer required.** Bills for `{{customer_id}}` belonging to the authenticated user. Same optional query keys and response attributes as **List bills (all)** (`amountPaid`, `remainingBalance`, etc.), including partial `filter[invoice_number]` search, but scoped to this customer."
 					}
 				},
 				{
@@ -1122,7 +1122,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill"]
 						},
-						"description": "**Bearer required.** Create a bill for a transaction. Only one bill per transaction. Body: required `amount` (integer, min 1); optional `notes`, `due_at`. Response includes auto-generated `billNumber` and `invoiceNumber` (`INV-YYMM#####`, incremented per month)."
+						"description": "**Bearer required.** Create a bill for a transaction. Only one bill per transaction. Body: required `amount` (integer, min 1); optional `notes`, `due_at`. Response includes auto-generated `billNumber` and `invoiceNumber` (`INV-YYMM#####`, incremented per month), plus `amountPaid` (0 on create) and `remainingBalance` (equals `amount` on create)."
 					}
 				},
 				{
@@ -1140,7 +1140,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill"]
 						},
-						"description": "**Bearer required.** Returns the bill for the transaction. Attributes include `billNumber`, `invoiceNumber`, `amount`, `status`, `notes`, `issuedAt`, `dueAt`, `paidAt`."
+						"description": "**Bearer required.** Returns the bill for the transaction. Attributes include `billNumber`, `invoiceNumber`, `amount`, `amountPaid`, `remainingBalance`, `status`, `notes`, `issuedAt`, `dueAt`, `paidAt`."
 					}
 				},
 				{
