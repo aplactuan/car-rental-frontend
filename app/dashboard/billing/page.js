@@ -4,8 +4,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const BILLS_PER_PAGE = 10;
-/** Max per_page supported by the bills API; used when aggregating amounts. */
-const BILLS_AGG_PAGE_SIZE = 100;
 /**
  * JSON:API compound include: loads each bill's transaction and that transaction's customer
  * into `included`, so customer names resolve for “All customers” without guessing shapes.
@@ -241,6 +239,28 @@ function normalizeBills(payload, customerNameFallback = "", customerLookup = {})
   });
 }
 
+function normalizeBillingSummary(payload) {
+  const source = payload?.data?.attributes ?? payload?.data ?? payload ?? {};
+  const toNumber = (value) => {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (value == null || value === "") return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  return {
+    totalPaid: toNumber(
+      source.totalPaid ?? source.total_paid ?? source.paidTotal ?? source.paid_total,
+    ),
+    totalUnpaid: toNumber(
+      source.totalUnpaid ??
+        source.total_unpaid ??
+        source.totalOutstanding ??
+        source.total_outstanding,
+    ),
+  };
+}
+
 function buildBillsListParams({ page, invoiceNumber }) {
   const params = {
     per_page: String(BILLS_PER_PAGE),
@@ -272,46 +292,24 @@ async function fetchBillsPayload(urlBase, baseParams) {
   return { res, data };
 }
 
-function sumAmountsFromBillPayload(payload) {
-  const raw = Array.isArray(payload?.data)
-    ? payload.data
-    : Array.isArray(payload)
-      ? payload
-      : [];
-  let sum = 0;
-  for (const item of raw) {
-    const attrs = item?.attributes ?? item;
-    const n =
-      typeof attrs?.amount === "number"
-        ? attrs.amount
-        : attrs?.amount != null
-          ? Number(attrs.amount)
-          : NaN;
-    if (Number.isFinite(n)) sum += n;
-  }
-  return sum;
-}
-
-async function fetchTotalAmountForStatus(base, statusFilter) {
-  let total = 0;
-  let page = 1;
-
-  for (;;) {
-    const { res, data } = await fetchBillsPayload(base, {
-      per_page: String(BILLS_AGG_PAGE_SIZE),
-      page: String(page),
-      sort: "-issued_at",
-      "filter[status]": statusFilter,
-    });
-    if (!res.ok) return null;
-    total += sumAmountsFromBillPayload(data);
-    const meta = extractListMeta(data);
-    if (page >= meta.lastPage) break;
-    page += 1;
-    if (page > 500) break;
+async function fetchBillingSummary(customerId) {
+  const params = new URLSearchParams();
+  if (customerId) {
+    params.set("filter[customer_id]", String(customerId));
   }
 
-  return total;
+  const query = params.toString();
+  const response = await fetch(
+    `/api/v1/billing/summary${query ? `?${query}` : ""}`,
+    { credentials: "include" },
+  );
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data?.error || data?.message || "Failed to load billing summary.");
+  }
+
+  return normalizeBillingSummary(data);
 }
 
 function formatCurrency(amount) {
@@ -418,16 +416,10 @@ export default function BillingReportPage() {
 
   const fetchAmountTotals = useCallback(async () => {
     setAmountsLoading(true);
-    const base = billsEndpoint(customerId);
-
     try {
-      const [unpaidSum, paidSum] = await Promise.all([
-        fetchTotalAmountForStatus(base, "draft,issued,partially_paid"),
-        fetchTotalAmountForStatus(base, "paid"),
-      ]);
-
-      setUnpaidAmountTotal(unpaidSum == null ? 0 : unpaidSum);
-      setPaidAmountTotal(paidSum == null ? 0 : paidSum);
+      const summary = await fetchBillingSummary(customerId);
+      setUnpaidAmountTotal(summary.totalUnpaid ?? 0);
+      setPaidAmountTotal(summary.totalPaid ?? 0);
     } catch {
       setUnpaidAmountTotal(0);
       setPaidAmountTotal(0);
@@ -493,7 +485,7 @@ export default function BillingReportPage() {
             {amountsLoading ? "…" : formatCurrency(unpaidAmountTotal)}
           </div>
           <p className="mt-1 text-xs text-zinc-500">
-            Sum of amounts for draft, issued, and partially paid bills (outstanding).
+            Outstanding balance for issued and partially paid bills.
           </p>
         </div>
         <div className="rounded-xl border border-zinc-200 bg-white p-5 text-left shadow-sm">
