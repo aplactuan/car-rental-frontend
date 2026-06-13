@@ -764,21 +764,22 @@ export default function BillingSection({
     if (!paymentMethod) return { error: "Payment method is required." };
     if (!referenceNumber) return { error: "Reference number is required." };
 
-    if (!paymentProofFile) return { error: "Proof image is required." };
-    if (!ALLOWED_PROOF_IMAGE_TYPES.has(paymentProofFile.type)) {
-      return {
-        error: "Proof image must be a JPG, PNG, or WEBP file.",
-      };
-    }
-    if (paymentProofFile.size > MAX_PROOF_IMAGE_SIZE_BYTES) {
-      return { error: "Proof image must not exceed 10 MB." };
+    if (paymentProofFile) {
+      if (!ALLOWED_PROOF_IMAGE_TYPES.has(paymentProofFile.type)) {
+        return {
+          error: "Proof image must be a JPG, PNG, or WEBP file.",
+        };
+      }
+      if (paymentProofFile.size > MAX_PROOF_IMAGE_SIZE_BYTES) {
+        return { error: "Proof image must not exceed 10 MB." };
+      }
     }
 
     const payload = new FormData();
     payload.set("amount", String(amount));
     payload.set("method", paymentMethod);
     payload.set("reference_number", referenceNumber);
-    payload.set("proof_image", paymentProofFile);
+    if (paymentProofFile) payload.set("proof_image", paymentProofFile);
     if (notes) payload.set("notes", notes);
     return { payload };
   };
@@ -1141,7 +1142,6 @@ export default function BillingSection({
                       setPaymentProofFile(event.target.files?.[0] ?? null)
                     }
                     disabled={isSubmittingPayment || isSubmitting}
-                    required
                     className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-100"
                   />
                 </label>
