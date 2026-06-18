@@ -136,6 +136,8 @@ export default function DriversPage() {
   const [license_expiry_date, setLicenseExpiryDate] = useState("");
   const [address, setAddress] = useState("");
   const [phone_number, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState("");
   const [drivers, setDrivers] = useState([]);
@@ -175,6 +177,8 @@ export default function DriversPage() {
     setLicenseExpiryDate("");
     setAddress("");
     setPhoneNumber("");
+    setEmail("");
+    setPassword("");
     setFormError("");
     setEditingDriverId("");
   }
@@ -300,6 +304,7 @@ export default function DriversPage() {
     setIsLoading(true);
     try {
       const { first_name, last_name } = splitFullName(name);
+      const isEdit = formMode === "edit";
       const payload = {
         first_name,
         last_name,
@@ -309,7 +314,10 @@ export default function DriversPage() {
         phone_number: phone_number.trim(),
       };
 
-      const isEdit = formMode === "edit";
+      if (!isEdit) {
+        payload.email = email.trim();
+        payload.password = password;
+      }
       if (isEdit && !editingDriverId) {
         setFormError("Unable to update this driver because no driver ID was found.");
         return;
@@ -513,6 +521,39 @@ export default function DriversPage() {
                 required
               />
             </div>
+            {formMode === "add" && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className={labelClass}>Email</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={inputClass}
+                    autoComplete="off"
+                    required
+                  />
+                  <p className="mt-1 text-xs text-zinc-500">
+                    Used for the linked driver login account.
+                  </p>
+                </div>
+                <div>
+                  <label className={labelClass}>Password</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={inputClass}
+                    autoComplete="new-password"
+                    minLength={8}
+                    required
+                  />
+                  <p className="mt-1 text-xs text-zinc-500">
+                    Minimum 8 characters.
+                  </p>
+                </div>
+              </div>
+            )}
             {formError && (
               <p className="text-sm text-red-600">{formError}</p>
             )}
