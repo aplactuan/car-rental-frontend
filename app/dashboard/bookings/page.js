@@ -213,7 +213,7 @@ function rangeLabel(page, rowsOnPage, total) {
   return `Showing ${from.toLocaleString()}-${to.toLocaleString()} of ${total.toLocaleString()} bookings`;
 }
 
-function BookingCard({ booking }) {
+function BookingCard({ booking, hideTransactionLink = false }) {
   const status = deriveStatus(booking.startDate, booking.endDate);
   const statusLabel = status === "unscheduled" ? "Unscheduled" : status;
 
@@ -265,7 +265,7 @@ function BookingCard({ booking }) {
         </p>
       ) : null}
 
-      {booking.transactionId ? (
+      {booking.transactionId && !hideTransactionLink ? (
         <div className="mt-4">
           <Link
             href={`/dashboard/transactions/${encodeURIComponent(booking.transactionId)}`}
@@ -300,6 +300,34 @@ export default function BookingsPage() {
     lastPage: 1,
     total: 0,
   });
+  const [isDriverView, setIsDriverView] = useState(false);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function fetchSessionRole() {
+      try {
+        const res = await fetch("/api/session", { cache: "no-store" });
+        const data = await res.json().catch(() => ({}));
+        if (!isCurrent) return;
+        if (res.ok && data?.role) {
+          setIsDriverView(data.role === "driver");
+          return;
+        }
+      } catch {
+        // Fall through to local role.
+      }
+
+      if (typeof window !== "undefined" && isCurrent) {
+        setIsDriverView(localStorage.getItem("auth_role") === "driver");
+      }
+    }
+
+    fetchSessionRole();
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
 
   useEffect(() => {
     let isCurrent = true;
@@ -454,7 +482,11 @@ export default function BookingsPage() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {bookings.map((booking) => (
-                <BookingCard key={booking.id || `${booking.startDate}-${booking.endDate}`} booking={booking} />
+                <BookingCard
+                  key={booking.id || `${booking.startDate}-${booking.endDate}`}
+                  booking={booking}
+                  hideTransactionLink={isDriverView}
+                />
               ))}
             </div>
           )}

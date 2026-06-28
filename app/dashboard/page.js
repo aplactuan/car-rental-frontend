@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 const dummyAnalytics = {
   kpis: [
@@ -45,7 +46,11 @@ const dummyAnalytics = {
 
 export default async function DashboardPage() {
   const cookieStore = await cookies();
-  const token = cookieStore.get("auth_token")?.value;
+  const role = cookieStore.get("auth_role")?.value;
+
+  if (role === "driver") {
+    redirect("/dashboard/bookings");
+  }
 
   return (
     <div className="w-full pr-8">

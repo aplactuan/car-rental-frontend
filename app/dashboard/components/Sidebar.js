@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
@@ -16,13 +17,58 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [role, setRole] = useState("admin");
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function fetchSessionRole() {
+      try {
+        const res = await fetch("/api/session", { cache: "no-store" });
+        const data = await res.json().catch(() => ({}));
+        if (!isCurrent) return;
+        if (res.ok && data?.role) {
+          setRole(data.role === "driver" ? "driver" : "admin");
+          return;
+        }
+      } catch {
+        // Fall back to local storage role.
+      }
+
+      if (typeof window !== "undefined" && isCurrent) {
+        const localRole = localStorage.getItem("auth_role");
+        setRole(localRole === "driver" ? "driver" : "admin");
+      }
+    }
+
+    fetchSessionRole();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
+
+  const visibleNavItems = useMemo(() => {
+    if (role === "driver") {
+      return navItems.filter((item) => item.href === "/dashboard/bookings");
+    }
+    return navItems;
+  }, [role]);
 
   async function handleLogout() {
     try {
       await fetch("/api/logout", { method: "POST" });
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("auth_role");
+      }
       router.push("/");
       router.refresh();
     } catch {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("auth_role");
+      }
       router.push("/");
       router.refresh();
     }
@@ -36,10 +82,15 @@ export default function Sidebar() {
             CarRental
           </div>
           <div className="mt-1 text-xs text-zinc-400">Management System</div>
+          {role === "driver" ? (
+            <span className="mt-3 inline-flex items-center rounded-full border border-teal-400/30 bg-teal-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-teal-300">
+              Driver mode
+            </span>
+          ) : null}
         </Link>
       </div>
       <nav className="flex-1 px-4">
-        {navItems.map((item) => {
+        {visibleNavItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link

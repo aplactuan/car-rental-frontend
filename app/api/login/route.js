@@ -1,5 +1,30 @@
 import { NextResponse } from "next/server";
 
+function normalizeRole(value) {
+  const role = String(value || "").trim().toLowerCase();
+  if (role === "admin") return "admin";
+  if (role === "driver" || role === "user") return "driver";
+  return "";
+}
+
+async function fetchCurrentUser(backendBase, token) {
+  try {
+    const userRes = await fetch(new URL("/api/user", backendBase).toString(), {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!userRes.ok) return null;
+    return userRes.json().catch(() => null);
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(req) {
   const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL;
   if (!backendBase) {
@@ -67,9 +92,37 @@ export async function POST(req) {
     );
   }
 
-  const res = NextResponse.json({ ok: true, token });
+  const currentUser = await fetchCurrentUser(backendBase, token);
+  const resolvedRole =
+    normalizeRole(
+      upstreamJson?.data?.user?.role ??
+        upstreamJson?.user?.role ??
+        upstreamJson?.data?.role ??
+        upstreamJson?.role ??
+      currentUser?.data?.role ??
+        currentUser?.role ??
+        currentUser?.data?.attributes?.role,
+    );
+
+  if (!resolvedRole) {
+    return NextResponse.json(
+      {
+        error:
+          "Login succeeded but user role could not be resolved. Please check backend user payload.",
+      },
+      { status: 502 },
+    );
+  }
+
+  const res = NextResponse.json({ ok: true, token, role: resolvedRole });
 
   res.cookies.set("auth_token", token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
+  res.cookies.set("auth_role", resolvedRole, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
