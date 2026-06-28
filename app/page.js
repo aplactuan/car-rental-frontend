@@ -37,6 +37,11 @@ export default function Home() {
       if (data?.token) {
         localStorage.setItem("auth_token", data.token);
       }
+      if (data?.role) {
+        localStorage.setItem("auth_role", data.role);
+      } else {
+        localStorage.removeItem("auth_role");
+      }
 
       router.push("/dashboard");
       router.refresh();
