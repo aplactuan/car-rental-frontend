@@ -18,8 +18,11 @@ export function middleware(request) {
     const isBookingsPage =
       pathname === "/dashboard/bookings" ||
       pathname.startsWith("/dashboard/bookings/");
+    const isAccountPage =
+      pathname === "/dashboard/account" ||
+      pathname.startsWith("/dashboard/account/");
 
-    if (isDriver && !isBookingsPage) {
+    if (isDriver && !isBookingsPage && !isAccountPage) {
       return NextResponse.redirect(new URL("/dashboard/bookings", request.url));
     }
   }

@@ -14,6 +14,12 @@ const navItems = [
   { href: "/dashboard/billing", label: "Billing report", icon: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" },
 ];
 
+const accountNavItem = {
+  href: "/dashboard/account",
+  label: "Change password",
+  icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
+};
+
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -121,6 +127,35 @@ export default function Sidebar() {
           );
         })}
       </nav>
+      <div className="px-4 pt-2">
+        <div className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+          Account
+        </div>
+        <Link
+          href={accountNavItem.href}
+          className={`mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+            pathname === accountNavItem.href
+              ? "bg-[#0F766E] text-white"
+              : "text-zinc-300 hover:bg-white/5 hover:text-white"
+          }`}
+        >
+          <svg
+            className="h-5 w-5 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d={accountNavItem.icon}
+            />
+          </svg>
+          {accountNavItem.label}
+        </Link>
+      </div>
       <div className="mt-auto px-4 pb-5">
         <button
           type="button"

@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "car-rental-api-collection",
 		"name": "Car Rental API",
-		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | **Not used** — public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` (register) | **Not used** — public, but the server may return **403** if registration is disabled (`allow_user_registration`). |\n| `GET /api/user`, `POST /api/logout` | **Required** — Sanctum. |\n| All other `/api/v1/...` routes | **Required** — same Bearer token as above. |\n\nThis collection sets **Bearer Token** auth at the collection level (`{{token}}`). Requests that must be public override auth to **No Auth** (Login, Register User).\n\n## Setup\n1. Set `base_url` (default: `http://localhost` — add port if needed, e.g. `http://localhost:8000`).\n2. Run **Login**; token is stored automatically.\n3. Fill path variables from responses: `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id`, `trip_report_id`, `car_import_id`, `driver_import_id`, `bill_payment_id` (UUIDs).\n\n## Optional query keys (frontend reference)\nMany `GET` endpoints accept optional keys documented on each request: pagination (`per_page`), nested `filter[...]`, `sort`, `include`, date ranges, etc. If a key is omitted, the API uses defaults described on that request.\n\n**User registration:** `POST /api/v1/users` needs `name`, `email`, `password`, `password_confirmation` — no Bearer; may still fail with 403 when registration is off.\n\n**CSV imports:** `multipart/form-data` with field `file`; then poll import status by ID. Sample car CSV: `samples/cars-import.csv`. Columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number` (`door` and `seats` are integers).\n\n**Transactions:** create/update bodies require `name` (max 255) where applicable. Optional `has_bill` query (`0`, `1`, `true`, `false`) on list transaction endpoints filters by whether a bill exists. **Bookings:** `GET /api/v1/bookings` lists all bookings for the authenticated user (paginated, optional `status`: `completed`, `today`, `ongoing`, `incoming`). Per-transaction `GET .../bookings` uses `status` (`upcoming`/`previous`), `period`, `car_id`, `driver_id`; newest first (`created_at`, then `start_date`).\n\n**Bills:** `billNumber` (`INV-YYYYMMDD-####`, daily sequence) and `invoiceNumber` (`INV-YYMM#####`, incremented per month) are assigned automatically on create. Do not send them in the request body. Bill statuses: `draft`, `issued`, `partially_paid`, `paid`, `cancelled`. Bill JSON attributes include `amountPaid` (sum of recorded payments) and `remainingBalance` (`amount` minus `amountPaid`, never below 0).\n\n**Billing summary:** `GET /api/v1/billing/summary` returns `totalPaid` (sum of fully paid bill amounts) and `totalUnpaid` (outstanding balance on `issued` and `partially_paid` bills) for the authenticated rental company.\n\n**Bill Payments (installments):** `POST .../bill/payments` records a single payment against a bill (multipart/form-data: `amount`, `method`, `reference_number` required; `notes` and `proof_image` optional). Accepted `method` values: `bank_transfer`, `cash`, `gcash`. Payment is only allowed when bill status is `issued` or `partially_paid`. The bill status is recomputed automatically after each payment or deletion: `issued` → `partially_paid` (partial) → `paid` (fully paid). Deleting a payment reverses the computation.\n\n**User roles:** every user has a `role` of `admin` or `user`. Admin users can update any driver record and manage the driver-user link.\n\n**Driver-user link:** adding a driver automatically creates a linked user account — provide `email` (unique) and `password` (min 8). The auto-created user uses the driver's full name and role `user`. Admins can reassign or unlink via `user_id` on Update Driver. A linked driver user can update their own record but cannot change `user_id`. Response attribute `userId` is `null` only when unlinked via update.\n\n**Trip reports:** nested under `.../bookings/{booking}/trip-reports`. **Authorization:** admin users or the driver assigned to the booking only; transaction owners who are not the assigned driver receive `403`. Required on create: `report_date`. Optional: `po_number`, `time_in`/`time_out` (`H:i`, `time_out` >= `time_in`), `rate`, `odometer_in`/`odometer_out` (out >= in), `fuel_liters`, `fuel_amount`, `invoice_or_or_number`, `collection_amount`, `percentage` (0-100), `destinations` (array of up to 6 `{from, to}` objects). Snapshots (`driverNameSnapshot`, `carPlateNumberSnapshot`, etc.) are captured at creation and never updated when related records change.",
+		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | **Not used** — public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` (register) | **Not used** — public, but the server may return **403** if registration is disabled (`allow_user_registration`). |\n| `GET /api/user`, `PUT /api/password`, `POST /api/logout` | **Required** — Sanctum. |\n| All other `/api/v1/...` routes | **Required** — same Bearer token as above. |\n\nThis collection sets **Bearer Token** auth at the collection level (`{{token}}`). Requests that must be public override auth to **No Auth** (Login, Register User).\n\n## Setup\n1. Set `base_url` (default: `http://localhost` — add port if needed, e.g. `http://localhost:8000`).\n2. Run **Login**; token is stored automatically. Seeded accounts (after `php artisan migrate --seed`): `test@example.com` / `password` (`user` role), `admin@example.com` / `password` (`admin` role). Collection variable `user_role` is set from login/register responses.\n3. Fill path variables from responses: `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id`, `trip_report_id`, `car_import_id`, `driver_import_id`, `bill_payment_id` (UUIDs).\n\n## Optional query keys (frontend reference)\nMany `GET` endpoints accept optional keys documented on each request: pagination (`per_page`), nested `filter[...]`, `sort`, `include`, date ranges, etc. If a key is omitted, the API uses defaults described on that request.\n\n**User registration:** `POST /api/v1/users` needs `name`, `email`, `password`, `password_confirmation` — no Bearer; may still fail with 403 when registration is off. Optional `role` defaults to `user`; public registration only accepts `user` (`admin` returns **422**). Response includes `data.attributes.role`.\n\n**Change password:** `PUT /api/password` updates the authenticated user's password. Required: `current_password`, `password` (min 8), `password_confirmation`. New password must differ from the current password.\n\n**CSV imports:** `multipart/form-data` with field `file`; then poll import status by ID.\n\n- **Cars** — sample: `samples/cars-import.csv`. Columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number` (`door` and `seats` are integers).\n- **Drivers** — sample: `samples/drivers-import.csv`. Columns: `first_name`, `last_name`, `license_number`, `license_expiry_date`, `address`, `phone_number`, `email`, `password` (min 8). Each valid row creates a driver and linked user account (same as `POST /api/v1/drivers`).\n\n**Transactions:** create/update bodies require `name` (max 255) where applicable. Optional `has_bill` query (`0`, `1`, `true`, `false`) on list transaction endpoints filters by whether a bill exists. **Bookings:** `GET /api/v1/bookings` lists all bookings for the authenticated user (paginated, optional `status`: `completed`, `today`, `ongoing`, `incoming`). Per-transaction `GET .../bookings` uses `status` (`upcoming`/`previous`), `period`, `car_id`, `driver_id`; newest first (`created_at`, then `start_date`).\n\n**Bills:** `billNumber` (`INV-YYYYMMDD-####`, daily sequence) and `invoiceNumber` (`INV-YYMM#####`, incremented per month) are assigned automatically on create. Do not send them in the request body. Bill statuses: `draft`, `issued`, `partially_paid`, `paid`, `cancelled`. Bill JSON attributes include `amountPaid` (sum of recorded payments) and `remainingBalance` (`amount` minus `amountPaid`, never below 0).\n\n**Billing summary:** `GET /api/v1/billing/summary` returns `totalPaid` (sum of fully paid bill amounts) and `totalUnpaid` (outstanding balance on `issued` and `partially_paid` bills) for the authenticated rental company.\n\n**Bill Payments (installments):** `POST .../bill/payments` records a single payment against a bill (multipart/form-data: `amount`, `method`, `reference_number` required; `notes` and `proof_image` optional). Accepted `method` values: `bank_transfer`, `cash`, `gcash`. Payment is only allowed when bill status is `issued` or `partially_paid`. The bill status is recomputed automatically after each payment or deletion: `issued` → `partially_paid` (partial) → `paid` (fully paid). Deleting a payment reverses the computation.\n\n**User roles:** every user has a stored `role` of `admin` or `user` on the `users` table. `data.role` (login) and `data.attributes.role` (user resource) return this stored value. Being a driver is separate — linked driver users still have `role: user`; use the driver profile / `userId` link to determine driver access.\n\n**Driver-user link:** adding a driver automatically creates a linked user account — provide `email` (unique) and `password` (min 8). The auto-created user uses the driver's full name and role `user`. Admins can reassign or unlink via `user_id` on Update Driver. A linked driver user can update their own record but cannot change `user_id`. Response attribute `userId` is `null` only when unlinked via update.\n\n**Trip reports:** nested under `.../bookings/{booking}/trip-reports`. **Authorization:** admin users or the driver assigned to the booking only; transaction owners who are not the assigned driver receive `403`. Required on create: `report_date`. Optional: `po_number`, `time_in`/`time_out` (`H:i`, `time_out` >= `time_in`), `rate`, `odometer_in`/`odometer_out` (out >= in), `fuel_liters`, `fuel_amount`, `invoice_or_or_number`, `collection_amount`, `percentage` (0-100), `destinations` (array of up to 6 `{from, to}` objects). Snapshots (`driverNameSnapshot`, `carPlateNumberSnapshot`, etc.) are captured at creation and never updated when related records change.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -95,7 +95,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "login"]
 						},
-						"description": "Public endpoint - **do not** send `Authorization`. Send JSON `email` and `password`. On success, use `data.token` as `Bearer` for all `/api/v1/*` routes (except register). Frontend clients should also read `data.role` and `data.user.attributes.role`; both now resolve to `admin` or `driver`."
+						"description": "Public endpoint - **do not** send `Authorization`. Send JSON `email` and `password`. On success, use `data.token` as `Bearer` for all `/api/v1/*` routes (except register). Response includes `data.role` (`admin` or `user`) and `data.user.attributes.role` with the same stored value. Linked driver users still return `role: user` — driver access is determined by the linked driver profile, not this field.\n\nDefault seeded credentials: `test@example.com` / `password` (user), `admin@example.com` / `password` (admin)."
 					},
 					"event": [
 						{
@@ -104,11 +104,13 @@
 								"exec": [
 									"if (pm.response.code === 200) {",
 									"    const json = pm.response.json();",
-																		"    if (json.data && json.data.token) {",
+									"    if (json.data && json.data.token) {",
 									"        pm.collectionVariables.set('token', json.data.token);",
 									"    }",
 									"    if (json.data && json.data.role) {",
 									"        pm.collectionVariables.set('user_role', json.data.role);",
+									"    } else if (json.data && json.data.user && json.data.user.attributes && json.data.user.attributes.role) {",
+									"        pm.collectionVariables.set('user_role', json.data.user.attributes.role);",
 									"    }",
 									"}"
 								],
@@ -138,7 +140,7 @@
 				{
 					"name": "Get Current User",
 					"request": {
-						"description": "**Bearer required.** Returns the authenticated user resource for the current token. Frontend clients should read `data.attributes.role`, which now resolves to `admin` or `driver`.",
+						"description": "**Bearer required.** Returns the authenticated user resource for the current token. Read `data.attributes.role` for the stored authorization role (`admin` or `user`). Linked driver users still return `role: user`.",
 						"method": "GET",
 						"header": [
 							{
@@ -150,6 +152,48 @@
 							"raw": "{{base_url}}/api/user",
 							"host": ["{{base_url}}"],
 							"path": ["api", "user"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const json = pm.response.json();",
+									"    if (json.data && json.data.attributes && json.data.attributes.role) {",
+									"        pm.collectionVariables.set('user_role', json.data.attributes.role);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"description": "**Bearer required.** Updates the authenticated user's password.\n\n**Required:** `current_password`, `password` (min 8), `password_confirmation`.\n\nThe new password must differ from `current_password`. Returns **422** when the current password is wrong, confirmation does not match, or validation fails.",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"current_password\": \"password\",\n    \"password\": \"newpassword123\",\n    \"password_confirmation\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/password",
+							"host": ["{{base_url}}"],
+							"path": ["api", "password"]
 						}
 					}
 				}
@@ -177,15 +221,31 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"Jane Smith\",\n    \"email\": \"jane@example.com\",\n    \"password\": \"password\",\n    \"password_confirmation\": \"password\"\n}"
+							"raw": "{\n    \"name\": \"Jane Smith\",\n    \"email\": \"jane@example.com\",\n    \"password\": \"password\",\n    \"password_confirmation\": \"password\",\n    \"role\": \"user\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/users",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "users"]
 						},
-						"description": "Register a new user account. **No Bearer token** — this route is public. Body: `name`, `email`, `password`, `password_confirmation`. Returns **403** when registration is disabled server-side (`allow_user_registration`). When enabled, returns success without needing any API key beyond optional rate limits."
-					}
+						"description": "Register a new user account. **No Bearer token** — this route is public.\n\n**Required:** `name`, `email`, `password` (min 8), `password_confirmation`.\n\n**Optional:** `role` — defaults to `user` when omitted. Public registration only accepts `user`; sending `admin` returns **422**.\n\nReturns **403** when registration is disabled server-side (`allow_user_registration`). On success, response includes `data.attributes.role` (`admin` or `user`)."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const json = pm.response.json();",
+									"    if (json.data && json.data.attributes && json.data.attributes.role) {",
+									"        pm.collectionVariables.set('user_role', json.data.attributes.role);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
 				}
 			]
 		},
@@ -469,7 +529,7 @@
 								{
 									"key": "file",
 									"type": "file",
-									"src": ""
+									"src": "samples/drivers-import.csv"
 								}
 							]
 						},
@@ -478,7 +538,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "drivers", "import"]
 						},
-						"description": "Queue a CSV import of drivers (multipart/form-data, `file` required). **Note:** CSV import creates driver records only — it does **not** auto-create linked user accounts (unlike `POST /api/v1/drivers`).\n\n**CSV header row (required):**\n`first_name,last_name,license_number,license_expiry_date,address,phone_number`\n\n**Example row:**\n`John,Doe,DL-12345678,2027-12-31,123 Main St,+1234567890`\n\n`license_number` must be unique across the database and within the file."
+						"description": "Queue a CSV import of drivers (multipart/form-data, `file` required). Each valid row creates a linked user account (same as `POST /api/v1/drivers`).\n\n**CSV header row (required):**\n`first_name,last_name,license_number,license_expiry_date,address,phone_number,email,password`\n\n**Example row:**\n`John,Doe,DL-12345678,2027-12-31,123 Main St,+1234567890,john.doe@example.com,password123`\n\n`license_number` must be unique across the database and within the file. `email` must be unique across users and within the file. `password` must be at least 8 characters."
 					},
 					"event": [
 						{
