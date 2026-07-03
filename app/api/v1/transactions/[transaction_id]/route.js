@@ -40,8 +40,10 @@ export async function GET(req, { params }) {
     const res = await fetch(url.toString(), {
       method: "GET",
       headers: {
+        Accept: "application/json",
         Authorization: `Bearer ${token}`,
       },
+      cache: "no-store",
     });
     const data = await res.json().catch(() => ({}));
     return NextResponse.json(data, { status: res.status });
