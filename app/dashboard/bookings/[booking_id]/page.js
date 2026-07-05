@@ -157,72 +157,6 @@ function extractPagination(payload) {
   };
 }
 
-function extractBookingFromTransactionPayload(payload, bookingId) {
-  const bookingsData =
-    payload?.data?.relationships?.bookings?.data ??
-    payload?.relationships?.bookings?.data;
-  if (!Array.isArray(bookingsData)) return null;
-
-  const bookingRef = bookingsData.find(
-    (item) => String(item?.id) === String(bookingId),
-  );
-  if (!bookingRef) return null;
-
-  const includedData = Array.isArray(payload?.included) ? payload.included : [];
-  const includedBooking =
-    includedData.find(
-      (item) =>
-        String(item?.id) === String(bookingId) &&
-        (!item?.type || item.type === "bookings" || item.type === "booking"),
-    ) ?? bookingRef;
-
-  const includedAttributes = includedBooking?.attributes ?? {};
-  const includedRelationships = includedBooking?.relationships ?? {};
-  const driverRef = includedRelationships?.driver?.data ?? null;
-  const carRef = includedRelationships?.car?.data ?? null;
-  const transactionAttrs = payload?.data?.attributes ?? payload?.attributes ?? {};
-  const transactionId = String(
-    payload?.data?.id ?? payload?.id ?? bookingRef?.relationships?.transaction?.data?.id ?? "",
-  );
-
-  return {
-    ...includedBooking,
-    id: String(bookingId),
-    relationships: {
-      ...(includedBooking?.relationships ?? {}),
-      ...(driverRef ? { driver: { data: driverRef } } : {}),
-      ...(carRef ? { car: { data: carRef } } : {}),
-      transaction: {
-        data: {
-          type: "transactions",
-          id: transactionId,
-          attributes: transactionAttrs,
-        },
-      },
-    },
-    attributes: {
-      ...(bookingRef?.attributes ?? {}),
-      ...includedAttributes,
-    },
-  };
-}
-
-async function fetchBookingViaTransaction(baseUrl, reqHeaders, transactionId, bookingId) {
-  const res = await fetch(
-    `${baseUrl}/api/v1/transactions/${encodeURIComponent(transactionId)}`,
-    {
-      headers: reqHeaders,
-      cache: "no-store",
-    },
-  );
-
-  if (!res.ok) return null;
-
-  const data = await res.json().catch(() => ({}));
-  const rawBooking = extractBookingFromTransactionPayload(data, bookingId);
-  return rawBooking ? normalizeBooking(rawBooking) : null;
-}
-
 async function fetchSingleBooking(baseUrl, reqHeaders, transactionId, bookingId) {
   const res = await fetch(
     `${baseUrl}/api/v1/transactions/${encodeURIComponent(transactionId)}/bookings/${encodeURIComponent(bookingId)}`,
@@ -339,34 +273,50 @@ export default async function BookingDetailPage({ params, searchParams }) {
       transactionId = booking?.transactionId || "";
     }
 
+    let bookingDetailError = "";
+
     if (transactionId) {
-      const fromTransaction = await fetchBookingViaTransaction(
+      const singleBookingResult = await fetchSingleBooking(
         baseUrl,
         reqHeaders,
         transactionId,
         bookingId,
       );
 
-      if (fromTransaction) {
-        booking = fromTransaction;
+      if (singleBookingResult.booking) {
+        booking = singleBookingResult.booking;
       } else {
-        const singleBookingResult = await fetchSingleBooking(
-          baseUrl,
-          reqHeaders,
-          transactionId,
-          bookingId,
-        );
+        bookingDetailError = singleBookingResult.error;
+      }
+    }
 
-        if (singleBookingResult.booking) {
-          booking = singleBookingResult.booking;
-        } else if (!booking) {
-          error = singleBookingResult.error;
+    if (!booking) {
+      const resolvedBooking = await resolveBookingFromList(baseUrl, reqHeaders, bookingId);
+
+      if (resolvedBooking) {
+        booking = resolvedBooking;
+
+        if (resolvedBooking.transactionId && resolvedBooking.transactionId !== transactionId) {
+          transactionId = resolvedBooking.transactionId;
+
+          const retryResult = await fetchSingleBooking(
+            baseUrl,
+            reqHeaders,
+            transactionId,
+            bookingId,
+          );
+
+          if (retryResult.booking) {
+            booking = retryResult.booking;
+          } else {
+            bookingDetailError = retryResult.error;
+          }
         }
       }
     }
 
     if (!booking && !error) {
-      error = "Booking details could not be found.";
+      error = bookingDetailError || "Booking details could not be found.";
     }
   }
 
