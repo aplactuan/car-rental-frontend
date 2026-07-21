@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "car-rental-api-collection",
 		"name": "Car Rental API",
-		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | **Not used** — public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` (register) | **Not used** — public, but the server may return **403** if registration is disabled (`allow_user_registration`). |\n| `GET /api/user`, `PUT /api/password`, `POST /api/logout` | **Required** — Sanctum. |\n| All other `/api/v1/...` routes | **Required** — same Bearer token as above. |\n\nThis collection sets **Bearer Token** auth at the collection level (`{{token}}`). Requests that must be public override auth to **No Auth** (Login, Register User).\n\n## Setup\n1. Set `base_url` (default: `http://localhost` — add port if needed, e.g. `http://localhost:8000`).\n2. Run **Login**; token is stored automatically. Seeded accounts (after `php artisan migrate --seed`): `test@example.com` / `password` (`user` role), `admin@example.com` / `password` (`admin` role). Collection variable `user_role` is set from login/register responses.\n3. Fill path variables from responses: `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id`, `trip_report_id`, `car_import_id`, `driver_import_id`, `bill_payment_id` (UUIDs).\n\n## Optional query keys (frontend reference)\nMany `GET` endpoints accept optional keys documented on each request: pagination (`per_page`), nested `filter[...]`, `sort`, `include`, date ranges, etc. If a key is omitted, the API uses defaults described on that request.\n\n**User registration:** `POST /api/v1/users` needs `name`, `email`, `password`, `password_confirmation` — no Bearer; may still fail with 403 when registration is off. Optional `role` defaults to `user`; public registration only accepts `user` (`admin` returns **422**). Response includes `data.attributes.role`.\n\n**Change password:** `PUT /api/password` updates the authenticated user's password. Required: `current_password`, `password` (min 8), `password_confirmation`. New password must differ from the current password.\n\n**CSV imports:** `multipart/form-data` with field `file`; then poll import status by ID.\n\n- **Cars** — sample: `samples/cars-import.csv`. Columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number` (`door` and `seats` are integers).\n- **Drivers** — sample: `samples/drivers-import.csv`. Columns: `first_name`, `last_name`, `license_number`, `license_expiry_date`, `address`, `phone_number`, `email`, `password` (min 8). Each valid row creates a driver and linked user account (same as `POST /api/v1/drivers`).\n\n**Transactions:** create/update bodies require `name` (max 255) where applicable. Optional `has_bill` query (`0`, `1`, `true`, `false`) on list transaction endpoints filters by whether a bill exists. **Bookings:** `GET /api/v1/bookings` lists all bookings for the authenticated user (paginated, optional `status`: `completed`, `today`, `ongoing`, `incoming`). Per-transaction `GET .../bookings` uses `status` (`upcoming`/`previous`), `period`, `car_id`, `driver_id`; newest first (`created_at`, then `start_date`). Booking JSON includes `relationships.car`, `relationships.driver`, and `relationships.transaction`. **Collection responses** (`GET /api/v1/bookings`, `GET .../transactions/{id}/bookings`, transaction `included` bookings) return car/driver embedded attributes plus transaction **linkage only** (`type` + `id`). **Single-resource responses** (`POST .../book`, `GET .../bookings/{id}`, `PUT .../bookings/{id}`) also embed transaction attributes: `name`, `userId`, `customerId`, `createdAt`.\n\n**Bills:** `billNumber` (`INV-YYYYMMDD-####`, daily sequence) and `invoiceNumber` (`INV-YYMM#####`, incremented per month) are assigned automatically on create. Do not send them in the request body. Bill statuses: `draft`, `issued`, `partially_paid`, `paid`, `cancelled`. Bill JSON attributes include `amountPaid` (sum of recorded payments) and `remainingBalance` (`amount` minus `amountPaid`, never below 0).\n\n**Billing summary:** `GET /api/v1/billing/summary` returns `totalPaid` (sum of fully paid bill amounts) and `totalUnpaid` (outstanding balance on `issued` and `partially_paid` bills) for the authenticated rental company.\n\n**Bill Payments (installments):** `POST .../bill/payments` records a single payment against a bill (multipart/form-data: `amount`, `method`, `reference_number` required; `notes` and `proof_image` optional). Accepted `method` values: `bank_transfer`, `cash`, `gcash`. Payment is only allowed when bill status is `issued` or `partially_paid`. The bill status is recomputed automatically after each payment or deletion: `issued` → `partially_paid` (partial) → `paid` (fully paid). Deleting a payment reverses the computation.\n\n**User roles:** every user has a stored `role` of `admin` or `user` on the `users` table. `data.role` (login) and `data.attributes.role` (user resource) return this stored value. Being a driver is separate — linked driver users still have `role: user`; use the driver profile / `userId` link to determine driver access.\n\n**Driver-user link:** adding a driver automatically creates a linked user account — provide `email` (unique) and `password` (min 8). The auto-created user uses the driver's full name and role `user`. Admins can reassign or unlink via `user_id` on Update Driver. A linked driver user can update their own record but cannot change `user_id`. Response attribute `userId` is `null` only when unlinked via update.\n\n**Trip reports:** nested under `.../bookings/{booking}/trip-reports`. **Authorization:** admin users or the driver assigned to the booking only; transaction owners who are not the assigned driver receive `403`. Required on create: `report_date`. Optional: `po_number`, `time_in`/`time_out` (`H:i`, `time_out` >= `time_in`), `rate`, `odometer_in`/`odometer_out` (out >= in), `fuel_liters`, `fuel_amount`, `invoice_or_or_number`, `collection_amount`, `percentage` (0-100), `destinations` (array of up to 6 `{from, to}` objects). Snapshots (`driverNameSnapshot`, `carPlateNumberSnapshot`, etc.) are captured at creation and never updated when related records change.",
+		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | Public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` | Public registration route; the server may still return **403** if registration is disabled. |\n| `GET /api/user`, `PUT /api/password`, `POST /api/logout` | Bearer token required. |\n| All other `/api/v1/...` routes | Bearer token required. |\n\nThis collection sets collection-level Bearer auth with `{{token}}`. Public requests override auth to `No Auth`.\n\n## Setup\n1. Set `base_url` (default: `http://localhost`; add a port if needed, for example `http://localhost:8000`).\n2. Run **Login**. The token is stored automatically. Seeded accounts after `php artisan migrate --seed`: `test@example.com` / `password` and `admin@example.com` / `password`.\n3. Reuse saved variables from earlier responses: `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id`, `trip_report_id`, `car_import_id`, `driver_import_id`, `bill_payment_id`.\n\n## Notes\n- User registration requires `name`, `email`, `password`, and `password_confirmation`. Optional `role` defaults to `user`; public registration rejects `admin` with **422**.\n- Change password requires `current_password`, `password`, and `password_confirmation`.\n- Car import CSV columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number`.\n- Driver import CSV columns: `first_name`, `last_name`, `license_number`, `license_expiry_date`, `address`, `phone_number`, `email`, `password`.\n- Customers support hierarchy and contact fields: `parent_id`, `contact_person`, `contact_mobile_number`, `contact_email`.\n- `GET /api/v1/bookings` uses global statuses `completed`, `today`, `ongoing`, `incoming`. `GET /api/v1/transactions/{id}/bookings` uses `upcoming` and `previous`, plus `period`, `car_id`, and `driver_id` filters.\n- Bill numbers are generated automatically. Bill payment uploads use `multipart/form-data`.\n- Trip reports are limited to admin users or the driver assigned to the booking. Snapshot fields are captured on create and do not change later.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -781,14 +781,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"Jane Smith\",\n    \"type\": \"personal\"\n}"
+							"raw": "{\n    \"name\": \"Iligan City Engineers Office\",\n    \"type\": \"business\",\n    \"parent_id\": \"{{customer_id}}\",\n    \"contact_person\": \"Jane Smith\",\n    \"contact_mobile_number\": \"+639171234567\",\n    \"contact_email\": \"jane@example.com\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "customers"]
 						},
-						"description": "**Bearer required.** Create a customer. Required: `name`, `type` (`personal` or `business`)."
+						"description": "**Bearer required.** Create a customer. Required: `name`, `type` (`personal` or `business`). Optional: `parent_id`, `contact_person`, `contact_mobile_number`, `contact_email`. `parent_id` must reference an existing customer or be omitted/null."
 					},
 					"event": [
 						{
@@ -828,7 +828,8 @@
 									"description": "Optional: 1-100"
 								}
 							]
-						}
+						},
+						"description": "**Bearer required.** Paginated customer list. Optional query: `per_page` (1-100). List responses include parent linkage when `parent_id` exists, but do not include parent attributes such as the parent name."
 					}
 				},
 				{
@@ -845,7 +846,44 @@
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "customers", "{{customer_id}}"]
-						}
+						},
+						"description": "**Bearer required.** Returns one customer. Customer attributes include `name`, `type`, `parentId`, `contactPerson`, `contactMobileNumber`, and `contactEmail`. Single-resource responses may include parent attributes such as the parent name under `relationships.parent.data.attributes`."
+					}
+				},
+				{
+					"name": "Get Customer Parent",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/parent",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "{{customer_id}}", "parent"]
+						},
+						"description": "**Bearer required.** Returns the immediate parent customer for `{{customer_id}}`. When the customer has no parent, the API returns **404** with `Customer has no parent account`."
+					}
+				},
+				{
+					"name": "Get Customer Children",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/children",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "customers", "{{customer_id}}", "children"]
+						},
+						"description": "**Bearer required.** Returns the immediate child accounts for `{{customer_id}}` as a customer resource collection. When children exist, each item includes parent linkage and may include the parent name under `relationships.parent.data.attributes`. When the customer has no children, the API returns an empty `data` array."
 					}
 				},
 				{
@@ -864,13 +902,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"Jane Smith Updated\",\n    \"type\": \"business\"\n}"
+							"raw": "{\n    \"name\": \"Iligan City Engineers Office Updated\",\n    \"parent_id\": null,\n    \"contact_person\": \"John Smith\",\n    \"contact_mobile_number\": \"+639189876543\",\n    \"contact_email\": \"john@example.com\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "customers", "{{customer_id}}"]
-						}
+						},
+						"description": "**Bearer required.** Update any subset of customer fields: `name`, `type`, `parent_id`, `contact_person`, `contact_mobile_number`, `contact_email`. Set `parent_id` to `null` to clear the parent. A customer cannot be its own parent or use one of its descendants as its parent."
 					}
 				},
 				{
@@ -2192,6 +2231,3 @@
 		}
 	]
 }
-
-
-

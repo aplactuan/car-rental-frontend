@@ -61,6 +61,12 @@ function normalizeCustomers(payload) {
       email: pick(["email", "email_address", "emailAddress"]),
       phone_number: pick(["phone_number", "phoneNumber"]),
       address: pick(["address", "full_address", "fullAddress"]),
+      contact_person: pick(["contact_person", "contactPerson"]),
+      contact_mobile_number: pick([
+        "contact_mobile_number",
+        "contactMobileNumber",
+      ]),
+      contact_email: pick(["contact_email", "contactEmail"]),
     };
   });
 }
@@ -95,10 +101,16 @@ function getTypeMeta(type) {
   };
 }
 
-function CustomerCard({ customer }) {
+function CustomerCard({ customer, onEdit }) {
   const displayName = customer.name || "Unnamed customer";
   const typeMeta = getTypeMeta(customer.type);
   const initials = getInitials(displayName);
+  const contactPerson = customer.contact_person;
+  const contactEmail = customer.contact_email || customer.email;
+  const contactPhone =
+    customer.contact_mobile_number || customer.phone_number;
+  const hasContactDetails =
+    contactPerson || contactEmail || contactPhone || customer.address;
 
   return (
     <article className="group flex flex-col rounded-xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-teal-200 hover:shadow-md">
@@ -116,7 +128,27 @@ function CustomerCard({ customer }) {
             </span>
           </div>
           <ul className="mt-3 space-y-1.5 text-sm text-zinc-600">
-            {customer.email ? (
+            {contactPerson ? (
+              <li className="flex items-center gap-2 truncate">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  className="h-4 w-4 shrink-0 text-zinc-400"
+                  aria-hidden
+                >
+                  <circle cx="12" cy="8" r="3.5" />
+                  <path
+                    d="M5 20v-1.2a5 5 0 0 1 14 0V20"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="truncate">{contactPerson}</span>
+              </li>
+            ) : null}
+            {contactEmail ? (
               <li className="flex items-center gap-2 truncate">
                 <svg
                   viewBox="0 0 24 24"
@@ -133,10 +165,10 @@ function CustomerCard({ customer }) {
                   />
                   <path d="m4 7 8 6 8-6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span className="truncate">{customer.email}</span>
+                <span className="truncate">{contactEmail}</span>
               </li>
             ) : null}
-            {customer.phone_number ? (
+            {contactPhone ? (
               <li className="flex items-center gap-2 truncate">
                 <svg
                   viewBox="0 0 24 24"
@@ -152,7 +184,7 @@ function CustomerCard({ customer }) {
                     strokeLinejoin="round"
                   />
                 </svg>
-                <span className="truncate">{customer.phone_number}</span>
+                <span className="truncate">{contactPhone}</span>
               </li>
             ) : null}
             {customer.address ? (
@@ -175,18 +207,18 @@ function CustomerCard({ customer }) {
                 <span className="line-clamp-2">{customer.address}</span>
               </li>
             ) : null}
-            {!customer.email && !customer.phone_number && !customer.address ? (
+            {!hasContactDetails ? (
               <li className="text-xs text-zinc-400">No contact details on file</li>
             ) : null}
           </ul>
         </div>
       </div>
 
-      <div className="mt-4 border-t border-zinc-100 pt-4">
+      <div className="mt-4 flex gap-2 border-t border-zinc-100 pt-4">
         {customer.id ? (
           <Link
             href={`/dashboard/customer/${customer.id}`}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white transition group-hover:bg-teal-800"
+            className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white transition group-hover:bg-teal-800"
           >
             View customer
             <svg
@@ -205,19 +237,47 @@ function CustomerCard({ customer }) {
             </svg>
           </Link>
         ) : (
-          <span className="block text-center text-sm text-zinc-400">
+          <span className="block flex-1 text-center text-sm text-zinc-400">
             No ID available
           </span>
         )}
+        {onEdit ? (
+          <button
+            type="button"
+            onClick={() => onEdit(customer)}
+            className="inline-flex items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+            title="Edit customer"
+            aria-label={`Edit ${displayName}`}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              className="h-4 w-4"
+              aria-hidden
+            >
+              <path
+                d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        ) : null}
       </div>
     </article>
   );
 }
 
 export default function CustomerDashboardPage() {
-  const [showForm, setShowForm] = useState(false);
+  const [formMode, setFormMode] = useState(null);
+  const [editingCustomerId, setEditingCustomerId] = useState("");
   const [name, setName] = useState("");
   const [type, setType] = useState("personal");
+  const [contactPerson, setContactPerson] = useState("");
+  const [contactMobileNumber, setContactMobileNumber] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customers, setCustomers] = useState([]);
@@ -227,7 +287,32 @@ export default function CustomerDashboardPage() {
   function resetForm() {
     setName("");
     setType("personal");
+    setContactPerson("");
+    setContactMobileNumber("");
+    setContactEmail("");
     setSubmitError("");
+    setEditingCustomerId("");
+  }
+
+  function openAddForm() {
+    resetForm();
+    setFormMode("add");
+  }
+
+  function openEditForm(customer) {
+    setFormMode("edit");
+    setEditingCustomerId(customer.id || "");
+    setName(customer.name || "");
+    setType(String(customer.type || "personal").toLowerCase() || "personal");
+    setContactPerson(customer.contact_person || "");
+    setContactMobileNumber(customer.contact_mobile_number || "");
+    setContactEmail(customer.contact_email || "");
+    setSubmitError("");
+  }
+
+  function closeForm() {
+    setFormMode(null);
+    resetForm();
   }
 
   async function fetchCustomers() {
@@ -265,32 +350,48 @@ export default function CustomerDashboardPage() {
     setSubmitError("");
     setIsSubmitting(true);
 
+    const isEdit = formMode === "edit";
+
     try {
-      const res = await fetch("/api/v1/customers", {
-        method: "POST",
+      if (isEdit && !editingCustomerId) {
+        setSubmitError(
+          "Unable to update this customer because no customer ID was found.",
+        );
+        return;
+      }
+
+      const payload = {
+        name: name.trim(),
+        type,
+        contact_person: contactPerson.trim() || null,
+        contact_mobile_number: contactMobileNumber.trim() || null,
+        contact_email: contactEmail.trim() || null,
+      };
+
+      const endpoint = isEdit
+        ? `/api/v1/customers/${encodeURIComponent(editingCustomerId)}`
+        : "/api/v1/customers";
+      const method = isEdit ? "PUT" : "POST";
+
+      const res = await fetch(endpoint, {
+        method,
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          name: name.trim(),
-          type,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setSubmitError(data?.error || data?.message || "Failed to add customer.");
+        setSubmitError(
+          data?.error ||
+            data?.message ||
+            (isEdit ? "Failed to update customer." : "Failed to add customer."),
+        );
         return;
       }
 
-      const [createdCustomer] = normalizeCustomers(data);
-
-      if (createdCustomer) {
-        setError("");
-        setCustomers((current) => [...current, createdCustomer]);
-      }
-
-      setShowForm(false);
-      resetForm();
+      closeForm();
+      await fetchCustomers();
     } catch {
       setSubmitError("Network error. Please try again.");
     } finally {
@@ -351,10 +452,7 @@ export default function CustomerDashboardPage() {
 
             <button
               type="button"
-              onClick={() => {
-                setShowForm(true);
-                resetForm();
-              }}
+              onClick={openAddForm}
               className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50"
             >
               <svg
@@ -389,11 +487,15 @@ export default function CustomerDashboardPage() {
         </div>
       </header>
 
-      {showForm && (
+      {formMode && (
         <div className="mt-6 overflow-hidden rounded-2xl border border-teal-200/80 bg-gradient-to-br from-teal-50/80 to-white p-6 shadow-sm ring-1 ring-teal-100">
-          <h2 className="text-base font-semibold text-zinc-900">Add new customer</h2>
+          <h2 className="text-base font-semibold text-zinc-900">
+            {formMode === "edit" ? "Edit customer" : "Add new customer"}
+          </h2>
           <p className="mt-1 text-sm text-zinc-500">
-            Create a personal or business customer profile.
+            {formMode === "edit"
+              ? "Update customer profile and contact person details."
+              : "Create a personal or business customer profile."}
           </p>
           <form onSubmit={handleSubmit} className="mt-5 grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
@@ -425,6 +527,45 @@ export default function CustomerDashboardPage() {
                 <option value="business">Business</option>
               </select>
             </div>
+            <div>
+              <label htmlFor="contact-person" className={labelClass}>
+                Contact person
+              </label>
+              <input
+                id="contact-person"
+                type="text"
+                value={contactPerson}
+                onChange={(e) => setContactPerson(e.target.value)}
+                className={inputClass}
+                placeholder="Primary contact name"
+              />
+            </div>
+            <div>
+              <label htmlFor="contact-mobile-number" className={labelClass}>
+                Contact mobile number
+              </label>
+              <input
+                id="contact-mobile-number"
+                type="tel"
+                value={contactMobileNumber}
+                onChange={(e) => setContactMobileNumber(e.target.value)}
+                className={inputClass}
+                placeholder="+639171234567"
+              />
+            </div>
+            <div>
+              <label htmlFor="contact-email" className={labelClass}>
+                Contact email
+              </label>
+              <input
+                id="contact-email"
+                type="email"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                className={inputClass}
+                placeholder="contact@example.com"
+              />
+            </div>
             {submitError ? (
               <p className="text-sm text-red-600 sm:col-span-2">{submitError}</p>
             ) : null}
@@ -434,14 +575,15 @@ export default function CustomerDashboardPage() {
                 disabled={isSubmitting}
                 className="rounded-lg bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:opacity-50"
               >
-                {isSubmitting ? "Saving…" : "Save customer"}
+                {isSubmitting
+                  ? "Saving…"
+                  : formMode === "edit"
+                    ? "Save changes"
+                    : "Save customer"}
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setShowForm(false);
-                  resetForm();
-                }}
+                onClick={closeForm}
                 disabled={isSubmitting}
                 className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50"
               >
@@ -505,10 +647,7 @@ export default function CustomerDashboardPage() {
               </p>
               <button
                 type="button"
-                onClick={() => {
-                  setShowForm(true);
-                  resetForm();
-                }}
+                onClick={openAddForm}
                 className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
               >
                 <svg
@@ -530,6 +669,7 @@ export default function CustomerDashboardPage() {
                 <CustomerCard
                   key={customer.id ?? customer.name}
                   customer={customer}
+                  onEdit={openEditForm}
                 />
               ))}
             </div>
