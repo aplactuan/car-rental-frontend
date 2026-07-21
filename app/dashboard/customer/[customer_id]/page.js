@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import AddCustomerTransactionButton from "./AddCustomerTransactionButton";
+import CustomerSubAccountsSection from "./CustomerSubAccountsSection";
 
 function readField(source, keys) {
   if (!source || typeof source !== "object") return "";
@@ -29,6 +30,10 @@ function readField(source, keys) {
 function normalizeCustomer(payload) {
   const record = payload?.data ?? payload?.customer ?? payload;
   const attrs = record?.attributes ?? {};
+  const parentRelationshipId =
+    record?.relationships?.parent?.data?.id ??
+    attrs?.relationships?.parent?.data?.id ??
+    "";
   const pick = (keys) => {
     const fromAttrs = readField(attrs, keys);
     if (fromAttrs !== "") return fromAttrs;
@@ -39,9 +44,18 @@ function normalizeCustomer(payload) {
     id: pick(["id", "customer_id", "customerId"]),
     name: pick(["name", "customer_name", "customerName"]),
     type: pick(["type", "customer_type", "customerType"]),
+    parent_id:
+      pick(["parent_id", "parentId", "parent_customer_id", "parentCustomerId"]) ||
+      parentRelationshipId,
     email: pick(["email", "email_address", "emailAddress"]),
     phone_number: pick(["phone_number", "phoneNumber"]),
     address: pick(["address", "full_address", "fullAddress"]),
+    contact_person: pick(["contact_person", "contactPerson"]),
+    contact_mobile_number: pick([
+      "contact_mobile_number",
+      "contactMobileNumber",
+    ]),
+    contact_email: pick(["contact_email", "contactEmail"]),
     created_at: pick(["created_at", "createdAt"]),
     updated_at: pick(["updated_at", "updatedAt"]),
   };
@@ -309,6 +323,12 @@ export default async function CustomerDetailPage({ params }) {
           <div className="grid gap-4 sm:grid-cols-2">
             <DetailRow label="Name" value={customer.name} />
             <DetailRow label="Type" value={customer.type} />
+            <DetailRow label="Contact Person" value={customer.contact_person} />
+            <DetailRow
+              label="Contact Mobile Number"
+              value={customer.contact_mobile_number}
+            />
+            <DetailRow label="Contact Email" value={customer.contact_email} />
             <DetailRow label="Email" value={customer.email} />
             <DetailRow label="Phone Number" value={customer.phone_number} />
             <DetailRow label="Address" value={customer.address} />
@@ -319,6 +339,10 @@ export default async function CustomerDetailPage({ params }) {
           <p className="text-sm text-zinc-500">No customer data returned.</p>
         )}
       </div>
+
+      {customerId && customer && !customer.parent_id ? (
+        <CustomerSubAccountsSection customerId={customerId} />
+      ) : null}
 
       <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
