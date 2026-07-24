@@ -241,6 +241,7 @@ export default function BillingSection({
   transactionId,
   bookings = EMPTY_BOOKINGS,
   className = "",
+  onBillChange,
 }) {
   const [bill, setBill] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -330,7 +331,9 @@ export default function BillingSection({
   const isIssuedBill = normalizedStatus === "issued";
   const isPartiallyPaidBill = normalizedStatus === "partially_paid";
   const isPaidBill = normalizedStatus === "paid";
+  const isCancelledBill = normalizedStatus === "cancelled";
   const canEditDraft = Boolean(bill) && isDraftBill;
+  const canDeleteBill = Boolean(bill) && (isDraftBill || isCancelledBill);
   const canRecordPayment = Boolean(bill) && (isIssuedBill || isPartiallyPaidBill);
   const canPrintInvoice =
     Boolean(bill) && (isIssuedBill || isPartiallyPaidBill || isPaidBill);
@@ -526,6 +529,11 @@ export default function BillingSection({
     refreshBillingData();
   }, [refreshBillingData]);
 
+  useEffect(() => {
+    if (isLoading) return;
+    onBillChange?.(bill);
+  }, [bill, isLoading, onBillChange]);
+
   const handleCreateToggle = async () => {
     if (showCreateForm) {
       setShowCreateForm(false);
@@ -712,9 +720,13 @@ export default function BillingSection({
     }
   };
 
-  const handleDeleteDraft = async () => {
-    if (!transactionId || !bill || !isDraftBill || isSubmitting) return;
-    if (!window.confirm("Delete this draft bill? This cannot be undone.")) return;
+  const handleDeleteBill = async () => {
+    if (!transactionId || !bill || !canDeleteBill || isSubmitting) return;
+
+    const confirmMessage = isCancelledBill
+      ? "Delete this cancelled bill? You can create a new bill afterward."
+      : "Delete this draft bill? This cannot be undone.";
+    if (!window.confirm(confirmMessage)) return;
 
     setFormError("");
     setActionError("");
@@ -1044,7 +1056,7 @@ export default function BillingSection({
                   </button>
                   <button
                     type="button"
-                    onClick={handleDeleteDraft}
+                    onClick={handleDeleteBill}
                     disabled={isSubmitting || isEditing}
                     className="rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
                   >
@@ -1054,21 +1066,30 @@ export default function BillingSection({
               ) : null}
 
               {(isIssuedBill || isPartiallyPaidBill) ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleStatusChange(
-                        "cancelled",
-                        "Cancel this issued bill? This action cannot be easily undone.",
-                      )
-                    }
-                    disabled={isSubmitting}
-                    className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Cancel
-                  </button>
-                </>
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleStatusChange(
+                      "cancelled",
+                      "Cancel this issued bill? This action cannot be easily undone.",
+                    )
+                  }
+                  disabled={isSubmitting}
+                  className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Cancel
+                </button>
+              ) : null}
+
+              {isCancelledBill ? (
+                <button
+                  type="button"
+                  onClick={handleDeleteBill}
+                  disabled={isSubmitting}
+                  className="rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Delete
+                </button>
               ) : null}
           </div>
 
@@ -1325,7 +1346,9 @@ export default function BillingSection({
           ) : null}
           {!canEditDraft ? (
             <p className="mt-3 text-sm text-zinc-500">
-              This bill is no longer in draft and cannot be edited here.
+              {isCancelledBill
+                ? "This bill is cancelled. Delete it to unlock bookings and create a new bill."
+                : "This bill is no longer in draft and cannot be edited here."}
             </p>
           ) : null}
         </div>

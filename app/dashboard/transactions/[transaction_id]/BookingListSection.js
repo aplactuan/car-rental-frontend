@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Fragment, useState, useEffect, useCallback, useRef } from "react";
 
 function getArray(response) {
@@ -178,6 +179,7 @@ export default function BookingListSection({
   transactionId,
   bookings: initialBookings,
   layout = "default",
+  bookingsLocked = false,
 }) {
   const isPanel = layout === "panel";
   const [showForm, setShowForm] = useState(false);
@@ -345,6 +347,14 @@ export default function BookingListSection({
     setAvailabilityError("");
   }, []);
 
+  useEffect(() => {
+    if (!bookingsLocked) return;
+    setShowForm(false);
+    setEditingId(null);
+    resetFormFields();
+    setListError("");
+  }, [bookingsLocked, resetFormFields]);
+
   const handleCancel = () => {
     setShowForm(false);
     setEditingId(null);
@@ -352,6 +362,7 @@ export default function BookingListSection({
   };
 
   const beginAdd = () => {
+    if (bookingsLocked) return;
     setEditingId(null);
     resetFormFields();
     const defaults = getDefaultBookingSchedule(bookingsRef.current);
@@ -361,6 +372,7 @@ export default function BookingListSection({
   };
 
   const beginEdit = (b) => {
+    if (bookingsLocked) return;
     setShowForm(false);
     setSubmitError("");
     setAvailabilityError("");
@@ -375,6 +387,12 @@ export default function BookingListSection({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (bookingsLocked) {
+      setSubmitError(
+        "Bookings cannot be changed while a bill exists for this transaction.",
+      );
+      return;
+    }
     if (!transactionId) return;
     if (!isTimeValid) {
       setSubmitError("End Time must be at least 1 hour after Start Time.");
@@ -444,6 +462,12 @@ export default function BookingListSection({
 
   const handleSaveEdit = async (e) => {
     e.preventDefault();
+    if (bookingsLocked) {
+      setSubmitError(
+        "Bookings cannot be changed while a bill exists for this transaction.",
+      );
+      return;
+    }
     if (!transactionId || !editingId) return;
     if (!isTimeValid) {
       setSubmitError("End Time must be at least 1 hour after Start Time.");
@@ -516,7 +540,7 @@ export default function BookingListSection({
   };
 
   const handleDelete = async (bookingId) => {
-    if (!transactionId) return;
+    if (!transactionId || bookingsLocked) return;
     if (!window.confirm("Delete this booking? This cannot be undone.")) return;
     setListError("");
     setDeletingId(bookingId);
@@ -585,17 +609,26 @@ export default function BookingListSection({
               {bookings.length} reservation{bookings.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => (showForm ? handleCancel() : beginAdd())}
-            className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800 active:scale-[0.98]"
-          >
-            {showForm ? "Close" : "Add booking"}
-          </button>
+          {!bookingsLocked ? (
+            <button
+              type="button"
+              onClick={() => (showForm ? handleCancel() : beginAdd())}
+              className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800 active:scale-[0.98]"
+            >
+              {showForm ? "Close" : "Add booking"}
+            </button>
+          ) : null}
         </div>
       </div>
 
-      {showForm && (
+      {bookingsLocked ? (
+        <p className="shrink-0 border-b border-amber-100 bg-amber-50/90 px-5 py-2.5 text-sm text-amber-900">
+          Bookings are locked because a bill exists. Delete the draft or cancelled
+          bill to add, edit, or remove bookings.
+        </p>
+      ) : null}
+
+      {showForm && !bookingsLocked && (
         <div className="shrink-0 max-h-[min(50vh,28rem)] overflow-y-auto border-b border-zinc-100">
           <BookingFormShell
             formKey="add"
@@ -667,29 +700,49 @@ export default function BookingListSection({
                         <span className="line-clamp-2">{b.noteDisplay}</span>
                       </td>
                       <td className="px-5 py-3 align-top text-right">
-                        <div className="inline-flex gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              editingId === b.id ? handleCancel() : beginEdit(b)
+                        <div className="inline-flex flex-wrap items-center justify-end gap-1.5">
+                          <Link
+                            href={
+                              transactionId
+                                ? `/dashboard/bookings/${encodeURIComponent(b.id)}?transaction_id=${encodeURIComponent(transactionId)}`
+                                : `/dashboard/bookings/${encodeURIComponent(b.id)}`
                             }
-                            disabled={deletingId === b.id}
-                            className="rounded-lg border border-teal-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal-800 transition hover:bg-teal-50 disabled:opacity-50"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50"
                           >
-                            {editingId === b.id ? "Cancel" : "Edit"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(b.id)}
-                            disabled={deletingId === b.id}
-                            className="rounded-lg border border-red-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50"
-                          >
-                            {deletingId === b.id ? "…" : "Delete"}
-                          </button>
+                            Details
+                          </Link>
+                          {!bookingsLocked ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  editingId === b.id ? handleCancel() : beginEdit(b)
+                                }
+                                disabled={deletingId === b.id}
+                                className="rounded-lg border border-teal-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal-800 transition hover:bg-teal-50 disabled:opacity-50"
+                              >
+                                {editingId === b.id ? "Cancel" : "Edit"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(b.id)}
+                                disabled={deletingId === b.id}
+                                className="rounded-lg border border-red-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50"
+                              >
+                                {deletingId === b.id ? "…" : "Delete"}
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-xs font-medium text-zinc-400">
+                              Locked
+                            </span>
+                          )}
                         </div>
                       </td>
                     </tr>
-                    {editingId === b.id && (
+                    {editingId === b.id && !bookingsLocked && (
                       <tr className="border-b border-zinc-100 bg-zinc-50/80">
                         <td colSpan={6} className="p-0">
                           <BookingFormShell
