@@ -210,6 +210,16 @@ export default function InvoicePrintPage() {
                   </p>
                 )}
               </div>
+              {invoice.notes?.trim() && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
+                    Notes
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-zinc-700">
+                    {invoice.notes}
+                  </p>
+                </div>
+              )}
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
                   Transaction
@@ -389,17 +399,20 @@ export default function InvoicePrintPage() {
             )}
           </div>
 
-          {/* Notes */}
-          {invoice.notes?.trim() && (
-            <div className="border-t border-zinc-100 px-10 pb-8 pt-4 print:px-8">
-              <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
-                Notes
-              </p>
-              <p className="mt-1 whitespace-pre-wrap text-sm text-zinc-700">
-                {invoice.notes}
-              </p>
-            </div>
-          )}
+          {/* End user */}
+          <div className="border-t border-zinc-100 px-10 pb-8 pt-4 print:px-8">
+            <p className="text-sm text-zinc-700">
+              <span className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
+                End user
+              </span>
+              <span className="mx-2 text-zinc-300">·</span>
+              <span className="font-medium text-zinc-800">
+                {invoice.customer?.contactPerson ||
+                  invoice.customer?.contact_person ||
+                  "—"}
+              </span>
+            </p>
+          </div>
 
           {/* Footer */}
           <div className="rounded-b-2xl border-t border-zinc-100 bg-zinc-50 px-10 py-4 text-center text-xs text-zinc-400 print:rounded-none print:px-8">

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import BookingListSection from "../../../../transactions/[transaction_id]/BookingListSection";
-import BillingSection from "../../../../transactions/[transaction_id]/BillingSection";
+import TransactionDetailPanels from "../../../../transactions/[transaction_id]/TransactionDetailPanels";
 
 function normalizeBookingsFromTransaction(data) {
   const bookingsData =
@@ -240,23 +239,10 @@ export default async function CustomerTransactionDetailPage({ params }) {
         loadError={loadError}
       />
 
-      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] lg:gap-5">
-        <aside className="min-h-0 overflow-y-auto lg:max-h-full lg:overflow-visible">
-          <BillingSection
-            transactionId={transactionId}
-            bookings={bookings}
-            className="lg:sticky lg:top-0"
-          />
-        </aside>
-
-        <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-          <BookingListSection
-            transactionId={transactionId}
-            bookings={bookings}
-            layout="panel"
-          />
-        </section>
-      </div>
+      <TransactionDetailPanels
+        transactionId={transactionId}
+        bookings={bookings}
+      />
     </div>
   );
 }
