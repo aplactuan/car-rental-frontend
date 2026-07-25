@@ -7,6 +7,7 @@ export default function AddCustomerTransactionButton({ customerId }) {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [transactionName, setTransactionName] = useState("");
+  const [poNumber, setPoNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -19,6 +20,7 @@ export default function AddCustomerTransactionButton({ customerId }) {
     if (isLoading) return;
     setIsDialogOpen(false);
     setTransactionName("");
+    setPoNumber("");
     setError("");
   };
 
@@ -28,6 +30,7 @@ export default function AddCustomerTransactionButton({ customerId }) {
     if (!customerId) return;
 
     const trimmedName = transactionName.trim();
+    const trimmedPoNumber = poNumber.trim();
 
     if (!trimmedName) {
       setError("Transaction name is required.");
@@ -51,6 +54,7 @@ export default function AddCustomerTransactionButton({ customerId }) {
           credentials: "include",
           body: JSON.stringify({
             name: trimmedName,
+            ...(trimmedPoNumber ? { po_number: trimmedPoNumber } : {}),
           }),
         },
       );
@@ -58,7 +62,18 @@ export default function AddCustomerTransactionButton({ customerId }) {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        setError(data?.error || data?.message || "Failed to create transaction.");
+        const validationMessage =
+          data?.errors?.po_number?.[0] ||
+          data?.errors?.name?.[0] ||
+          (typeof data?.errors === "object"
+            ? Object.values(data.errors).flat()?.[0]
+            : null);
+        setError(
+          validationMessage ||
+            data?.error ||
+            data?.message ||
+            "Failed to create transaction.",
+        );
         return;
       }
 
@@ -74,6 +89,7 @@ export default function AddCustomerTransactionButton({ customerId }) {
       }
 
       setTransactionName("");
+      setPoNumber("");
       setIsDialogOpen(false);
       router.push(
         `/dashboard/customer/${encodeURIComponent(customerId)}/transaction/${encodeURIComponent(transactionId)}`,
@@ -105,7 +121,8 @@ export default function AddCustomerTransactionButton({ customerId }) {
                   Add transaction
                 </h2>
                 <p className="mt-1 text-sm text-zinc-500">
-                  Enter a name for this customer transaction.
+                  Enter a name and optional PO number for this customer
+                  transaction.
                 </p>
               </div>
 
@@ -120,27 +137,49 @@ export default function AddCustomerTransactionButton({ customerId }) {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-5">
-              <label
-                htmlFor="transactionName"
-                className="mb-2 block text-sm font-medium text-zinc-700"
-              >
-                Transaction name
-              </label>
-              <input
-                id="transactionName"
-                type="text"
-                value={transactionName}
-                onChange={(event) => setTransactionName(event.target.value)}
-                disabled={isLoading}
-                maxLength={255}
-                autoFocus
-                required
-                placeholder="Enter transaction name"
-                className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
-              />
+            <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+              <div>
+                <label
+                  htmlFor="transactionName"
+                  className="mb-2 block text-sm font-medium text-zinc-700"
+                >
+                  Transaction name
+                </label>
+                <input
+                  id="transactionName"
+                  type="text"
+                  value={transactionName}
+                  onChange={(event) => setTransactionName(event.target.value)}
+                  disabled={isLoading}
+                  maxLength={255}
+                  autoFocus
+                  required
+                  placeholder="Enter transaction name"
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                />
+              </div>
 
-              {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
+              <div>
+                <label
+                  htmlFor="poNumber"
+                  className="mb-2 block text-sm font-medium text-zinc-700"
+                >
+                  PO number{" "}
+                  <span className="font-normal text-zinc-400">(optional)</span>
+                </label>
+                <input
+                  id="poNumber"
+                  type="text"
+                  value={poNumber}
+                  onChange={(event) => setPoNumber(event.target.value)}
+                  disabled={isLoading}
+                  maxLength={255}
+                  placeholder="e.g. PO-1001"
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                />
+              </div>
+
+              {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
               <div className="mt-5 flex justify-end gap-3">
                 <button

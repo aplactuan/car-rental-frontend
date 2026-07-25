@@ -39,13 +39,14 @@ export async function GET(req, { params }) {
   }
 
   const { searchParams } = new URL(req.url);
-  const perPage = searchParams.get("per_page") || "15";
-
   const url = new URL(
     `/api/v1/customers/${customerId}/transactions`,
     backendBase,
   );
-  url.searchParams.set("per_page", perPage);
+  searchParams.forEach((value, key) => url.searchParams.set(key, value));
+  if (!url.searchParams.has("per_page")) {
+    url.searchParams.set("per_page", "15");
+  }
 
   try {
     const res = await fetch(url.toString(), {

@@ -945,14 +945,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"Summer rental\"\n}"
+							"raw": "{\n    \"name\": \"Summer rental\",\n    \"po_number\": \"PO-1001\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "customers", "{{customer_id}}", "transactions"]
 						},
-						"description": "**Bearer required.** Create a transaction for the customer in the URL. Body must include `name` (string, max 255)."
+						"description": "**Bearer required.** Create a transaction for the customer in the URL. Body must include `name` (string, max 255). Optional `po_number` (string, max 255, unique)."
 					},
 					"event": [
 						{
@@ -982,7 +982,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions?per_page=15&has_bill=1",
+							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions?per_page=15&has_bill=1&po_number=PO-1001",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "customers", "{{customer_id}}", "transactions"],
 							"query": [
@@ -995,10 +995,15 @@
 									"key": "has_bill",
 									"value": "1",
 									"description": "Optional. `0`, `1`, `true`, or `false` — filter by whether the transaction has a bill."
+								},
+								{
+									"key": "po_number",
+									"value": "PO-1001",
+									"description": "Optional. Exact match on the transaction PO number."
 								}
 							]
 						},
-						"description": "**Bearer required.** Paginated transactions for `{{customer_id}}`. Optional `has_bill` filters by bill presence."
+						"description": "**Bearer required.** Paginated transactions for `{{customer_id}}`. Optional `has_bill` filters by bill presence. Optional `po_number` filters by exact PO number. Response attributes include `poNumber`."
 					}
 				},
 				{
@@ -1089,14 +1094,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"customer_id\": \"{{customer_id}}\",\n    \"name\": \"Updated transaction label\"\n}"
+							"raw": "{\n    \"customer_id\": \"{{customer_id}}\",\n    \"name\": \"Updated transaction label\",\n    \"po_number\": \"PO-2002\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions/{{transaction_id}}",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "customers", "{{customer_id}}", "transactions", "{{transaction_id}}"]
 						},
-						"description": "Requires `customer_id` (UUID) and `name` (string, max 255)."
+						"description": "Requires `customer_id` (UUID) and `name` (string, max 255). Optional `po_number` (string, max 255, unique)."
 					}
 				},
 				{
@@ -1137,14 +1142,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"customer_id\": \"{{customer_id}}\",\n    \"name\": \"Corporate fleet deal\"\n}"
+							"raw": "{\n    \"customer_id\": \"{{customer_id}}\",\n    \"name\": \"Corporate fleet deal\",\n    \"po_number\": \"PO-1001\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "transactions"]
 						},
-						"description": "**Bearer required.** Requires `customer_id` (UUID) and `name` (string, max 255)."
+						"description": "**Bearer required.** Requires `customer_id` (UUID) and `name` (string, max 255). Optional `po_number` (string, max 255, unique). Response includes `poNumber`."
 					},
 					"event": [
 						{
@@ -1174,7 +1179,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/transactions?per_page=15&has_bill=0",
+							"raw": "{{base_url}}/api/v1/transactions?per_page=15&has_bill=0&po_number=PO-1001",
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "transactions"],
 							"query": [
@@ -1187,10 +1192,15 @@
 									"key": "has_bill",
 									"value": "0",
 									"description": "Optional. `0`, `1`, `true`, or `false` — filter by whether the transaction has a bill."
+								},
+								{
+									"key": "po_number",
+									"value": "PO-1001",
+									"description": "Optional. Exact match on the transaction PO number."
 								}
 							]
 						},
-						"description": "**Bearer required.** Paginated transactions for the authenticated user. Optional `has_bill` filters by bill presence."
+						"description": "**Bearer required.** Paginated transactions for the authenticated user. Optional `has_bill` filters by bill presence. Optional `po_number` filters by exact PO number. Response attributes include `poNumber`."
 					}
 				},
 				{
@@ -1208,7 +1218,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "transactions", "{{transaction_id}}"]
 						},
-						"description": "Returns transaction attributes including `name`, `userId`, `customerId`, and nested `bookings` (newest first) plus `included` booking details when present. Bookings in `included` follow the collection shape: car/driver attributes embedded, `relationships.transaction` linkage only (`type` + `id`)."
+						"description": "Returns transaction attributes including `name`, `poNumber`, `userId`, `customerId`, and nested `bookings` (newest first) plus `included` booking details when present. Bookings in `included` follow the collection shape: car/driver attributes embedded, `relationships.transaction` linkage only (`type` + `id`)."
 					}
 				},
 				{
