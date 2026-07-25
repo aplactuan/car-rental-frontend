@@ -72,6 +72,7 @@ function TransactionHero({
   customerName,
   transactionId,
   transactionName,
+  poNumber,
   bookingCount,
   loadError,
 }) {
@@ -148,6 +149,12 @@ function TransactionHero({
                     Customer transaction
                   </p>
                 )}
+                {poNumber ? (
+                  <p className="mt-1 text-sm text-blue-100/90">
+                    PO number:{" "}
+                    <span className="font-medium text-white">{poNumber}</span>
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>
@@ -184,6 +191,7 @@ export default async function CustomerTransactionDetailPage({ params }) {
 
   let customerName = null;
   let transactionName = null;
+  let poNumber = null;
   let loadError = "";
   let bookings = [];
 
@@ -218,6 +226,7 @@ export default async function CustomerTransactionDetailPage({ params }) {
         attrs?.transaction_name ??
         attrs?.transactionName ??
         null;
+      poNumber = attrs?.poNumber ?? attrs?.po_number ?? null;
       customerName =
         data?.data?.attributes?.customerName ??
         data?.attributes?.customerName ??
@@ -235,6 +244,7 @@ export default async function CustomerTransactionDetailPage({ params }) {
         customerName={customerName}
         transactionId={transactionId}
         transactionName={transactionName}
+        poNumber={poNumber}
         bookingCount={bookingCount}
         loadError={loadError}
       />

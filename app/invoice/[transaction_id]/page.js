@@ -61,6 +61,7 @@ export default function InvoicePrintPage() {
 
   const [invoice, setInvoice] = useState(null);
   const [payments, setPayments] = useState([]);
+  const [poNumber, setPoNumber] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -72,13 +73,21 @@ export default function InvoicePrintPage() {
       setError("");
       try {
         const headers = getBearerHeaders();
-        const [invoiceRes, paymentsRes] = await Promise.all([
+        // TODO(invoice-po-in-payload): Invoice printable payload currently omits
+        // transaction.poNumber (only name). Extra GET /transactions/{id} is a
+        // workaround — remove it once the invoice API includes poNumber.
+        const [invoiceRes, paymentsRes, transactionRes] = await Promise.all([
           fetch(`/api/v1/transactions/${transactionId}/bill/invoice`, {
             headers,
             credentials: "include",
             cache: "no-store",
           }),
           fetch(`/api/v1/transactions/${transactionId}/bill/payments`, {
+            headers,
+            credentials: "include",
+            cache: "no-store",
+          }),
+          fetch(`/api/v1/transactions/${transactionId}`, {
             headers,
             credentials: "include",
             cache: "no-store",
@@ -98,6 +107,28 @@ export default function InvoicePrintPage() {
         } else {
           setPayments([]);
         }
+
+        let resolvedPo =
+          invoiceData?.transaction?.poNumber ||
+          invoiceData?.transaction?.po_number ||
+          invoiceData?.poNumber ||
+          invoiceData?.po_number ||
+          "";
+
+        if (transactionRes.ok) {
+          const transactionData = await transactionRes.json().catch(() => ({}));
+          const attrs =
+            transactionData?.data?.attributes ??
+            transactionData?.attributes ??
+            transactionData ??
+            {};
+          resolvedPo =
+            attrs?.poNumber ||
+            attrs?.po_number ||
+            resolvedPo;
+        }
+
+        setPoNumber(typeof resolvedPo === "string" ? resolvedPo.trim() : "");
       } catch {
         setError("Network error. Please try again.");
       } finally {
@@ -210,6 +241,12 @@ export default function InvoicePrintPage() {
                   </p>
                 )}
               </div>
+              {poNumber ? (
+                <p className="text-sm text-zinc-700">
+                  <span className="font-semibold text-zinc-900">PO Number:</span>{" "}
+                  {poNumber}
+                </p>
+              ) : null}
               {invoice.notes?.trim() && (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
