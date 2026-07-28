@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "car-rental-api-collection",
 		"name": "Car Rental API",
-		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | Public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` | Public registration route; the server may still return **403** if registration is disabled. |\n| `GET /api/user`, `PUT /api/password`, `POST /api/logout` | Bearer token required. |\n| All other `/api/v1/...` routes | Bearer token required. |\n\nThis collection sets collection-level Bearer auth with `{{token}}`. Public requests override auth to `No Auth`.\n\n## Setup\n1. Set `base_url` (default: `http://localhost`; add a port if needed, for example `http://localhost:8000`).\n2. Run **Login**. The token is stored automatically. Seeded accounts after `php artisan migrate --seed`: `test@example.com` / `password` and `admin@example.com` / `password`.\n3. Reuse saved variables from earlier responses: `car_id`, `driver_id`, `customer_id`, `transaction_id`, `booking_id`, `trip_report_id`, `car_import_id`, `driver_import_id`, `bill_payment_id`.\n\n## Notes\n- User registration requires `name`, `email`, `password`, and `password_confirmation`. Optional `role` defaults to `user`; public registration rejects `admin` with **422**.\n- Change password requires `current_password`, `password`, and `password_confirmation`.\n- Car import CSV columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number`.\n- Driver import CSV columns: `first_name`, `last_name`, `license_number`, `license_expiry_date`, `address`, `phone_number`, `email`, `password`.\n- Customers support hierarchy and contact fields: `parent_id`, `contact_person`, `contact_mobile_number`, `contact_email`.\n- `GET /api/v1/bookings` uses global statuses `completed`, `today`, `ongoing`, `incoming`. `GET /api/v1/transactions/{id}/bookings` uses `upcoming` and `previous`, plus `period`, `car_id`, and `driver_id` filters.\n- Bill numbers are generated automatically. Bill payment uploads use `multipart/form-data`.\n- Trip reports are limited to admin users or the driver assigned to the booking. Snapshot fields are captured on create and do not change later.",
+		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | Public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` | Public registration route; the server may still return **403** if registration is disabled. |\n| `GET /api/user`, `PUT /api/password`, `POST /api/logout` | Bearer token required. |\n| All other `/api/v1/...` routes | Bearer token required. |\n\nThis collection sets collection-level Bearer auth with `{{token}}`. Public requests override auth to `No Auth`.\n\n## Setup\n1. Set `base_url` (default: `http://localhost`; add a port if needed, for example `http://localhost:8000`).\n2. Run **Login**. The token is stored automatically. Seeded accounts after `php artisan migrate --seed`: `test@example.com` / `password` and `admin@example.com` / `password`.\n3. Reuse saved variables from earlier responses: `car_id`, `driver_id`, `customer_id`, `purchase_order_id`, `transaction_id`, `booking_id`, `trip_report_id`, `car_import_id`, `driver_import_id`, `bill_payment_id`.\n\n## Notes\n- User registration requires `name`, `email`, `password`, and `password_confirmation`. Optional `role` defaults to `user`; public registration rejects `admin` with **422**.\n- Change password requires `current_password`, `password`, and `password_confirmation`.\n- Car import CSV columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number`.\n- Driver import CSV columns: `first_name`, `last_name`, `license_number`, `license_expiry_date`, `address`, `phone_number`, `email`, `password`.\n- Customers support hierarchy and contact fields: `parent_id`, `contact_person`, `contact_mobile_number`, `contact_email`.\n- `GET /api/v1/bookings` uses global statuses `completed`, `today`, `ongoing`, `incoming`. `GET /api/v1/transactions/{id}/bookings` uses `upcoming` and `previous`, plus `period`, `car_id`, and `driver_id` filters.\n- Bill numbers are generated automatically. Bill payment uploads use `multipart/form-data`.\n- Purchase order and trip report `amount` values are unsigned money integers (smallest currency unit).\n- Trip reports nest under purchase orders. Optional `trip_report_image` uploads use `multipart/form-data`. `driver` is a free-text string (not a driver model FK).",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -28,6 +28,10 @@
 		},
 		{
 			"key": "customer_id",
+			"value": ""
+		},
+		{
+			"key": "purchase_order_id",
 			"value": ""
 		},
 		{
@@ -2072,11 +2076,11 @@
 			]
 		},
 		{
-			"name": "Trip Reports",
-			"description": "Trip logs nested under a booking. **Authorization:** admin users or the driver assigned to the booking. Transaction owners who are not the assigned driver receive `403`.",
+			"name": "Purchase Orders",
+			"description": "Standalone purchase order CRUD. `amount` is an unsigned money integer (min 0).",
 			"item": [
 				{
-					"name": "Add Trip Report",
+					"name": "Add Purchase Order",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -2091,14 +2095,183 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"report_date\": \"2026-06-25\",\n    \"po_number\": \"PO-1001\",\n    \"time_in\": \"08:00\",\n    \"time_out\": \"17:00\",\n    \"rate\": 1800,\n    \"odometer_in\": 1000,\n    \"odometer_out\": 1100,\n    \"fuel_liters\": 25.5,\n    \"fuel_amount\": 1800,\n    \"invoice_or_or_number\": \"INV-1001\",\n    \"collection_amount\": 3500,\n    \"percentage\": 15.5,\n    \"destinations\": [\n        {\"from\": \"Quezon City\", \"to\": \"Makati\"},\n        {\"from\": \"Makati\", \"to\": \"Pasig\"}\n    ]\n}"
+							"raw": "{\n    \"customer_id\": \"{{customer_id}}\",\n    \"po_number\": \"PO-1001\",\n    \"date\": \"2026-07-15\",\n    \"amount\": 250000,\n    \"request_person\": \"Jane Doe\",\n    \"description\": \"Airport transfer package\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings/{{booking_id}}/trip-reports",
+							"raw": "{{base_url}}/api/v1/purchase-orders",
 							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings", "{{booking_id}}", "trip-reports"]
+							"path": ["api", "v1", "purchase-orders"]
 						},
-						"description": "**Bearer required.** Admin or assigned driver only. Required: `report_date`. Optional: `po_number`, `time_in`/`time_out` (`H:i`), `rate`, `odometer_in`/`odometer_out`, `fuel_liters`, `fuel_amount`, `invoice_or_or_number`, `collection_amount`, `percentage` (0–100), `destinations` (max 6 `{from, to}` entries). Response includes immutable snapshots (`driverNameSnapshot`, `carPlateNumberSnapshot`, `customerNameSnapshot`, `transactionNameSnapshot`, etc.)."
+						"description": "**Bearer required.** Create a purchase order. Required: `customer_id`, `po_number` (unique), `date`, `amount` (unsigned integer, min 0). Optional: `request_person`, `description`. Response includes customer relationship data when loaded."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const json = pm.response.json();",
+									"    if (json.data && json.data.id) {",
+									"        pm.collectionVariables.set('purchase_order_id', json.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "List Purchase Orders",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/purchase-orders?per_page=15",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "purchase-orders"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Optional: 1-100"
+								},
+								{
+									"key": "customer_id",
+									"value": "{{customer_id}}",
+									"description": "Optional: filter by customer UUID",
+									"disabled": true
+								}
+							]
+						},
+						"description": "**Bearer required.** Paginated purchase order list ordered by latest date. Optional query: `per_page` (1-100), `customer_id`."
+					}
+				},
+				{
+					"name": "Get Single Purchase Order",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}"]
+						},
+						"description": "**Bearer required.** Returns one purchase order with attributes `poNumber`, `date`, `amount`, `requestPerson`, `description`, `customerId`, and customer relationship."
+					}
+				},
+				{
+					"name": "Update Purchase Order",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"po_number\": \"PO-2002\",\n    \"date\": \"2026-08-01\",\n    \"amount\": 325000,\n    \"request_person\": \"Updated Person\",\n    \"description\": \"Updated description\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}"]
+						},
+						"description": "**Bearer required.** Partial update (`sometimes` rules). Fields: `customer_id` (nullable), `po_number` (unique), `date`, `amount` (unsigned integer, min 0), `request_person`, `description`."
+					}
+				},
+				{
+					"name": "Delete Purchase Order",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}"]
+						},
+						"description": "**Bearer required.** Deletes the purchase order and cascaded trip reports. Returns 204 No Content."
+					}
+				}
+			]
+		},
+		{
+			"name": "Trip Reports",
+			"description": "Trip logs nested under a purchase order. Any authenticated user may manage them. `driver` is a free-text string. `amount` is an unsigned money integer. Optional `trip_report_image` uses `multipart/form-data`.",
+			"item": [
+				{
+					"name": "Add Trip Report",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "report_date",
+									"value": "2026-07-28",
+									"description": "Required. Date.",
+									"type": "text"
+								},
+								{
+									"key": "driver",
+									"value": "Juan Dela Cruz",
+									"description": "Required. Free-text driver name (string, max 255).",
+									"type": "text"
+								},
+								{
+									"key": "destinations",
+									"value": "Manila to Quezon City",
+									"description": "Required. Free-text destinations.",
+									"type": "text"
+								},
+								{
+									"key": "amount",
+									"value": "1500",
+									"description": "Required. Unsigned money integer, min 0.",
+									"type": "text"
+								},
+								{
+									"key": "trip_report_image",
+									"description": "Optional. Image file (jpg, jpeg, png, webp), max 10 MB.",
+									"type": "file",
+									"src": "",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/trip-reports",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "trip-reports"]
+						},
+						"description": "**Bearer required.** Create a trip report for the purchase order. Prefer `multipart/form-data` when uploading an image.\n\n**Required:** `report_date`, `driver` (string), `destinations` (string), `amount` (unsigned integer, min 0).\n\n**Optional:** `trip_report_image` (jpg/jpeg/png/webp, max 10 MB).\n\nResponse attributes: `reportDate`, `driver`, `destinations`, `amount`, `tripReportImageUrl` (null when omitted), `createdAt`, `updatedAt`. Relationship: `purchaseOrder`."
 					},
 					"event": [
 						{
@@ -2128,11 +2301,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings/{{booking_id}}/trip-reports",
+							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/trip-reports",
 							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings", "{{booking_id}}", "trip-reports"]
+							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "trip-reports"]
 						},
-						"description": "**Bearer required.** Admin or assigned driver only. Returns all trip reports for the booking."
+						"description": "**Bearer required.** Returns all trip reports for the purchase order, ordered by latest `report_date`."
 					}
 				},
 				{
@@ -2146,11 +2319,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings/{{booking_id}}/trip-reports/{{trip_report_id}}",
+							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/trip-reports/{{trip_report_id}}",
 							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings", "{{booking_id}}", "trip-reports", "{{trip_report_id}}"]
+							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "trip-reports", "{{trip_report_id}}"]
 						},
-						"description": "**Bearer required.** Admin or assigned driver only. Returns one trip report with snapshot attributes."
+						"description": "**Bearer required.** Returns one trip report. Returns **404** if the trip report does not belong to the given purchase order."
 					}
 				},
 				{
@@ -2161,22 +2334,50 @@
 							{
 								"key": "Accept",
 								"value": "application/json"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
 							}
 						],
 						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"po_number\": \"PO-2002\",\n    \"time_out\": \"18:00\",\n    \"collection_amount\": 4500\n}"
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "report_date",
+									"value": "2026-08-01",
+									"description": "Optional. Date.",
+									"type": "text"
+								},
+								{
+									"key": "driver",
+									"value": "Pedro Reyes",
+									"description": "Optional. Free-text driver name.",
+									"type": "text"
+								},
+								{
+									"key": "destinations",
+									"value": "Makati to Pasig",
+									"description": "Optional. Free-text destinations.",
+									"type": "text"
+								},
+								{
+									"key": "amount",
+									"value": "2500",
+									"description": "Optional. Unsigned money integer, min 0.",
+									"type": "text"
+								},
+								{
+									"key": "trip_report_image",
+									"description": "Optional. Replaces existing image when provided (jpg/jpeg/png/webp, max 10 MB).",
+									"type": "file",
+									"src": "",
+									"disabled": true
+								}
+							]
 						},
 						"url": {
-							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings/{{booking_id}}/trip-reports/{{trip_report_id}}",
+							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/trip-reports/{{trip_report_id}}",
 							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings", "{{booking_id}}", "trip-reports", "{{trip_report_id}}"]
+							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "trip-reports", "{{trip_report_id}}"]
 						},
-						"description": "**Bearer required.** Admin or assigned driver only. Partial update (`sometimes` rules). Snapshots are not changed on update."
+						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when replacing the image. Uploading `trip_report_image` replaces the previous single-file media."
 					}
 				},
 				{
@@ -2190,11 +2391,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings/{{booking_id}}/trip-reports/{{trip_report_id}}",
+							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/trip-reports/{{trip_report_id}}",
 							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings", "{{booking_id}}", "trip-reports", "{{trip_report_id}}"]
+							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "trip-reports", "{{trip_report_id}}"]
 						},
-						"description": "**Bearer required.** Admin or assigned driver only. Returns 204 No Content."
+						"description": "**Bearer required.** Deletes the trip report. Returns 204 No Content. Returns **404** if the trip report does not belong to the given purchase order."
 					}
 				}
 			]
