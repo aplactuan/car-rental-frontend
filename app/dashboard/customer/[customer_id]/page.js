@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import AddCustomerTransactionButton from "./AddCustomerTransactionButton";
-import CustomerSubAccountsSection from "./CustomerSubAccountsSection";
+import AddPurchaseOrderButton from "./AddPurchaseOrderButton";
 
 function readField(source, keys) {
   if (!source || typeof source !== "object") return "";
@@ -30,10 +29,6 @@ function readField(source, keys) {
 function normalizeCustomer(payload) {
   const record = payload?.data ?? payload?.customer ?? payload;
   const attrs = record?.attributes ?? {};
-  const parentRelationshipId =
-    record?.relationships?.parent?.data?.id ??
-    attrs?.relationships?.parent?.data?.id ??
-    "";
   const pick = (keys) => {
     const fromAttrs = readField(attrs, keys);
     if (fromAttrs !== "") return fromAttrs;
@@ -44,9 +39,6 @@ function normalizeCustomer(payload) {
     id: pick(["id", "customer_id", "customerId"]),
     name: pick(["name", "customer_name", "customerName"]),
     type: pick(["type", "customer_type", "customerType"]),
-    parent_id:
-      pick(["parent_id", "parentId", "parent_customer_id", "parentCustomerId"]) ||
-      parentRelationshipId,
     email: pick(["email", "email_address", "emailAddress"]),
     phone_number: pick(["phone_number", "phoneNumber"]),
     address: pick(["address", "full_address", "fullAddress"]),
@@ -61,66 +53,44 @@ function normalizeCustomer(payload) {
   };
 }
 
-function DetailRow({ label, value }) {
-  return (
-    <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-      <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-        {label}
-      </div>
-      <div className="mt-2 text-sm text-zinc-900">{value || "Not available"}</div>
-    </div>
-  );
+function normalizePurchaseOrders(payload) {
+  const raw =
+    payload?.data ?? payload?.purchase_orders ?? payload?.items ?? payload;
+  const list = Array.isArray(raw) ? raw : [];
+
+  return list
+    .map((record) => {
+      const attrs = record?.attributes ?? {};
+      const pick = (keys) =>
+        readField(attrs, keys) || readField(record, keys);
+      const amountRaw = attrs?.amount ?? record?.amount;
+      const amount =
+        typeof amountRaw === "number"
+          ? amountRaw
+          : amountRaw !== undefined && amountRaw !== null && amountRaw !== ""
+            ? Number(amountRaw)
+            : null;
+
+      return {
+        id: String(pick(["id", "purchase_order_id", "purchaseOrderId"]) || ""),
+        poNumber: String(pick(["po_number", "poNumber"]) || ""),
+        date: String(pick(["date"]) || ""),
+        amount: Number.isFinite(amount) ? amount : null,
+        requestPerson: String(
+          pick(["request_person", "requestPerson"]) || "",
+        ),
+        description: String(pick(["description"]) || ""),
+      };
+    })
+    .filter((item) => item.id);
 }
 
-function toBillStatusMeta(rawStatus) {
-  const status = String(rawStatus ?? "").toLowerCase();
-
-  if (status === "draft") {
-    return {
-      label: "Draft",
-      className: "bg-zinc-100 text-zinc-700",
-    };
-  }
-
-  if (status === "issued") {
-    return {
-      label: "Issued",
-      className: "bg-blue-100 text-blue-700",
-    };
-  }
-
-  if (status === "paid") {
-    return {
-      label: "Paid",
-      className: "bg-emerald-100 text-emerald-700",
-    };
-  }
-
-  if (status === "partially_paid") {
-    return {
-      label: "Partially paid",
-      className: "bg-indigo-100 text-indigo-700",
-    };
-  }
-
-  if (status === "cancelled") {
-    return {
-      label: "Cancelled",
-      className: "bg-amber-100 text-amber-700",
-    };
-  }
-
-  return {
-    label: "No bill",
-    className: "bg-zinc-100 text-zinc-600",
-  };
-}
-
-function formatIdr(amount) {
+function formatPhp(amount) {
   if (typeof amount !== "number" || !Number.isFinite(amount)) return "—";
-  return new Intl.NumberFormat("id-ID", {
+  return new Intl.NumberFormat("en-PH", {
     style: "currency",
-    currency: "IDR",
+    currency: "PHP",
+    currencyDisplay: "code",
     maximumFractionDigits: 0,
   }).format(amount);
 }
@@ -137,6 +107,17 @@ function formatDate(value) {
   });
 }
 
+function DetailRow({ label, value }) {
+  return (
+    <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+      <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+        {label}
+      </div>
+      <div className="mt-2 text-sm text-zinc-900">{value || "Not available"}</div>
+    </div>
+  );
+}
+
 export default async function CustomerDetailPage({ params }) {
   const resolvedParams = await params;
   const customerId = resolvedParams?.customer_id;
@@ -151,25 +132,17 @@ export default async function CustomerDetailPage({ params }) {
     (process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
       : "http://localhost:3000");
+  const fetchHeaders = cookieHeader ? { Cookie: cookieHeader } : {};
 
   let customer = null;
   let error = "";
-  let transactions = [];
-  let transactionsError = "";
-  let billByTransactionId = {};
-  let billingSummary = {
-    noBill: 0,
-    draft: 0,
-    issued: 0,
-    partiallyPaid: 0,
-    paid: 0,
-    cancelled: 0,
-  };
+  let purchaseOrders = [];
+  let purchaseOrdersError = "";
 
   if (customerId) {
     try {
       const res = await fetch(`${baseUrl}/api/v1/customers/${customerId}`, {
-        headers: cookieHeader ? { Cookie: cookieHeader } : {},
+        headers: fetchHeaders,
         cache: "no-store",
       });
 
@@ -186,107 +159,25 @@ export default async function CustomerDetailPage({ params }) {
     }
 
     try {
-      const txRes = await fetch(
-        `${baseUrl}/api/v1/customers/${customerId}/transactions?per_page=15`,
+      const poRes = await fetch(
+        `${baseUrl}/api/v1/purchase-orders?customer_id=${encodeURIComponent(customerId)}&per_page=100`,
         {
-          headers: cookieHeader ? { Cookie: cookieHeader } : {},
+          headers: fetchHeaders,
           cache: "no-store",
         },
       );
-      const txData = await txRes.json().catch(() => ({}));
-      if (!txRes.ok) {
-        transactionsError =
-          txData?.error || txData?.message || "Failed to load transactions.";
+      const poData = await poRes.json().catch(() => ({}));
+
+      if (!poRes.ok) {
+        purchaseOrdersError =
+          poData?.error ||
+          poData?.message ||
+          "Failed to load purchase orders.";
       } else {
-        const raw =
-          txData?.data ?? txData?.transactions ?? txData?.items ?? txData;
-        transactions = Array.isArray(raw) ? raw : [];
-
-        const transactionIds = transactions
-          .map((tx) => {
-            const attrs = tx?.attributes ?? tx ?? {};
-            return (
-              tx?.id ??
-              attrs?.id ??
-              attrs?.transaction_id ??
-              attrs?.transactionId ??
-              null
-            );
-          })
-          .filter(Boolean)
-          .map((id) => String(id));
-
-        if (transactionIds.length > 0) {
-          const billPairs = await Promise.all(
-            transactionIds.map(async (id) => {
-              try {
-                const billRes = await fetch(
-                  `${baseUrl}/api/v1/transactions/${id}/bill`,
-                  {
-                    headers: cookieHeader ? { Cookie: cookieHeader } : {},
-                    cache: "no-store",
-                  },
-                );
-
-                if (billRes.status === 404) {
-                  return [id, null];
-                }
-
-                const billData = await billRes.json().catch(() => ({}));
-                if (!billRes.ok) return [id, null];
-
-                const source = billData?.data ?? billData ?? {};
-                const attrs = source?.attributes ?? source;
-
-                return [
-                  id,
-                  {
-                    status: attrs?.status ?? null,
-                    amount: attrs?.amount ?? null,
-                    dueAt: attrs?.dueAt ?? attrs?.due_at ?? null,
-                  },
-                ];
-              } catch {
-                return [id, null];
-              }
-            }),
-          );
-
-          billByTransactionId = Object.fromEntries(billPairs);
-
-          transactionIds.forEach((id) => {
-            const current = billByTransactionId[id];
-            const normalizedStatus = String(current?.status ?? "").toLowerCase();
-            if (!current) {
-              billingSummary.noBill += 1;
-              return;
-            }
-            if (normalizedStatus === "draft") {
-              billingSummary.draft += 1;
-              return;
-            }
-            if (normalizedStatus === "issued") {
-              billingSummary.issued += 1;
-              return;
-            }
-            if (normalizedStatus === "paid") {
-              billingSummary.paid += 1;
-              return;
-            }
-            if (normalizedStatus === "partially_paid") {
-              billingSummary.partiallyPaid += 1;
-              return;
-            }
-            if (normalizedStatus === "cancelled") {
-              billingSummary.cancelled += 1;
-              return;
-            }
-            billingSummary.noBill += 1;
-          });
-        }
+        purchaseOrders = normalizePurchaseOrders(poData);
       }
     } catch {
-      transactionsError = "Could not reach the transactions endpoint.";
+      purchaseOrdersError = "Could not reach the purchase orders endpoint.";
     }
   } else {
     error = "Customer ID was not provided.";
@@ -304,14 +195,16 @@ export default async function CustomerDetailPage({ params }) {
               Back to customer list
             </Link>
 
-            <h1 className="mt-4 text-3xl font-bold tracking-tight">Customer Details</h1>
+            <h1 className="mt-4 text-3xl font-bold tracking-tight">
+              Customer Details
+            </h1>
             <p className="mt-2 text-sm text-zinc-500">
               Customer ID:{" "}
               <span className="font-medium text-zinc-900">{customerId}</span>
             </p>
           </div>
           {customerId ? (
-            <AddCustomerTransactionButton customerId={customerId} />
+            <AddPurchaseOrderButton customerId={customerId} />
           ) : null}
         </div>
       </div>
@@ -340,123 +233,61 @@ export default async function CustomerDetailPage({ params }) {
         )}
       </div>
 
-      {customerId && customer && !customer.parent_id ? (
-        <CustomerSubAccountsSection customerId={customerId} />
-      ) : null}
-
       <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
-          Transactions
+          Purchase Orders
         </h2>
+        <p className="mt-1 text-sm text-zinc-500">
+          Purchase orders linked to this customer.
+        </p>
 
-        {transactionsError ? (
-          <p className="mt-4 text-sm text-red-600">{transactionsError}</p>
-        ) : transactions.length === 0 ? (
-          <p className="mt-4 text-sm text-zinc-500">No transactions found.</p>
+        {purchaseOrdersError ? (
+          <p className="mt-4 text-sm text-red-600">{purchaseOrdersError}</p>
+        ) : purchaseOrders.length === 0 ? (
+          <p className="mt-4 text-sm text-zinc-500">No purchase orders found.</p>
         ) : (
-          <div className="mt-4 space-y-4">
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-700">
-                No bill: {billingSummary.noBill}
-              </div>
-              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-700">
-                Draft: {billingSummary.draft}
-              </div>
-              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-700">
-                Issued: {billingSummary.issued}
-              </div>
-              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-700">
-                Partially paid: {billingSummary.partiallyPaid}
-              </div>
-              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-700">
-                Paid: {billingSummary.paid}
-              </div>
-              <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-medium text-zinc-700">
-                Cancelled: {billingSummary.cancelled}
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
+          <div className="mt-4 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  <th className="pb-3 pr-6">Transaction Name</th>
                   <th className="pb-3 pr-6">PO Number</th>
-                  <th className="pb-3 pr-6">Status</th>
-                  <th className="pb-3 pr-6">Bill</th>
-                  <th className="pb-3 pr-6">Created At</th>
+                  <th className="pb-3 pr-6">Date</th>
+                  <th className="pb-3 pr-6">Amount</th>
+                  <th className="pb-3 pr-6">Request Person</th>
+                  <th className="pb-3 pr-6">Description</th>
                   <th className="pb-3" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
-                {transactions.map((tx) => {
-                  const attrs = tx?.attributes ?? tx ?? {};
-                  const id =
-                    tx?.id ??
-                    attrs?.id ??
-                    attrs?.transaction_id ??
-                    attrs?.transactionId;
-                  const name =
-                    readField(attrs, ["name", "transaction_name", "transactionName"]) ||
-                    readField(tx, ["name", "transaction_name", "transactionName"]);
-                  const poNumber =
-                    readField(attrs, ["poNumber", "po_number"]) ||
-                    readField(tx, ["poNumber", "po_number"]);
-                  const status = attrs?.status ?? attrs?.state ?? "-";
-                  const createdAt =
-                    attrs?.created_at ??
-                    attrs?.createdAt ??
-                    tx?.created_at ??
-                    "-";
-                  const bill = id ? billByTransactionId[String(id)] : null;
-                  const billMeta = toBillStatusMeta(bill?.status);
-                  const billAmount = formatIdr(bill?.amount);
-                  const billDueAt = formatDate(bill?.dueAt);
-
-                  return (
-                    <tr key={id} className="group">
-                      <td className="py-3 pr-6 text-zinc-700">
-                        {name || "Unnamed transaction"}
-                      </td>
-                      <td className="py-3 pr-6 text-zinc-700">
-                        {poNumber || "—"}
-                      </td>
-                      <td className="py-3 pr-6">
-                        <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium capitalize text-zinc-700">
-                          {status}
-                        </span>
-                      </td>
-                      <td className="py-3 pr-6">
-                        <div className="flex flex-col gap-1">
-                          <span
-                            className={`inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${billMeta.className}`}
-                          >
-                            {billMeta.label}
-                          </span>
-                          {bill ? (
-                            <span className="text-xs text-zinc-500">
-                              {billAmount} • due {billDueAt}
-                            </span>
-                          ) : null}
-                        </div>
-                      </td>
-                      <td className="py-3 pr-6 text-zinc-500">{createdAt}</td>
-                      <td className="py-3 text-right">
-                        {id ? (
-                          <Link
-                            href={`/dashboard/customer/${customerId}/transaction/${id}`}
-                            className="text-xs font-medium text-teal-700 transition hover:text-teal-800"
-                          >
-                            View
-                          </Link>
-                        ) : null}
-                      </td>
-                    </tr>
-                  );
-                })}
+                {purchaseOrders.map((po) => (
+                  <tr key={po.id}>
+                    <td className="py-3 pr-6 font-medium text-zinc-900">
+                      {po.poNumber || "—"}
+                    </td>
+                    <td className="py-3 pr-6 text-zinc-700">
+                      {formatDate(po.date)}
+                    </td>
+                    <td className="py-3 pr-6 text-zinc-700">
+                      {formatPhp(po.amount)}
+                    </td>
+                    <td className="py-3 pr-6 text-zinc-700">
+                      {po.requestPerson || "—"}
+                    </td>
+                    <td className="py-3 pr-6 text-zinc-700">
+                      {po.description || "—"}
+                    </td>
+                    <td className="py-3 text-right">
+                      <Link
+                        href={`/dashboard/customer/${encodeURIComponent(customerId)}/purchase-order/${encodeURIComponent(po.id)}`}
+                        className="text-xs font-medium text-teal-700 transition hover:text-teal-800"
+                      >
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
-          </div>
           </div>
         )}
       </div>
