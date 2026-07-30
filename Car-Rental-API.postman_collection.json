@@ -2406,7 +2406,7 @@
 		},
 		{
 			"name": "Purchase Order Invoices",
-			"description": "Invoices nested under a purchase order (distinct from transaction bill printable invoices). Optional `payment_receipt` and `disbursement_voucher` use `multipart/form-data` (jpg/jpeg/png/webp/pdf, max 10 MB). Trip reports can be bulk attached or detached via `trip_report_ids`.",
+			"description": "Invoices nested under a purchase order (distinct from transaction bill printable invoices). `status` is `unpaid` (default) or `paid`. Optional `payment_receipt` and `disbursement_voucher` use `multipart/form-data` (jpg/jpeg/png/webp/pdf, max 10 MB). Trip reports can be bulk attached or detached via `trip_report_ids`.",
 			"item": [
 				{
 					"name": "Add Invoice",
@@ -2440,6 +2440,13 @@
 									"type": "text"
 								},
 								{
+									"key": "status",
+									"value": "unpaid",
+									"description": "Optional. `unpaid` (default) or `paid`.",
+									"type": "text",
+									"disabled": true
+								},
+								{
 									"key": "payment_receipt",
 									"description": "Optional. Image or PDF (jpg, jpeg, png, webp, pdf), max 10 MB.",
 									"type": "file",
@@ -2460,7 +2467,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "invoices"]
 						},
-						"description": "**Bearer required.** Create a purchase order invoice. Prefer `multipart/form-data` when uploading files.\n\n**Required:** `invoice_number` (unique), `lddap_adap_no`.\n\n**Optional:** `note`, `payment_receipt`, `disbursement_voucher`.\n\nResponse type `purchase-order-invoice` with attributes `invoiceNumber`, `lddapAdapNo`, `note`, `paymentReceiptUrl`, `disbursementVoucherUrl`, `createdAt`, `updatedAt`. Relationship: `purchaseOrder`."
+						"description": "**Bearer required.** Create a purchase order invoice. Prefer `multipart/form-data` when uploading files.\n\n**Required:** `invoice_number` (unique), `lddap_adap_no`.\n\n**Optional:** `note`, `status` (`unpaid` default, or `paid`), `payment_receipt`, `disbursement_voucher`.\n\nResponse type `purchase-order-invoice` with attributes `invoiceNumber`, `lddapAdapNo`, `note`, `status`, `paymentReceiptUrl`, `disbursementVoucherUrl`, `createdAt`, `updatedAt`. Relationship: `purchaseOrder`."
 					},
 					"event": [
 						{
@@ -2547,6 +2554,12 @@
 									"type": "text"
 								},
 								{
+									"key": "status",
+									"value": "paid",
+									"description": "Optional. `unpaid` or `paid`.",
+									"type": "text"
+								},
+								{
 									"key": "payment_receipt",
 									"description": "Optional. Replaces existing payment receipt when provided. Cannot be sent with `remove_payment_receipt=true`.",
 									"type": "file",
@@ -2581,7 +2594,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "invoices", "{{invoice_id}}"]
 						},
-						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when replacing or removing files.\n\n**Optional fields:** `invoice_number`, `lddap_adap_no`, `note`, `payment_receipt`, `disbursement_voucher`, `remove_payment_receipt`, `remove_disbursement_voucher`.\n\nUploading a file replaces the previous single-file media. Setting a remove flag clears that collection. You cannot upload and remove the same file in one request. Omitting file fields leaves existing media unchanged."
+						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when replacing or removing files.\n\n**Optional fields:** `invoice_number`, `lddap_adap_no`, `note`, `status` (`unpaid` or `paid`), `payment_receipt`, `disbursement_voucher`, `remove_payment_receipt`, `remove_disbursement_voucher`.\n\nUploading a file replaces the previous single-file media. Setting a remove flag clears that collection. You cannot upload and remove the same file in one request. Omitting file fields leaves existing media unchanged."
 					}
 				},
 				{
