@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "car-rental-api-collection",
 		"name": "Car Rental API",
-		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | Public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` | Public registration route; the server may still return **403** if registration is disabled. |\n| `GET /api/user`, `PUT /api/password`, `POST /api/logout` | Bearer token required. |\n| All other `/api/v1/...` routes | Bearer token required. |\n\nThis collection sets collection-level Bearer auth with `{{token}}`. Public requests override auth to `No Auth`.\n\n## Setup\n1. Set `base_url` (default: `http://localhost`; add a port if needed, for example `http://localhost:8000`).\n2. Run **Login**. The token is stored automatically. Seeded accounts after `php artisan migrate --seed`: `test@example.com` / `password` and `admin@example.com` / `password`.\n3. Reuse saved variables from earlier responses: `car_id`, `driver_id`, `customer_id`, `purchase_order_id`, `transaction_id`, `booking_id`, `trip_report_id`, `car_import_id`, `driver_import_id`, `bill_payment_id`.\n\n## Notes\n- User registration requires `name`, `email`, `password`, and `password_confirmation`. Optional `role` defaults to `user`; public registration rejects `admin` with **422**.\n- Change password requires `current_password`, `password`, and `password_confirmation`.\n- Car import CSV columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number`.\n- Driver import CSV columns: `first_name`, `last_name`, `license_number`, `license_expiry_date`, `address`, `phone_number`, `email`, `password`.\n- Customers support hierarchy and contact fields: `parent_id`, `contact_person`, `contact_mobile_number`, `contact_email`.\n- `GET /api/v1/bookings` uses global statuses `completed`, `today`, `ongoing`, `incoming`. `GET /api/v1/transactions/{id}/bookings` uses `upcoming` and `previous`, plus `period`, `car_id`, and `driver_id` filters.\n- Bill numbers are generated automatically. Bill payment uploads use `multipart/form-data`.\n- Purchase order and trip report `amount` values are unsigned money integers (smallest currency unit).\n- Trip reports nest under purchase orders. Optional `trip_report_image` uploads use `multipart/form-data`. `driver` is a free-text string (not a driver model FK).",
+		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | Public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` | Public registration route; the server may still return **403** if registration is disabled. |\n| `GET /api/user`, `PUT /api/password`, `POST /api/logout` | Bearer token required. |\n| All other `/api/v1/...` routes | Bearer token required. |\n\nThis collection sets collection-level Bearer auth with `{{token}}`. Public requests override auth to `No Auth`.\n\n## Setup\n1. Set `base_url` (default: `http://localhost`; add a port if needed, for example `http://localhost:8000`).\n2. Run **Login**. The token is stored automatically. Seeded accounts after `php artisan migrate --seed`: `test@example.com` / `password` and `admin@example.com` / `password`.\n3. Reuse saved variables from earlier responses: `car_id`, `driver_id`, `customer_id`, `purchase_order_id`, `transaction_id`, `booking_id`, `trip_report_id`, `invoice_id`, `car_import_id`, `driver_import_id`, `bill_payment_id`.\n\n## Notes\n- User registration requires `name`, `email`, `password`, and `password_confirmation`. Optional `role` defaults to `user`; public registration rejects `admin` with **422**.\n- Change password requires `current_password`, `password`, and `password_confirmation`.\n- Car import CSV columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number`.\n- Driver import CSV columns: `first_name`, `last_name`, `license_number`, `license_expiry_date`, `address`, `phone_number`, `email`, `password`.\n- Customers support hierarchy and contact fields: `parent_id`, `contact_person`, `contact_mobile_number`, `contact_email`.\n- `GET /api/v1/bookings` uses global statuses `completed`, `today`, `ongoing`, `incoming`. `GET /api/v1/transactions/{id}/bookings` uses `upcoming` and `previous`, plus `period`, `car_id`, and `driver_id` filters.\n- Bill numbers are generated automatically. Bill payment uploads use `multipart/form-data`.\n- Purchase order and trip report `amount` values are unsigned money integers (smallest currency unit).\n- Trip reports nest under purchase orders. Optional `trip_report_image` uploads use `multipart/form-data`. `driver` is a free-text string (not a driver model FK).\n- Purchase order invoices nest under purchase orders. Optional `payment_receipt` and `disbursement_voucher` uploads use `multipart/form-data` (jpg/jpeg/png/webp/pdf, max 10 MB). Bulk attach/detach trip reports with `trip_report_ids`.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -56,6 +56,10 @@
 		},
 		{
 			"key": "trip_report_id",
+			"value": ""
+		},
+		{
+			"key": "invoice_id",
 			"value": ""
 		}
 	],
@@ -2211,14 +2215,14 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}"]
 						},
-						"description": "**Bearer required.** Deletes the purchase order and cascaded trip reports. Returns 204 No Content."
+						"description": "**Bearer required.** Deletes the purchase order and cascaded trip reports. Returns 204 No Content. Purchase orders with invoices cannot be deleted while those invoices still exist (`restrictOnDelete`)."
 					}
 				}
 			]
 		},
 		{
 			"name": "Trip Reports",
-			"description": "Trip logs nested under a purchase order. Any authenticated user may manage them. `driver` is a free-text string. `amount` is an unsigned money integer. Optional `trip_report_image` uses `multipart/form-data`.",
+			"description": "Trip logs nested under a purchase order. Any authenticated user may manage them. `driver` is a free-text string. `amount` is an unsigned money integer. Optional `trip_report_image` uses `multipart/form-data`. Responses include an `invoice` relationship (`null` until attached to a purchase order invoice).",
 			"item": [
 				{
 					"name": "Add Trip Report",
@@ -2271,7 +2275,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "trip-reports"]
 						},
-						"description": "**Bearer required.** Create a trip report for the purchase order. Prefer `multipart/form-data` when uploading an image.\n\n**Required:** `report_date`, `driver` (string), `destinations` (string), `amount` (unsigned integer, min 0).\n\n**Optional:** `trip_report_image` (jpg/jpeg/png/webp, max 10 MB).\n\nResponse attributes: `reportDate`, `driver`, `destinations`, `amount`, `tripReportImageUrl` (null when omitted), `createdAt`, `updatedAt`. Relationship: `purchaseOrder`."
+						"description": "**Bearer required.** Create a trip report for the purchase order. Prefer `multipart/form-data` when uploading an image.\n\n**Required:** `report_date`, `driver` (string), `destinations` (string), `amount` (unsigned integer, min 0).\n\n**Optional:** `trip_report_image` (jpg/jpeg/png/webp, max 10 MB).\n\nResponse attributes: `reportDate`, `driver`, `destinations`, `amount`, `tripReportImageUrl` (null when omitted), `createdAt`, `updatedAt`. Relationships: `purchaseOrder`, `invoice` (null until attached)."
 					},
 					"event": [
 						{
@@ -2396,6 +2400,258 @@
 							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "trip-reports", "{{trip_report_id}}"]
 						},
 						"description": "**Bearer required.** Deletes the trip report. Returns 204 No Content. Returns **404** if the trip report does not belong to the given purchase order."
+					}
+				}
+			]
+		},
+		{
+			"name": "Purchase Order Invoices",
+			"description": "Invoices nested under a purchase order (distinct from transaction bill printable invoices). Optional `payment_receipt` and `disbursement_voucher` use `multipart/form-data` (jpg/jpeg/png/webp/pdf, max 10 MB). Trip reports can be bulk attached or detached via `trip_report_ids`.",
+			"item": [
+				{
+					"name": "Add Invoice",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "invoice_number",
+									"value": "INV-1001",
+									"description": "Required. Unique invoice number (string, max 255).",
+									"type": "text"
+								},
+								{
+									"key": "lddap_adap_no",
+									"value": "LDDAP-2026-001",
+									"description": "Required. LDDAP/ADAP number (string, max 255).",
+									"type": "text"
+								},
+								{
+									"key": "note",
+									"value": "Payment for July trips",
+									"description": "Optional. Free-text note.",
+									"type": "text"
+								},
+								{
+									"key": "payment_receipt",
+									"description": "Optional. Image or PDF (jpg, jpeg, png, webp, pdf), max 10 MB.",
+									"type": "file",
+									"src": "",
+									"disabled": true
+								},
+								{
+									"key": "disbursement_voucher",
+									"description": "Optional. Image or PDF (jpg, jpeg, png, webp, pdf), max 10 MB.",
+									"type": "file",
+									"src": "",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/invoices",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "invoices"]
+						},
+						"description": "**Bearer required.** Create a purchase order invoice. Prefer `multipart/form-data` when uploading files.\n\n**Required:** `invoice_number` (unique), `lddap_adap_no`.\n\n**Optional:** `note`, `payment_receipt`, `disbursement_voucher`.\n\nResponse type `purchase-order-invoice` with attributes `invoiceNumber`, `lddapAdapNo`, `note`, `paymentReceiptUrl`, `disbursementVoucherUrl`, `createdAt`, `updatedAt`. Relationship: `purchaseOrder`."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const json = pm.response.json();",
+									"    if (json.data && json.data.id) {",
+									"        pm.collectionVariables.set('invoice_id', json.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "List Invoices",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/invoices",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "invoices"]
+						},
+						"description": "**Bearer required.** Returns all invoices for the purchase order, ordered by latest created."
+					}
+				},
+				{
+					"name": "Get Single Invoice",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/invoices/{{invoice_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "invoices", "{{invoice_id}}"]
+						},
+						"description": "**Bearer required.** Returns one purchase order invoice. Returns **404** if the invoice does not belong to the given purchase order."
+					}
+				},
+				{
+					"name": "Update Invoice",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "invoice_number",
+									"value": "INV-UPDATED-002",
+									"description": "Optional. Unique invoice number (ignored for uniqueness against this invoice).",
+									"type": "text"
+								},
+								{
+									"key": "lddap_adap_no",
+									"value": "LDDAP-UPDATED",
+									"description": "Optional. LDDAP/ADAP number.",
+									"type": "text"
+								},
+								{
+									"key": "note",
+									"value": "Updated note",
+									"description": "Optional. Free-text note (nullable).",
+									"type": "text"
+								},
+								{
+									"key": "payment_receipt",
+									"description": "Optional. Replaces existing payment receipt when provided. Cannot be sent with `remove_payment_receipt=true`.",
+									"type": "file",
+									"src": "",
+									"disabled": true
+								},
+								{
+									"key": "disbursement_voucher",
+									"description": "Optional. Replaces existing disbursement voucher when provided. Cannot be sent with `remove_disbursement_voucher=true`.",
+									"type": "file",
+									"src": "",
+									"disabled": true
+								},
+								{
+									"key": "remove_payment_receipt",
+									"value": "false",
+									"description": "Optional boolean. When `true`, removes the existing payment receipt. Do not also upload `payment_receipt`.",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "remove_disbursement_voucher",
+									"value": "false",
+									"description": "Optional boolean. When `true`, removes the existing disbursement voucher. Do not also upload `disbursement_voucher`.",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/invoices/{{invoice_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "invoices", "{{invoice_id}}"]
+						},
+						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when replacing or removing files.\n\n**Optional fields:** `invoice_number`, `lddap_adap_no`, `note`, `payment_receipt`, `disbursement_voucher`, `remove_payment_receipt`, `remove_disbursement_voucher`.\n\nUploading a file replaces the previous single-file media. Setting a remove flag clears that collection. You cannot upload and remove the same file in one request. Omitting file fields leaves existing media unchanged."
+					}
+				},
+				{
+					"name": "Delete Invoice",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/invoices/{{invoice_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "invoices", "{{invoice_id}}"]
+						},
+						"description": "**Bearer required.** Deletes the invoice and its media. Related trip reports keep their rows but get `invoice_id` set to `null`. Returns 204 No Content. Returns **404** if the invoice does not belong to the given purchase order."
+					}
+				},
+				{
+					"name": "Attach Trip Reports to Invoice",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"trip_report_ids\": [\n        \"{{trip_report_id}}\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/invoices/{{invoice_id}}/trip-reports",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "invoices", "{{invoice_id}}", "trip-reports"]
+						},
+						"description": "**Bearer required.** Bulk-attach trip reports to this invoice in one request.\n\n**Body:** `trip_report_ids` — required non-empty array of distinct UUIDs. Each ID must belong to the same purchase order.\n\nReports already linked to another invoice on the same purchase order are moved to this invoice. Returns the attached trip report collection (each with `relationships.invoice` set)."
+					}
+				},
+				{
+					"name": "Detach Trip Reports from Invoice",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"trip_report_ids\": [\n        \"{{trip_report_id}}\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/invoices/{{invoice_id}}/trip-reports",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "invoices", "{{invoice_id}}", "trip-reports"]
+						},
+						"description": "**Bearer required.** Bulk-detach trip reports from this invoice in one request.\n\n**Body:** `trip_report_ids` — required non-empty array of distinct UUIDs. Each ID must already be attached to this invoice.\n\nSets `invoice_id` to `null` only for the listed reports; other attachments on the invoice are unchanged. Returns the detached trip report collection (each with `relationships.invoice.data` as `null`)."
 					}
 				}
 			]
