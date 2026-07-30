@@ -2,6 +2,8 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import AddInvoiceButton from "./AddInvoiceButton";
 import AddTripReportButton from "./AddTripReportButton";
+import InvoiceActions from "./InvoiceActions";
+import TripReportActions from "./TripReportActions";
 
 function readField(source, keys) {
   if (!source || typeof source !== "object") return "";
@@ -120,6 +122,9 @@ function normalizeInvoices(payload) {
       const pick = (keys) =>
         readField(attrs, keys) || readField(record, keys);
 
+      const statusRaw = String(pick(["status"]) || "unpaid").toLowerCase();
+      const status = statusRaw === "paid" ? "paid" : "unpaid";
+
       return {
         id: String(pick(["id", "invoice_id", "invoiceId"]) || ""),
         invoiceNumber: String(
@@ -127,6 +132,7 @@ function normalizeInvoices(payload) {
         ),
         lddapAdapNo: String(pick(["lddap_adap_no", "lddapAdapNo"]) || ""),
         note: String(pick(["note"]) || ""),
+        status,
         paymentReceiptUrl: String(
           pick(["payment_receipt_url", "paymentReceiptUrl"]) || "",
         ),
@@ -137,6 +143,22 @@ function normalizeInvoices(payload) {
       };
     })
     .filter((item) => item.id);
+}
+
+function InvoiceStatusBadge({ status }) {
+  const isPaid = status === "paid";
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+        isPaid
+          ? "bg-emerald-50 text-emerald-800"
+          : "bg-amber-50 text-amber-800"
+      }`}
+    >
+      {isPaid ? "Paid" : "Unpaid"}
+    </span>
+  );
 }
 
 function DocumentLink({ href, label }) {
@@ -483,7 +505,8 @@ export default async function PurchaseOrderDetailPage({ params }) {
                     <th className="pb-3 pr-6">Destinations</th>
                     <th className="pb-3 pr-6">Amount</th>
                     <th className="pb-3 pr-6">Invoice</th>
-                    <th className="pb-3">Image</th>
+                    <th className="pb-3 pr-6">Image</th>
+                    <th className="pb-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
@@ -522,10 +545,16 @@ export default async function PurchaseOrderDetailPage({ params }) {
                             </span>
                           )}
                         </td>
-                        <td className="py-3.5">
+                        <td className="py-3.5 pr-6">
                           <DocumentLink
                             href={report.tripReportImageUrl}
                             label="View"
+                          />
+                        </td>
+                        <td className="py-3.5 text-right">
+                          <TripReportActions
+                            purchaseOrderId={purchaseOrderId}
+                            tripReport={report}
                           />
                         </td>
                       </tr>
@@ -573,45 +602,64 @@ export default async function PurchaseOrderDetailPage({ params }) {
                 <thead>
                   <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                     <th className="pb-3 pr-6">Invoice number</th>
+                    <th className="pb-3 pr-6">Status</th>
                     <th className="pb-3 pr-6">LDDAP/ADAP</th>
                     <th className="pb-3 pr-6">Note</th>
                     <th className="pb-3 pr-6">Created</th>
                     <th className="pb-3 pr-6">Receipt</th>
-                    <th className="pb-3">Voucher</th>
+                    <th className="pb-3 pr-6">Voucher</th>
+                    <th className="pb-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
-                  {invoices.map((invoice) => (
-                    <tr
-                      key={invoice.id}
-                      className="transition hover:bg-zinc-50/80"
-                    >
-                      <td className="py-3.5 pr-6 font-medium text-zinc-900">
-                        {invoice.invoiceNumber || "—"}
-                      </td>
-                      <td className="py-3.5 pr-6 text-zinc-700">
-                        {invoice.lddapAdapNo || "—"}
-                      </td>
-                      <td className="max-w-xs py-3.5 pr-6 text-zinc-700">
-                        {invoice.note || "—"}
-                      </td>
-                      <td className="py-3.5 pr-6 text-zinc-700">
-                        {formatDate(invoice.createdAt)}
-                      </td>
-                      <td className="py-3.5 pr-6">
-                        <DocumentLink
-                          href={invoice.paymentReceiptUrl}
-                          label="View"
-                        />
-                      </td>
-                      <td className="py-3.5">
-                        <DocumentLink
-                          href={invoice.disbursementVoucherUrl}
-                          label="View"
-                        />
-                      </td>
-                    </tr>
-                  ))}
+                  {invoices.map((invoice) => {
+                    const attachedTripReports = tripReports.filter(
+                      (report) => report.invoiceId === invoice.id,
+                    );
+
+                    return (
+                      <tr
+                        key={invoice.id}
+                        className="transition hover:bg-zinc-50/80"
+                      >
+                        <td className="py-3.5 pr-6 font-medium text-zinc-900">
+                          {invoice.invoiceNumber || "—"}
+                        </td>
+                        <td className="py-3.5 pr-6">
+                          <InvoiceStatusBadge status={invoice.status} />
+                        </td>
+                        <td className="py-3.5 pr-6 text-zinc-700">
+                          {invoice.lddapAdapNo || "—"}
+                        </td>
+                        <td className="max-w-xs py-3.5 pr-6 text-zinc-700">
+                          {invoice.note || "—"}
+                        </td>
+                        <td className="py-3.5 pr-6 text-zinc-700">
+                          {formatDate(invoice.createdAt)}
+                        </td>
+                        <td className="py-3.5 pr-6">
+                          <DocumentLink
+                            href={invoice.paymentReceiptUrl}
+                            label="View"
+                          />
+                        </td>
+                        <td className="py-3.5 pr-6">
+                          <DocumentLink
+                            href={invoice.disbursementVoucherUrl}
+                            label="View"
+                          />
+                        </td>
+                        <td className="py-3.5 text-right">
+                          <InvoiceActions
+                            purchaseOrderId={purchaseOrderId}
+                            invoice={invoice}
+                            availableTripReports={availableTripReports}
+                            attachedTripReports={attachedTripReports}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

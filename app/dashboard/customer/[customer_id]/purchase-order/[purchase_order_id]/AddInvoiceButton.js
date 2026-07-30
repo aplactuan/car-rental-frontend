@@ -7,9 +7,14 @@ const EMPTY_FORM = {
   invoice_number: "",
   lddap_adap_no: "",
   note: "",
+  status: "unpaid",
 };
 
 const FILE_ACCEPT = "image/jpeg,image/jpg,image/png,image/webp,application/pdf";
+const INVOICE_STATUS_OPTIONS = [
+  { value: "unpaid", label: "Unpaid" },
+  { value: "paid", label: "Paid" },
+];
 
 function formatPhp(amount) {
   if (typeof amount !== "number" || !Number.isFinite(amount)) return "—";
@@ -88,6 +93,7 @@ export default function AddInvoiceButton({
     const invoiceNumber = form.invoice_number.trim();
     const lddapAdapNo = form.lddap_adap_no.trim();
     const note = form.note.trim();
+    const status = form.status === "paid" ? "paid" : "unpaid";
 
     if (!invoiceNumber) {
       setError("Invoice number is required.");
@@ -105,6 +111,7 @@ export default function AddInvoiceButton({
       const body = new FormData();
       body.append("invoice_number", invoiceNumber);
       body.append("lddap_adap_no", lddapAdapNo);
+      body.append("status", status);
       if (note) {
         body.append("note", note);
       }
@@ -138,6 +145,7 @@ export default function AddInvoiceButton({
           data?.errors?.invoice_number?.[0] ||
           data?.errors?.lddap_adap_no?.[0] ||
           data?.errors?.note?.[0] ||
+          data?.errors?.status?.[0] ||
           data?.errors?.payment_receipt?.[0] ||
           data?.errors?.disbursement_voucher?.[0] ||
           (typeof data?.errors === "object"
@@ -305,6 +313,28 @@ export default function AddInvoiceButton({
                   placeholder="e.g. Payment for July trips"
                   className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                 />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="invoiceStatus"
+                  className="mb-2 block text-sm font-medium text-zinc-700"
+                >
+                  Status
+                </label>
+                <select
+                  id="invoiceStatus"
+                  value={form.status}
+                  onChange={(event) => updateField("status", event.target.value)}
+                  disabled={isLoading}
+                  className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                >
+                  {INVOICE_STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <fieldset>
