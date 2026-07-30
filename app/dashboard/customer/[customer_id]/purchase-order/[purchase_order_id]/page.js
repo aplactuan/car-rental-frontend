@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
+import AddInvoiceButton from "./AddInvoiceButton";
 import AddTripReportButton from "./AddTripReportButton";
+import InvoiceActions from "./InvoiceActions";
+import TripReportActions from "./TripReportActions";
 
 function readField(source, keys) {
   if (!source || typeof source !== "object") return "";
@@ -82,6 +85,18 @@ function normalizeTripReports(payload) {
       const pick = (keys) =>
         readField(attrs, keys) || readField(record, keys);
 
+      const invoiceRelationship =
+        record?.relationships?.invoice?.data ??
+        attrs?.relationships?.invoice?.data ??
+        null;
+      const invoiceId = String(
+        pick(["invoice_id", "invoiceId"]) ||
+          (invoiceRelationship && invoiceRelationship.id != null
+            ? invoiceRelationship.id
+            : "") ||
+          "",
+      );
+
       return {
         id: String(pick(["id", "trip_report_id", "tripReportId"]) || ""),
         reportDate: String(pick(["report_date", "reportDate"]) || ""),
@@ -91,9 +106,90 @@ function normalizeTripReports(payload) {
         tripReportImageUrl: String(
           pick(["trip_report_image_url", "tripReportImageUrl"]) || "",
         ),
+        invoiceId,
       };
     })
     .filter((item) => item.id);
+}
+
+function normalizeInvoices(payload) {
+  const raw = payload?.data ?? payload?.invoices ?? payload?.items ?? payload;
+  const list = Array.isArray(raw) ? raw : [];
+
+  return list
+    .map((record) => {
+      const attrs = record?.attributes ?? {};
+      const pick = (keys) =>
+        readField(attrs, keys) || readField(record, keys);
+
+      const statusRaw = String(pick(["status"]) || "unpaid").toLowerCase();
+      const status = statusRaw === "paid" ? "paid" : "unpaid";
+
+      return {
+        id: String(pick(["id", "invoice_id", "invoiceId"]) || ""),
+        invoiceNumber: String(
+          pick(["invoice_number", "invoiceNumber"]) || "",
+        ),
+        lddapAdapNo: String(pick(["lddap_adap_no", "lddapAdapNo"]) || ""),
+        note: String(pick(["note"]) || ""),
+        status,
+        paymentReceiptUrl: String(
+          pick(["payment_receipt_url", "paymentReceiptUrl"]) || "",
+        ),
+        disbursementVoucherUrl: String(
+          pick(["disbursement_voucher_url", "disbursementVoucherUrl"]) || "",
+        ),
+        createdAt: String(pick(["created_at", "createdAt"]) || ""),
+      };
+    })
+    .filter((item) => item.id);
+}
+
+function InvoiceStatusBadge({ status }) {
+  const isPaid = status === "paid";
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+        isPaid
+          ? "bg-emerald-50 text-emerald-800"
+          : "bg-amber-50 text-amber-800"
+      }`}
+    >
+      {isPaid ? "Paid" : "Unpaid"}
+    </span>
+  );
+}
+
+function DocumentLink({ href, label }) {
+  if (!href) {
+    return <span className="text-zinc-400">—</span>;
+  }
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1 text-xs font-medium text-teal-700 transition hover:text-teal-800"
+    >
+      {label}
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        className="h-3.5 w-3.5"
+        aria-hidden
+      >
+        <path
+          d="M7 17L17 7M7 7h10v10"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </a>
+  );
 }
 
 function formatPhp(amount) {
@@ -139,6 +235,8 @@ export default async function PurchaseOrderDetailPage({ params }) {
   let error = "";
   let tripReports = [];
   let tripReportsError = "";
+  let invoices = [];
+  let invoicesError = "";
 
   if (!purchaseOrderId) {
     error = "Purchase order ID was not provided.";
@@ -186,6 +284,28 @@ export default async function PurchaseOrderDetailPage({ params }) {
     } catch {
       tripReportsError = "Could not reach the trip reports endpoint.";
     }
+
+    try {
+      const invoiceRes = await fetch(
+        `${baseUrl}/api/v1/purchase-orders/${encodeURIComponent(purchaseOrderId)}/invoices`,
+        {
+          headers: fetchHeaders,
+          cache: "no-store",
+        },
+      );
+      const invoiceData = await invoiceRes.json().catch(() => ({}));
+
+      if (!invoiceRes.ok) {
+        invoicesError =
+          invoiceData?.error ||
+          invoiceData?.message ||
+          "Failed to load invoices.";
+      } else {
+        invoices = normalizeInvoices(invoiceData);
+      }
+    } catch {
+      invoicesError = "Could not reach the invoices endpoint.";
+    }
   }
 
   const backHref = customerId
@@ -196,6 +316,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
     (sum, report) => sum + (typeof report.amount === "number" ? report.amount : 0),
     0,
   );
+  const availableTripReports = tripReports.filter((report) => !report.invoiceId);
   const poAmount =
     typeof purchaseOrder?.amount === "number" ? purchaseOrder.amount : null;
   const tripTotalExceedsPo =
@@ -280,7 +401,13 @@ export default async function PurchaseOrderDetailPage({ params }) {
             </div>
 
             {purchaseOrderId ? (
-              <AddTripReportButton purchaseOrderId={purchaseOrderId} />
+              <div className="flex flex-wrap items-center gap-2">
+                <AddInvoiceButton
+                  purchaseOrderId={purchaseOrderId}
+                  availableTripReports={availableTripReports}
+                />
+                <AddTripReportButton purchaseOrderId={purchaseOrderId} />
+              </div>
             ) : null}
           </div>
 
@@ -377,57 +504,162 @@ export default async function PurchaseOrderDetailPage({ params }) {
                     <th className="pb-3 pr-6">Driver</th>
                     <th className="pb-3 pr-6">Destinations</th>
                     <th className="pb-3 pr-6">Amount</th>
-                    <th className="pb-3">Image</th>
+                    <th className="pb-3 pr-6">Invoice</th>
+                    <th className="pb-3 pr-6">Image</th>
+                    <th className="pb-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
-                  {tripReports.map((report) => (
-                    <tr
-                      key={report.id}
-                      className="transition hover:bg-zinc-50/80"
-                    >
-                      <td className="py-3.5 pr-6 font-medium text-zinc-900">
-                        {formatDate(report.reportDate)}
-                      </td>
-                      <td className="py-3.5 pr-6 text-zinc-700">
-                        {report.driver || "—"}
-                      </td>
-                      <td className="max-w-xs py-3.5 pr-6 text-zinc-700">
-                        {report.destinations || "—"}
-                      </td>
-                      <td className="py-3.5 pr-6 font-medium text-zinc-900">
-                        {formatPhp(report.amount)}
-                      </td>
-                      <td className="py-3.5">
-                        {report.tripReportImageUrl ? (
-                          <a
+                  {tripReports.map((report) => {
+                    const linkedInvoice = report.invoiceId
+                      ? invoices.find(
+                          (invoice) => invoice.id === report.invoiceId,
+                        )
+                      : null;
+
+                    return (
+                      <tr
+                        key={report.id}
+                        className="transition hover:bg-zinc-50/80"
+                      >
+                        <td className="py-3.5 pr-6 font-medium text-zinc-900">
+                          {formatDate(report.reportDate)}
+                        </td>
+                        <td className="py-3.5 pr-6 text-zinc-700">
+                          {report.driver || "—"}
+                        </td>
+                        <td className="max-w-xs py-3.5 pr-6 text-zinc-700">
+                          {report.destinations || "—"}
+                        </td>
+                        <td className="py-3.5 pr-6 font-medium text-zinc-900">
+                          {formatPhp(report.amount)}
+                        </td>
+                        <td className="py-3.5 pr-6">
+                          {report.invoiceId ? (
+                            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
+                              {linkedInvoice?.invoiceNumber || "Invoiced"}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+                              Unassigned
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 pr-6">
+                          <DocumentLink
                             href={report.tripReportImageUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs font-medium text-teal-700 transition hover:text-teal-800"
-                          >
-                            View
-                            <svg
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              className="h-3.5 w-3.5"
-                              aria-hidden
-                            >
-                              <path
-                                d="M7 17L17 7M7 7h10v10"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </a>
-                        ) : (
-                          <span className="text-zinc-400">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                            label="View"
+                          />
+                        </td>
+                        <td className="py-3.5 text-right">
+                          <TripReportActions
+                            purchaseOrderId={purchaseOrderId}
+                            tripReport={report}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-6 py-5">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
+              Invoices
+            </h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Purchase order invoices with payment and disbursement documents.
+            </p>
+          </div>
+          {!invoicesError && invoices.length > 0 ? (
+            <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
+              {invoices.length} invoice{invoices.length === 1 ? "" : "s"}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="px-6 py-5">
+          {invoicesError ? (
+            <p className="text-sm text-red-600">{invoicesError}</p>
+          ) : invoices.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-6 py-10 text-center">
+              <p className="text-sm font-medium text-zinc-700">
+                No invoices yet
+              </p>
+              <p className="mt-1 text-sm text-zinc-500">
+                Add the first invoice for this purchase order.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    <th className="pb-3 pr-6">Invoice number</th>
+                    <th className="pb-3 pr-6">Status</th>
+                    <th className="pb-3 pr-6">LDDAP/ADAP</th>
+                    <th className="pb-3 pr-6">Note</th>
+                    <th className="pb-3 pr-6">Created</th>
+                    <th className="pb-3 pr-6">Receipt</th>
+                    <th className="pb-3 pr-6">Voucher</th>
+                    <th className="pb-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100">
+                  {invoices.map((invoice) => {
+                    const attachedTripReports = tripReports.filter(
+                      (report) => report.invoiceId === invoice.id,
+                    );
+
+                    return (
+                      <tr
+                        key={invoice.id}
+                        className="transition hover:bg-zinc-50/80"
+                      >
+                        <td className="py-3.5 pr-6 font-medium text-zinc-900">
+                          {invoice.invoiceNumber || "—"}
+                        </td>
+                        <td className="py-3.5 pr-6">
+                          <InvoiceStatusBadge status={invoice.status} />
+                        </td>
+                        <td className="py-3.5 pr-6 text-zinc-700">
+                          {invoice.lddapAdapNo || "—"}
+                        </td>
+                        <td className="max-w-xs py-3.5 pr-6 text-zinc-700">
+                          {invoice.note || "—"}
+                        </td>
+                        <td className="py-3.5 pr-6 text-zinc-700">
+                          {formatDate(invoice.createdAt)}
+                        </td>
+                        <td className="py-3.5 pr-6">
+                          <DocumentLink
+                            href={invoice.paymentReceiptUrl}
+                            label="View"
+                          />
+                        </td>
+                        <td className="py-3.5 pr-6">
+                          <DocumentLink
+                            href={invoice.disbursementVoucherUrl}
+                            label="View"
+                          />
+                        </td>
+                        <td className="py-3.5 text-right">
+                          <InvoiceActions
+                            purchaseOrderId={purchaseOrderId}
+                            invoice={invoice}
+                            availableTripReports={availableTripReports}
+                            attachedTripReports={attachedTripReports}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
