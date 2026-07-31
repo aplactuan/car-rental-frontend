@@ -100,6 +100,8 @@ function normalizeTripReports(payload) {
       return {
         id: String(pick(["id", "trip_report_id", "tripReportId"]) || ""),
         reportDate: String(pick(["report_date", "reportDate"]) || ""),
+        tripStart: String(pick(["trip_start", "tripStart"]) || ""),
+        tripEnd: String(pick(["trip_end", "tripEnd"]) || ""),
         driver: String(pick(["driver"]) || ""),
         destinations: String(pick(["destinations"]) || ""),
         amount: toAmount(attrs?.amount ?? record?.amount),
@@ -501,6 +503,8 @@ export default async function PurchaseOrderDetailPage({ params }) {
                 <thead>
                   <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                     <th className="pb-3 pr-6">Report date</th>
+                    <th className="pb-3 pr-6">Trip start</th>
+                    <th className="pb-3 pr-6">Trip end</th>
                     <th className="pb-3 pr-6">Driver</th>
                     <th className="pb-3 pr-6">Destinations</th>
                     <th className="pb-3 pr-6">Amount</th>
@@ -524,6 +528,12 @@ export default async function PurchaseOrderDetailPage({ params }) {
                       >
                         <td className="py-3.5 pr-6 font-medium text-zinc-900">
                           {formatDate(report.reportDate)}
+                        </td>
+                        <td className="py-3.5 pr-6 text-zinc-700">
+                          {formatDate(report.tripStart)}
+                        </td>
+                        <td className="py-3.5 pr-6 text-zinc-700">
+                          {formatDate(report.tripEnd)}
                         </td>
                         <td className="py-3.5 pr-6 text-zinc-700">
                           {report.driver || "—"}

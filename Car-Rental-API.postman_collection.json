@@ -2222,7 +2222,7 @@
 		},
 		{
 			"name": "Trip Reports",
-			"description": "Trip logs nested under a purchase order. Any authenticated user may manage them. `driver` is a free-text string. `amount` is an unsigned money integer. Optional `trip_report_image` uses `multipart/form-data`. Responses include an `invoice` relationship (`null` until attached to a purchase order invoice).",
+			"description": "Trip logs nested under a purchase order. Any authenticated user may manage them. `driver` is a free-text string. `amount` is an unsigned money integer. `trip_start` and `trip_end` are required dates. Optional `trip_report_image` uses `multipart/form-data`. Responses include an `invoice` relationship (`null` until attached to a purchase order invoice).",
 			"item": [
 				{
 					"name": "Add Trip Report",
@@ -2241,6 +2241,18 @@
 									"key": "report_date",
 									"value": "2026-07-28",
 									"description": "Required. Date.",
+									"type": "text"
+								},
+								{
+									"key": "trip_start",
+									"value": "2026-07-27",
+									"description": "Required. Trip start date.",
+									"type": "text"
+								},
+								{
+									"key": "trip_end",
+									"value": "2026-07-28",
+									"description": "Required. Trip end date.",
 									"type": "text"
 								},
 								{
@@ -2275,7 +2287,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "trip-reports"]
 						},
-						"description": "**Bearer required.** Create a trip report for the purchase order. Prefer `multipart/form-data` when uploading an image.\n\n**Required:** `report_date`, `driver` (string), `destinations` (string), `amount` (unsigned integer, min 0).\n\n**Optional:** `trip_report_image` (jpg/jpeg/png/webp, max 10 MB).\n\nResponse attributes: `reportDate`, `driver`, `destinations`, `amount`, `tripReportImageUrl` (null when omitted), `createdAt`, `updatedAt`. Relationships: `purchaseOrder`, `invoice` (null until attached)."
+						"description": "**Bearer required.** Create a trip report for the purchase order. Prefer `multipart/form-data` when uploading an image.\n\n**Required:** `report_date`, `trip_start`, `trip_end`, `driver` (string), `destinations` (string), `amount` (unsigned integer, min 0).\n\n**Optional:** `trip_report_image` (jpg/jpeg/png/webp, max 10 MB).\n\nResponse attributes: `reportDate`, `tripStart`, `tripEnd`, `driver`, `destinations`, `amount`, `tripReportImageUrl` (null when omitted), `createdAt`, `updatedAt`. Relationships: `purchaseOrder`, `invoice` (null until attached)."
 					},
 					"event": [
 						{
@@ -2350,6 +2362,18 @@
 									"type": "text"
 								},
 								{
+									"key": "trip_start",
+									"value": "2026-07-30",
+									"description": "Optional. Trip start date.",
+									"type": "text"
+								},
+								{
+									"key": "trip_end",
+									"value": "2026-08-01",
+									"description": "Optional. Trip end date.",
+									"type": "text"
+								},
+								{
 									"key": "driver",
 									"value": "Pedro Reyes",
 									"description": "Optional. Free-text driver name.",
@@ -2381,7 +2405,7 @@
 							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "trip-reports", "{{trip_report_id}}"]
 						},
-						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when replacing the image. Uploading `trip_report_image` replaces the previous single-file media."
+						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when replacing the image. When provided, `trip_start` and `trip_end` must be valid dates. Uploading `trip_report_image` replaces the previous single-file media."
 					}
 				},
 				{
