@@ -68,24 +68,51 @@ export async function POST(req) {
     );
   }
 
-  let body;
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
-  }
-
+  const contentType = req.headers.get("content-type") || "";
   const url = new URL("/api/v1/purchase-orders", backendBase);
 
   try {
+    if (contentType.includes("application/json")) {
+      let body;
+      try {
+        body = await req.json();
+      } catch {
+        return NextResponse.json(
+          { error: "Invalid JSON body." },
+          { status: 400 },
+        );
+      }
+
+      const res = await fetch(url.toString(), {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      return NextResponse.json(data, { status: res.status });
+    }
+
+    let formData;
+    try {
+      formData = await req.formData();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid multipart form body." },
+        { status: 400 },
+      );
+    }
+
     const res = await fetch(url.toString(), {
       method: "POST",
       headers: {
         Accept: "application/json",
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(body),
+      body: formData,
     });
     const data = await res.json().catch(() => ({}));
     return NextResponse.json(data, { status: res.status });
