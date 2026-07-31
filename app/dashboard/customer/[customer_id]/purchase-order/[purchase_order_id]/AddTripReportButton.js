@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 
 const EMPTY_FORM = {
   report_date: "",
+  trip_start: "",
+  trip_end: "",
   driver: "",
   destinations: "",
   amount: "",
@@ -46,12 +48,26 @@ export default function AddTripReportButton({ purchaseOrderId }) {
     if (!purchaseOrderId) return;
 
     const reportDate = form.report_date.trim();
+    const tripStart = form.trip_start.trim();
+    const tripEnd = form.trip_end.trim();
     const driver = form.driver.trim();
     const destinations = form.destinations.trim();
     const amountValue = form.amount.trim();
 
     if (!reportDate) {
       setError("Report date is required.");
+      return;
+    }
+    if (!tripStart) {
+      setError("Trip start is required.");
+      return;
+    }
+    if (!tripEnd) {
+      setError("Trip end is required.");
+      return;
+    }
+    if (tripEnd < tripStart) {
+      setError("Trip end must be on or after trip start.");
       return;
     }
     if (!driver) {
@@ -75,6 +91,8 @@ export default function AddTripReportButton({ purchaseOrderId }) {
     try {
       const body = new FormData();
       body.append("report_date", reportDate);
+      body.append("trip_start", tripStart);
+      body.append("trip_end", tripEnd);
       body.append("driver", driver);
       body.append("destinations", destinations);
       body.append("amount", String(amount));
@@ -101,6 +119,8 @@ export default function AddTripReportButton({ purchaseOrderId }) {
       if (!response.ok) {
         const validationMessage =
           data?.errors?.report_date?.[0] ||
+          data?.errors?.trip_start?.[0] ||
+          data?.errors?.trip_end?.[0] ||
           data?.errors?.driver?.[0] ||
           data?.errors?.destinations?.[0] ||
           data?.errors?.amount?.[0] ||
@@ -182,6 +202,48 @@ export default function AddTripReportButton({ purchaseOrderId }) {
                   required
                   className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label
+                    htmlFor="tripStart"
+                    className="mb-2 block text-sm font-medium text-zinc-700"
+                  >
+                    Trip start
+                  </label>
+                  <input
+                    id="tripStart"
+                    type="date"
+                    value={form.trip_start}
+                    onChange={(event) =>
+                      updateField("trip_start", event.target.value)
+                    }
+                    disabled={isLoading}
+                    required
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="tripEnd"
+                    className="mb-2 block text-sm font-medium text-zinc-700"
+                  >
+                    Trip end
+                  </label>
+                  <input
+                    id="tripEnd"
+                    type="date"
+                    value={form.trip_end}
+                    onChange={(event) =>
+                      updateField("trip_end", event.target.value)
+                    }
+                    disabled={isLoading}
+                    required
+                    min={form.trip_start || undefined}
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                  />
+                </div>
               </div>
 
               <div>

@@ -40,6 +40,8 @@ export default function TripReportActions({ purchaseOrderId, tripReport }) {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [form, setForm] = useState({
     report_date: "",
+    trip_start: "",
+    trip_end: "",
     driver: "",
     destinations: "",
     amount: "",
@@ -60,6 +62,8 @@ export default function TripReportActions({ purchaseOrderId, tripReport }) {
     setImageFile(null);
     setForm({
       report_date: toDateInputValue(tripReport.reportDate),
+      trip_start: toDateInputValue(tripReport.tripStart),
+      trip_end: toDateInputValue(tripReport.tripEnd),
       driver: tripReport.driver || "",
       destinations: tripReport.destinations || "",
       amount:
@@ -84,12 +88,26 @@ export default function TripReportActions({ purchaseOrderId, tripReport }) {
     if (!reportPath || hasInvoice) return;
 
     const reportDate = form.report_date.trim();
+    const tripStart = form.trip_start.trim();
+    const tripEnd = form.trip_end.trim();
     const driver = form.driver.trim();
     const destinations = form.destinations.trim();
     const amountValue = form.amount.trim();
 
     if (!reportDate) {
       setError("Report date is required.");
+      return;
+    }
+    if (!tripStart) {
+      setError("Trip start is required.");
+      return;
+    }
+    if (!tripEnd) {
+      setError("Trip end is required.");
+      return;
+    }
+    if (tripEnd < tripStart) {
+      setError("Trip end must be on or after trip start.");
       return;
     }
     if (!driver) {
@@ -116,6 +134,8 @@ export default function TripReportActions({ purchaseOrderId, tripReport }) {
       if (imageFile) {
         const body = new FormData();
         body.append("report_date", reportDate);
+        body.append("trip_start", tripStart);
+        body.append("trip_end", tripEnd);
         body.append("driver", driver);
         body.append("destinations", destinations);
         body.append("amount", String(amount));
@@ -137,6 +157,8 @@ export default function TripReportActions({ purchaseOrderId, tripReport }) {
           credentials: "include",
           body: JSON.stringify({
             report_date: reportDate,
+            trip_start: tripStart,
+            trip_end: tripEnd,
             driver,
             destinations,
             amount,
@@ -150,6 +172,8 @@ export default function TripReportActions({ purchaseOrderId, tripReport }) {
         setError(
           firstErrorMessage(data, [
             "report_date",
+            "trip_start",
+            "trip_end",
             "driver",
             "destinations",
             "amount",
@@ -277,6 +301,48 @@ export default function TripReportActions({ purchaseOrderId, tripReport }) {
                   required
                   className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label
+                    htmlFor={`edit-trip-start-${tripReport.id}`}
+                    className="mb-2 block text-sm font-medium text-zinc-700"
+                  >
+                    Trip start
+                  </label>
+                  <input
+                    id={`edit-trip-start-${tripReport.id}`}
+                    type="date"
+                    value={form.trip_start}
+                    onChange={(event) =>
+                      updateField("trip_start", event.target.value)
+                    }
+                    disabled={isSaving}
+                    required
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor={`edit-trip-end-${tripReport.id}`}
+                    className="mb-2 block text-sm font-medium text-zinc-700"
+                  >
+                    Trip end
+                  </label>
+                  <input
+                    id={`edit-trip-end-${tripReport.id}`}
+                    type="date"
+                    value={form.trip_end}
+                    onChange={(event) =>
+                      updateField("trip_end", event.target.value)
+                    }
+                    disabled={isSaving}
+                    required
+                    min={form.trip_start || undefined}
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                  />
+                </div>
               </div>
 
               <div>
