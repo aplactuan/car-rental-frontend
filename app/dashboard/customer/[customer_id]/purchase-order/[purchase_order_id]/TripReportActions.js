@@ -409,9 +409,9 @@ export default function TripReportActions({ purchaseOrderId, tripReport }) {
                   htmlFor={`edit-image-${tripReport.id}`}
                   className="mb-2 block text-sm font-medium text-zinc-700"
                 >
-                  Image{" "}
+                  Attachment{" "}
                   <span className="font-normal text-zinc-400">
-                    (optional, jpg/png/webp, max 10 MB)
+                    (optional, jpg/png/webp/pdf/doc/xls, max 10 MB)
                   </span>
                 </label>
                 {tripReport.tripReportImageUrl ? (
@@ -423,14 +423,14 @@ export default function TripReportActions({ purchaseOrderId, tripReport }) {
                       rel="noopener noreferrer"
                       className="font-medium text-teal-700 hover:text-teal-800"
                     >
-                      View image
+                      View file
                     </a>
                   </p>
                 ) : null}
                 <input
                   id={`edit-image-${tripReport.id}`}
                   type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,image/jpeg,image/png,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                   onChange={(event) =>
                     setImageFile(event.target.files?.[0] ?? null)
                   }

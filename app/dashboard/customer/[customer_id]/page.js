@@ -80,6 +80,10 @@ function normalizePurchaseOrders(payload) {
           pick(["request_person", "requestPerson"]) || "",
         ),
         description: String(pick(["description"]) || ""),
+        status:
+          String(pick(["status"]) || "pending").toLowerCase() === "ok"
+            ? "ok"
+            : "pending",
       };
     })
     .filter((item) => item.id);
@@ -105,6 +109,22 @@ function formatDate(value) {
     month: "short",
     year: "numeric",
   });
+}
+
+function PurchaseOrderStatusBadge({ status }) {
+  const isOk = status === "ok";
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+        isOk
+          ? "bg-emerald-50 text-emerald-800"
+          : "bg-amber-50 text-amber-800"
+      }`}
+    >
+      {isOk ? "OK" : "Pending"}
+    </span>
+  );
 }
 
 function DetailRow({ label, value }) {
@@ -253,6 +273,7 @@ export default async function CustomerDetailPage({ params }) {
                   <th className="pb-3 pr-6">PO Number</th>
                   <th className="pb-3 pr-6">Date</th>
                   <th className="pb-3 pr-6">Amount</th>
+                  <th className="pb-3 pr-6">Status</th>
                   <th className="pb-3 pr-6">Request Person</th>
                   <th className="pb-3 pr-6">Description</th>
                   <th className="pb-3" />
@@ -269,6 +290,9 @@ export default async function CustomerDetailPage({ params }) {
                     </td>
                     <td className="py-3 pr-6 text-zinc-700">
                       {formatPhp(po.amount)}
+                    </td>
+                    <td className="py-3 pr-6">
+                      <PurchaseOrderStatusBadge status={po.status} />
                     </td>
                     <td className="py-3 pr-6 text-zinc-700">
                       {po.requestPerson || "—"}

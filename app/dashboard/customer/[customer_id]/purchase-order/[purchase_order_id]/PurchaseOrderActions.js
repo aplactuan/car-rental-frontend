@@ -3,15 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const EMPTY_FORM = {
-  po_number: "",
-  date: "",
-  amount: "",
-  request_person: "",
-  description: "",
-  status: "pending",
-};
-
 const PO_STATUS_OPTIONS = [
   { value: "pending", label: "Pending" },
   { value: "ok", label: "OK" },
@@ -20,40 +11,98 @@ const PO_STATUS_OPTIONS = [
 const ATTACHMENT_ACCEPT =
   ".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,image/jpeg,image/png,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
-export default function AddPurchaseOrderButton({ customerId }) {
+function toDateInputValue(value) {
+  if (!value) return "";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    const asString = String(value);
+    return asString.length >= 10 ? asString.slice(0, 10) : asString;
+  }
+  return parsed.toISOString().slice(0, 10);
+}
+
+function getAuthHeaders() {
+  const authToken =
+    typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+  return {
+    Accept: "application/json",
+    ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+  };
+}
+
+function firstErrorMessage(data, keys = []) {
+  for (const key of keys) {
+    const value = data?.errors?.[key]?.[0];
+    if (value) return value;
+  }
+  if (typeof data?.errors === "object") {
+    const first = Object.values(data.errors).flat()?.[0];
+    if (first) return first;
+  }
+  return data?.error || data?.message || null;
+}
+
+export default function PurchaseOrderActions({ purchaseOrder }) {
   const router = useRouter();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [form, setForm] = useState({
+    po_number: "",
+    date: "",
+    amount: "",
+    request_person: "",
+    description: "",
+    status: "pending",
+  });
   const [attachmentFiles, setAttachmentFiles] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [removeAttachmentIds, setRemoveAttachmentIds] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const openDialog = () => {
+  const purchaseOrderPath = purchaseOrder?.id
+    ? `/api/v1/purchase-orders/${encodeURIComponent(purchaseOrder.id)}`
+    : "";
+
+  const openEdit = () => {
     setError("");
     setAttachmentFiles([]);
+    setRemoveAttachmentIds([]);
     setForm({
-      ...EMPTY_FORM,
-      date: new Date().toISOString().slice(0, 10),
+      po_number: purchaseOrder.poNumber || "",
+      date: toDateInputValue(purchaseOrder.date),
+      amount:
+        typeof purchaseOrder.amount === "number"
+          ? String(purchaseOrder.amount)
+          : "",
+      request_person: purchaseOrder.requestPerson || "",
+      description: purchaseOrder.description || "",
+      status: purchaseOrder.status === "ok" ? "ok" : "pending",
     });
-    setIsDialogOpen(true);
+    setIsEditOpen(true);
   };
 
-  const closeDialog = () => {
-    if (isLoading) return;
-    setIsDialogOpen(false);
-    setForm(EMPTY_FORM);
-    setAttachmentFiles([]);
+  const closeEdit = () => {
+    if (isSaving) return;
+    setIsEditOpen(false);
     setError("");
+    setAttachmentFiles([]);
+    setRemoveAttachmentIds([]);
   };
 
   const updateField = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }));
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const toggleRemoveAttachment = (attachmentId) => {
+    setRemoveAttachmentIds((current) =>
+      current.includes(attachmentId)
+        ? current.filter((id) => id !== attachmentId)
+        : [...current, attachmentId],
+    );
+  };
 
-    if (!customerId) return;
+  const handleSave = async (event) => {
+    event.preventDefault();
+    if (!purchaseOrderPath) return;
 
     const poNumber = form.po_number.trim();
     const date = form.date.trim();
@@ -66,7 +115,6 @@ export default function AddPurchaseOrderButton({ customerId }) {
       setError("PO number is required.");
       return;
     }
-
     if (!date) {
       setError("Date is required.");
       return;
@@ -79,56 +127,51 @@ export default function AddPurchaseOrderButton({ customerId }) {
     }
 
     setError("");
-    setIsLoading(true);
+    setIsSaving(true);
 
     try {
-      const authToken = localStorage.getItem("auth_token");
-      const authHeaders = {
-        Accept: "application/json",
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-      };
+      const authHeaders = getAuthHeaders();
+      const hasFileChanges =
+        attachmentFiles.length > 0 || removeAttachmentIds.length > 0;
 
       let response;
 
-      if (attachmentFiles.length > 0) {
+      if (hasFileChanges) {
         const body = new FormData();
-        body.append("customer_id", customerId);
         body.append("po_number", poNumber);
         body.append("date", date);
         body.append("amount", String(amount));
+        body.append("request_person", requestPerson);
+        body.append("description", description);
         body.append("status", status);
-        if (requestPerson) {
-          body.append("request_person", requestPerson);
-        }
-        if (description) {
-          body.append("description", description);
-        }
         for (const file of attachmentFiles) {
           body.append("attachments[]", file);
         }
+        for (const id of removeAttachmentIds) {
+          body.append("remove_attachment_ids[]", id);
+        }
 
-        response = await fetch("/api/v1/purchase-orders", {
-          method: "POST",
+        response = await fetch(purchaseOrderPath, {
+          method: "PUT",
           headers: authHeaders,
           credentials: "include",
           body,
         });
       } else {
-        response = await fetch("/api/v1/purchase-orders", {
-          method: "POST",
+        response = await fetch(purchaseOrderPath, {
+          method: "PUT",
           headers: {
             ...authHeaders,
             "Content-Type": "application/json",
           },
           credentials: "include",
           body: JSON.stringify({
-            customer_id: customerId,
             po_number: poNumber,
             date,
             amount,
+            request_person: requestPerson,
+            description,
             status,
-            ...(requestPerson ? { request_person: requestPerson } : {}),
-            ...(description ? { description } : {}),
           }),
         });
       }
@@ -136,109 +179,111 @@ export default function AddPurchaseOrderButton({ customerId }) {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        const validationMessage =
-          data?.errors?.po_number?.[0] ||
-          data?.errors?.date?.[0] ||
-          data?.errors?.amount?.[0] ||
-          data?.errors?.customer_id?.[0] ||
-          data?.errors?.status?.[0] ||
-          data?.errors?.["attachments[]"]?.[0] ||
-          data?.errors?.attachments?.[0] ||
-          (typeof data?.errors === "object"
-            ? Object.values(data.errors).flat()?.[0]
-            : null);
         setError(
-          validationMessage ||
-            data?.error ||
-            data?.message ||
-            "Failed to create purchase order.",
+          firstErrorMessage(data, [
+            "po_number",
+            "date",
+            "amount",
+            "request_person",
+            "description",
+            "status",
+            "attachments",
+            "attachments[]",
+            "remove_attachment_ids",
+            "remove_attachment_ids[]",
+          ]) || "Failed to update purchase order.",
         );
         return;
       }
 
-      setForm(EMPTY_FORM);
-      setAttachmentFiles([]);
-      setIsDialogOpen(false);
+      setIsEditOpen(false);
       router.refresh();
     } catch {
       setError("Network error. Please try again.");
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
+
+  const existingAttachments = Array.isArray(purchaseOrder?.attachments)
+    ? purchaseOrder.attachments
+    : [];
 
   return (
     <div>
       <button
         type="button"
-        onClick={openDialog}
-        disabled={!customerId}
-        className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60"
+        onClick={openEdit}
+        disabled={!purchaseOrder?.id}
+        className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        Add purchase order
+        Edit purchase order
       </button>
 
-      {isDialogOpen ? (
+      {error && !isEditOpen ? (
+        <p className="mt-2 max-w-[12rem] text-right text-xs text-red-100">
+          {error}
+        </p>
+      ) : null}
+
+      {isEditOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 px-4">
           <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-lg font-semibold text-zinc-900">
-                  Add purchase order
+                  Edit purchase order
                 </h2>
                 <p className="mt-1 text-sm text-zinc-500">
-                  Create a purchase order for this customer.
+                  Update details, status, and attachments.
                 </p>
               </div>
-
               <button
                 type="button"
-                onClick={closeDialog}
-                disabled={isLoading}
-                aria-label="Close add purchase order dialog"
+                onClick={closeEdit}
+                disabled={isSaving}
+                aria-label="Close edit purchase order dialog"
                 className="rounded-md p-2 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 x
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+            <form onSubmit={handleSave} className="mt-5 space-y-4">
               <div>
                 <label
-                  htmlFor="poNumber"
+                  htmlFor="edit-po-number"
                   className="mb-2 block text-sm font-medium text-zinc-700"
                 >
                   PO number
                 </label>
                 <input
-                  id="poNumber"
+                  id="edit-po-number"
                   type="text"
                   value={form.po_number}
                   onChange={(event) =>
                     updateField("po_number", event.target.value)
                   }
-                  disabled={isLoading}
+                  disabled={isSaving}
                   maxLength={255}
-                  autoFocus
                   required
-                  placeholder="e.g. PO-1001"
                   className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                 />
               </div>
 
               <div>
                 <label
-                  htmlFor="poDate"
+                  htmlFor="edit-po-date"
                   className="mb-2 block text-sm font-medium text-zinc-700"
                 >
                   Date
                 </label>
                 <input
-                  id="poDate"
+                  id="edit-po-date"
                   type="date"
                   value={form.date}
                   onChange={(event) => updateField("date", event.target.value)}
-                  disabled={isLoading}
+                  disabled={isSaving}
                   required
                   className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                 />
@@ -246,13 +291,13 @@ export default function AddPurchaseOrderButton({ customerId }) {
 
               <div>
                 <label
-                  htmlFor="poAmount"
+                  htmlFor="edit-po-amount"
                   className="mb-2 block text-sm font-medium text-zinc-700"
                 >
                   Amount
                 </label>
                 <input
-                  id="poAmount"
+                  id="edit-po-amount"
                   type="number"
                   min="0"
                   step="1"
@@ -260,25 +305,24 @@ export default function AddPurchaseOrderButton({ customerId }) {
                   onChange={(event) =>
                     updateField("amount", event.target.value)
                   }
-                  disabled={isLoading}
+                  disabled={isSaving}
                   required
-                  placeholder="0"
                   className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                 />
               </div>
 
               <div>
                 <label
-                  htmlFor="poStatus"
+                  htmlFor="edit-po-status"
                   className="mb-2 block text-sm font-medium text-zinc-700"
                 >
                   Status
                 </label>
                 <select
-                  id="poStatus"
+                  id="edit-po-status"
                   value={form.status}
                   onChange={(event) => updateField("status", event.target.value)}
-                  disabled={isLoading}
+                  disabled={isSaving}
                   className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                 >
                   {PO_STATUS_OPTIONS.map((option) => (
@@ -291,73 +335,111 @@ export default function AddPurchaseOrderButton({ customerId }) {
 
               <div>
                 <label
-                  htmlFor="requestPerson"
+                  htmlFor="edit-request-person"
                   className="mb-2 block text-sm font-medium text-zinc-700"
                 >
-                  Request person{" "}
-                  <span className="font-normal text-zinc-400">(optional)</span>
+                  Request person
                 </label>
                 <input
-                  id="requestPerson"
+                  id="edit-request-person"
                   type="text"
                   value={form.request_person}
                   onChange={(event) =>
                     updateField("request_person", event.target.value)
                   }
-                  disabled={isLoading}
+                  disabled={isSaving}
                   maxLength={255}
-                  placeholder="e.g. Jane Doe"
                   className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                 />
               </div>
 
               <div>
                 <label
-                  htmlFor="poDescription"
+                  htmlFor="edit-po-description"
                   className="mb-2 block text-sm font-medium text-zinc-700"
                 >
-                  Description{" "}
-                  <span className="font-normal text-zinc-400">(optional)</span>
+                  Description
                 </label>
                 <textarea
-                  id="poDescription"
+                  id="edit-po-description"
                   value={form.description}
                   onChange={(event) =>
                     updateField("description", event.target.value)
                   }
-                  disabled={isLoading}
+                  disabled={isSaving}
                   rows={3}
-                  placeholder="Optional notes for this purchase order"
                   className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                 />
               </div>
 
+              {existingAttachments.length > 0 ? (
+                <div>
+                  <p className="mb-2 text-sm font-medium text-zinc-700">
+                    Current attachments
+                  </p>
+                  <ul className="space-y-2">
+                    {existingAttachments.map((attachment) => {
+                      const marked = removeAttachmentIds.includes(
+                        attachment.id,
+                      );
+                      return (
+                        <li
+                          key={attachment.id}
+                          className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 px-3 py-2"
+                        >
+                          <a
+                            href={attachment.url || undefined}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`min-w-0 truncate text-sm ${
+                              marked
+                                ? "text-zinc-400 line-through"
+                                : "font-medium text-teal-700 hover:text-teal-800"
+                            }`}
+                          >
+                            {attachment.fileName || "Attachment"}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              toggleRemoveAttachment(attachment.id)
+                            }
+                            disabled={isSaving}
+                            className="shrink-0 text-xs font-medium text-red-600 transition hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {marked ? "Undo" : "Remove"}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ) : null}
+
               <div>
                 <label
-                  htmlFor="poAttachments"
+                  htmlFor="edit-po-attachments"
                   className="mb-2 block text-sm font-medium text-zinc-700"
                 >
-                  Attachments{" "}
+                  Add attachments{" "}
                   <span className="font-normal text-zinc-400">
-                    (optional, images/docs/PDF, max 10 MB each)
+                    (optional, does not replace existing)
                   </span>
                 </label>
                 <input
-                  id="poAttachments"
+                  id="edit-po-attachments"
                   type="file"
                   multiple
                   accept={ATTACHMENT_ACCEPT}
                   onChange={(event) =>
-                    setAttachmentFiles(
-                      Array.from(event.target.files ?? []),
-                    )
+                    setAttachmentFiles(Array.from(event.target.files ?? []))
                   }
-                  disabled={isLoading}
+                  disabled={isSaving}
                   className="w-full text-sm text-zinc-700 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-800 hover:file:bg-zinc-200 disabled:cursor-not-allowed"
                 />
                 {attachmentFiles.length > 0 ? (
                   <p className="mt-2 text-xs text-zinc-500">
-                    {attachmentFiles.length} file
+                    {attachmentFiles.length} new file
                     {attachmentFiles.length === 1 ? "" : "s"} selected
                   </p>
                 ) : null}
@@ -368,18 +450,18 @@ export default function AddPurchaseOrderButton({ customerId }) {
               <div className="mt-5 flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={closeDialog}
-                  disabled={isLoading}
+                  onClick={closeEdit}
+                  disabled={isSaving}
                   className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isSaving}
                   className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isLoading ? "Adding..." : "Create purchase order"}
+                  {isSaving ? "Saving..." : "Save changes"}
                 </button>
               </div>
             </form>

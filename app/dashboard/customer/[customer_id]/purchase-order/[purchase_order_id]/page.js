@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import AddInvoiceButton from "./AddInvoiceButton";
 import AddTripReportButton from "./AddTripReportButton";
 import InvoiceActions from "./InvoiceActions";
+import PurchaseOrderActions from "./PurchaseOrderActions";
 import TripReportActions from "./TripReportActions";
 
 function readField(source, keys) {
@@ -58,6 +59,30 @@ function normalizePurchaseOrder(payload) {
     )?.attributes ??
     {};
 
+  const statusRaw = String(pick(["status"]) || "pending").toLowerCase();
+  const status = statusRaw === "ok" ? "ok" : "pending";
+
+  const rawAttachments =
+    attrs?.attachments ?? record?.attachments ?? [];
+  const attachments = Array.isArray(rawAttachments)
+    ? rawAttachments
+        .map((item) => {
+          if (!item || typeof item !== "object") return null;
+          const id = String(item.id ?? item.uuid ?? "");
+          if (!id) return null;
+          return {
+            id,
+            fileName: String(
+              item.fileName ?? item.file_name ?? item.name ?? "Attachment",
+            ),
+            mimeType: String(item.mimeType ?? item.mime_type ?? ""),
+            size: toAmount(item.size),
+            url: String(item.url ?? item.original_url ?? item.path ?? ""),
+          };
+        })
+        .filter(Boolean)
+    : [];
+
   return {
     id: String(pick(["id", "purchase_order_id", "purchaseOrderId"]) || ""),
     poNumber: String(pick(["po_number", "poNumber"]) || ""),
@@ -65,6 +90,8 @@ function normalizePurchaseOrder(payload) {
     amount: toAmount(attrs?.amount ?? record?.amount),
     requestPerson: String(pick(["request_person", "requestPerson"]) || ""),
     description: String(pick(["description"]) || ""),
+    status,
+    attachments,
     customerId: String(
       pick(["customer_id", "customerId"]) || customerRelationship?.id || "",
     ),
@@ -72,6 +99,22 @@ function normalizePurchaseOrder(payload) {
       readField(customerAttrs, ["name", "customer_name", "customerName"]) || "",
     ),
   };
+}
+
+function PurchaseOrderStatusBadge({ status }) {
+  const isOk = status === "ok";
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+        isOk
+          ? "bg-emerald-50 text-emerald-800"
+          : "bg-amber-50 text-amber-800"
+      }`}
+    >
+      {isOk ? "OK" : "Pending"}
+    </span>
+  );
 }
 
 function normalizeTripReports(payload) {
@@ -404,6 +447,9 @@ export default async function PurchaseOrderDetailPage({ params }) {
 
             {purchaseOrderId ? (
               <div className="flex flex-wrap items-center gap-2">
+                {purchaseOrder ? (
+                  <PurchaseOrderActions purchaseOrder={purchaseOrder} />
+                ) : null}
                 <AddInvoiceButton
                   purchaseOrderId={purchaseOrderId}
                   availableTripReports={availableTripReports}
@@ -421,7 +467,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
         </div>
 
         {!error && purchaseOrder ? (
-          <div className="grid gap-px bg-zinc-200 sm:grid-cols-3">
+          <div className="grid gap-px bg-zinc-200 sm:grid-cols-2 lg:grid-cols-4">
             <div className="bg-white px-6 py-5">
               <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                 Amount
@@ -446,6 +492,14 @@ export default async function PurchaseOrderDetailPage({ params }) {
                 {purchaseOrder.requestPerson || "—"}
               </p>
             </div>
+            <div className="bg-white px-6 py-5">
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                Status
+              </p>
+              <div className="mt-2">
+                <PurchaseOrderStatusBadge status={purchaseOrder.status} />
+              </div>
+            </div>
           </div>
         ) : null}
 
@@ -459,123 +513,25 @@ export default async function PurchaseOrderDetailPage({ params }) {
             </p>
           </div>
         ) : null}
-      </header>
 
-      <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-6 py-5">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
-              Trip reports
-            </h2>
-            <p className="mt-1 text-sm text-zinc-500">
-              Trips logged against this purchase order.
+        {!error && purchaseOrder?.attachments?.length > 0 ? (
+          <div className="border-t border-zinc-100 bg-white px-6 py-4 sm:px-8">
+            <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+              Attachments
             </p>
+            <ul className="mt-3 flex flex-wrap gap-3">
+              {purchaseOrder.attachments.map((attachment) => (
+                <li key={attachment.id}>
+                  <DocumentLink
+                    href={attachment.url}
+                    label={attachment.fileName || "View file"}
+                  />
+                </li>
+              ))}
+            </ul>
           </div>
-          {!tripReportsError && tripReports.length > 0 ? (
-            <div
-              className={`rounded-full px-3 py-1 text-xs font-medium ${
-                tripTotalExceedsPo
-                  ? "bg-red-50 text-red-800"
-                  : "bg-emerald-50 text-emerald-800"
-              }`}
-            >
-              {tripReports.length} report{tripReports.length === 1 ? "" : "s"} ·{" "}
-              {formatPhp(tripTotal)}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="px-6 py-5">
-          {tripReportsError ? (
-            <p className="text-sm text-red-600">{tripReportsError}</p>
-          ) : tripReports.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-6 py-10 text-center">
-              <p className="text-sm font-medium text-zinc-700">
-                No trip reports yet
-              </p>
-              <p className="mt-1 text-sm text-zinc-500">
-                Add the first trip report for this purchase order.
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                    <th className="pb-3 pr-6">Report date</th>
-                    <th className="pb-3 pr-6">Trip start</th>
-                    <th className="pb-3 pr-6">Trip end</th>
-                    <th className="pb-3 pr-6">Driver</th>
-                    <th className="pb-3 pr-6">Destinations</th>
-                    <th className="pb-3 pr-6">Amount</th>
-                    <th className="pb-3 pr-6">Invoice</th>
-                    <th className="pb-3 pr-6">Image</th>
-                    <th className="pb-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100">
-                  {tripReports.map((report) => {
-                    const linkedInvoice = report.invoiceId
-                      ? invoices.find(
-                          (invoice) => invoice.id === report.invoiceId,
-                        )
-                      : null;
-
-                    return (
-                      <tr
-                        key={report.id}
-                        className="transition hover:bg-zinc-50/80"
-                      >
-                        <td className="py-3.5 pr-6 font-medium text-zinc-900">
-                          {formatDate(report.reportDate)}
-                        </td>
-                        <td className="py-3.5 pr-6 text-zinc-700">
-                          {formatDate(report.tripStart)}
-                        </td>
-                        <td className="py-3.5 pr-6 text-zinc-700">
-                          {formatDate(report.tripEnd)}
-                        </td>
-                        <td className="py-3.5 pr-6 text-zinc-700">
-                          {report.driver || "—"}
-                        </td>
-                        <td className="max-w-xs py-3.5 pr-6 text-zinc-700">
-                          {report.destinations || "—"}
-                        </td>
-                        <td className="py-3.5 pr-6 font-medium text-zinc-900">
-                          {formatPhp(report.amount)}
-                        </td>
-                        <td className="py-3.5 pr-6">
-                          {report.invoiceId ? (
-                            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
-                              {linkedInvoice?.invoiceNumber || "Invoiced"}
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
-                              Unassigned
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3.5 pr-6">
-                          <DocumentLink
-                            href={report.tripReportImageUrl}
-                            label="View"
-                          />
-                        </td>
-                        <td className="py-3.5 text-right">
-                          <TripReportActions
-                            purchaseOrderId={purchaseOrderId}
-                            tripReport={report}
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </section>
+        ) : null}
+      </header>
 
       <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-6 py-5">
@@ -665,6 +621,122 @@ export default async function PurchaseOrderDetailPage({ params }) {
                             invoice={invoice}
                             availableTripReports={availableTripReports}
                             attachedTripReports={attachedTripReports}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-6 py-5">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
+              Trip reports
+            </h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Trips logged against this purchase order.
+            </p>
+          </div>
+          {!tripReportsError && tripReports.length > 0 ? (
+            <div
+              className={`rounded-full px-3 py-1 text-xs font-medium ${
+                tripTotalExceedsPo
+                  ? "bg-red-50 text-red-800"
+                  : "bg-emerald-50 text-emerald-800"
+              }`}
+            >
+              {tripReports.length} report{tripReports.length === 1 ? "" : "s"} ·{" "}
+              {formatPhp(tripTotal)}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="px-6 py-5">
+          {tripReportsError ? (
+            <p className="text-sm text-red-600">{tripReportsError}</p>
+          ) : tripReports.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-6 py-10 text-center">
+              <p className="text-sm font-medium text-zinc-700">
+                No trip reports yet
+              </p>
+              <p className="mt-1 text-sm text-zinc-500">
+                Add the first trip report for this purchase order.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    <th className="pb-3 pr-6">Report date</th>
+                    <th className="pb-3 pr-6">Trip start</th>
+                    <th className="pb-3 pr-6">Trip end</th>
+                    <th className="pb-3 pr-6">Driver</th>
+                    <th className="pb-3 pr-6">Destinations</th>
+                    <th className="pb-3 pr-6">Amount</th>
+                    <th className="pb-3 pr-6">Invoice</th>
+                    <th className="pb-3 pr-6">File</th>
+                    <th className="pb-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100">
+                  {tripReports.map((report) => {
+                    const linkedInvoice = report.invoiceId
+                      ? invoices.find(
+                          (invoice) => invoice.id === report.invoiceId,
+                        )
+                      : null;
+
+                    return (
+                      <tr
+                        key={report.id}
+                        className="transition hover:bg-zinc-50/80"
+                      >
+                        <td className="py-3.5 pr-6 font-medium text-zinc-900">
+                          {formatDate(report.reportDate)}
+                        </td>
+                        <td className="py-3.5 pr-6 text-zinc-700">
+                          {formatDate(report.tripStart)}
+                        </td>
+                        <td className="py-3.5 pr-6 text-zinc-700">
+                          {formatDate(report.tripEnd)}
+                        </td>
+                        <td className="py-3.5 pr-6 text-zinc-700">
+                          {report.driver || "—"}
+                        </td>
+                        <td className="max-w-xs py-3.5 pr-6 text-zinc-700">
+                          {report.destinations || "—"}
+                        </td>
+                        <td className="py-3.5 pr-6 font-medium text-zinc-900">
+                          {formatPhp(report.amount)}
+                        </td>
+                        <td className="py-3.5 pr-6">
+                          {report.invoiceId ? (
+                            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
+                              {linkedInvoice?.invoiceNumber || "Invoiced"}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+                              Unassigned
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 pr-6">
+                          <DocumentLink
+                            href={report.tripReportImageUrl}
+                            label="View"
+                          />
+                        </td>
+                        <td className="py-3.5 text-right">
+                          <TripReportActions
+                            purchaseOrderId={purchaseOrderId}
+                            tripReport={report}
                           />
                         </td>
                       </tr>
