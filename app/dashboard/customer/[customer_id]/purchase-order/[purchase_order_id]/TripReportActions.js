@@ -34,9 +34,45 @@ function firstErrorMessage(data, keys = []) {
   return data?.error || data?.message || null;
 }
 
-export default function TripReportActions({ purchaseOrderId, tripReport }) {
+function formatPhp(amount) {
+  if (typeof amount !== "number" || !Number.isFinite(amount)) return "—";
+  return new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+    currencyDisplay: "code",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+function formatDate(value) {
+  if (!value) return "—";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return String(value);
+
+  return parsed.toLocaleDateString("en-PH", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function DetailRow({ label, children }) {
+  return (
+    <div className="grid grid-cols-[7.5rem_1fr] gap-x-4 gap-y-1 py-2.5 sm:grid-cols-[9rem_1fr]">
+      <dt className="text-sm text-zinc-500">{label}</dt>
+      <dd className="text-sm font-medium text-zinc-900">{children}</dd>
+    </div>
+  );
+}
+
+export default function TripReportActions({
+  purchaseOrderId,
+  tripReport,
+  invoiceNumber = "",
+}) {
   const router = useRouter();
   const hasInvoice = Boolean(tripReport?.invoiceId);
+  const [isViewOpen, setIsViewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [form, setForm] = useState({
     report_date: "",
@@ -55,6 +91,14 @@ export default function TripReportActions({ purchaseOrderId, tripReport }) {
     purchaseOrderId && tripReport?.id
       ? `/api/v1/purchase-orders/${encodeURIComponent(purchaseOrderId)}/trip-reports/${encodeURIComponent(tripReport.id)}`
       : "";
+
+  const openView = () => {
+    setIsViewOpen(true);
+  };
+
+  const closeView = () => {
+    setIsViewOpen(false);
+  };
 
   const openEdit = () => {
     if (hasInvoice) return;
@@ -238,6 +282,14 @@ export default function TripReportActions({ purchaseOrderId, tripReport }) {
       <div className="flex items-center gap-2">
         <button
           type="button"
+          onClick={openView}
+          disabled={busy}
+          className="text-xs font-medium text-zinc-700 transition hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          View
+        </button>
+        <button
+          type="button"
           onClick={openEdit}
           disabled={busy || !purchaseOrderId || hasInvoice}
           title={lockedTitle}
@@ -257,6 +309,96 @@ export default function TripReportActions({ purchaseOrderId, tripReport }) {
       </div>
       {error && !isEditOpen ? (
         <p className="max-w-[12rem] text-right text-xs text-red-600">{error}</p>
+      ) : null}
+
+      {isViewOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 px-4">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-lg font-semibold text-zinc-900">
+                Trip report details
+              </h2>
+              <button
+                type="button"
+                onClick={closeView}
+                aria-label="Close trip report details dialog"
+                className="rounded-md p-2 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-700"
+              >
+                x
+              </button>
+            </div>
+
+            <dl className="mt-4 divide-y divide-zinc-100">
+              <DetailRow label="Report date">
+                {formatDate(tripReport.reportDate)}
+              </DetailRow>
+              <DetailRow label="Trip start">
+                {formatDate(tripReport.tripStart)}
+              </DetailRow>
+              <DetailRow label="Trip end">
+                {formatDate(tripReport.tripEnd)}
+              </DetailRow>
+              <DetailRow label="Driver">
+                {tripReport.driver || "—"}
+              </DetailRow>
+              <DetailRow label="Destinations">
+                {tripReport.destinations || "—"}
+              </DetailRow>
+              <DetailRow label="Amount">
+                {formatPhp(tripReport.amount)}
+              </DetailRow>
+              <DetailRow label="Invoice">
+                {hasInvoice ? (
+                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
+                    {invoiceNumber || "Invoiced"}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+                    Unassigned
+                  </span>
+                )}
+              </DetailRow>
+              <DetailRow label="Attachment">
+                {tripReport.tripReportImageUrl ? (
+                  <a
+                    href={tripReport.tripReportImageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-medium text-teal-700 transition hover:text-teal-800"
+                  >
+                    View file
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="h-3.5 w-3.5"
+                      aria-hidden
+                    >
+                      <path
+                        d="M7 17L17 7M7 7h10v10"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </a>
+                ) : (
+                  "—"
+                )}
+              </DetailRow>
+            </dl>
+
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={closeView}
+                className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       ) : null}
 
       {isEditOpen ? (

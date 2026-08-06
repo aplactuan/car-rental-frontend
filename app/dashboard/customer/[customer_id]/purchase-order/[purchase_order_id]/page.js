@@ -759,6 +759,9 @@ export default async function PurchaseOrderDetailPage({ params }) {
                           <TripReportActions
                             purchaseOrderId={purchaseOrderId}
                             tripReport={report}
+                            invoiceNumber={
+                              linkedInvoice?.invoiceNumber || ""
+                            }
                           />
                         </td>
                       </tr>
