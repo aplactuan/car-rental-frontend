@@ -726,6 +726,31 @@
 					}
 				},
 				{
+					"name": "List Driver Names",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/drivers/names",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"drivers",
+								"names"
+							]
+						},
+						"description": "**Bearer required.** Returns all drivers with no pagination. Each item includes `id` plus attributes `firstName` and `lastName` only (ordered by last name, then first name). Suitable for dropdowns/select lists."
+					}
+				},
+				{
 					"name": "Get Single Driver",
 					"request": {
 						"method": "GET",
@@ -3146,7 +3171,7 @@
 		},
 		{
 			"name": "Trip Reports",
-			"description": "Trip logs nested under a purchase order. Any authenticated user may manage them. `driver` is a free-text string. `amount` is an unsigned money integer. `trip_start` and `trip_end` are required dates. Optional `trip_report_image` uses `multipart/form-data` (jpg/jpeg/png/webp/pdf/doc/docx/xls/xlsx, max 10 MB). Responses include an `invoice` relationship (`null` until attached to a purchase order invoice).",
+			"description": "Trip logs nested under a purchase order. Any authenticated user may manage them. `trip_report_no` is required and unique within the purchase order. `driver` is a free-text string. `amount` is an unsigned money integer. `trip_start` and `trip_end` are required dates. Optional `trip_report_image` uses `multipart/form-data` (jpg/jpeg/png/webp/pdf/doc/docx/xls/xlsx, max 10 MB). Responses include an `invoice` relationship (`null` until attached to a purchase order invoice).",
 			"item": [
 				{
 					"name": "Add Trip Report",
@@ -3161,6 +3186,12 @@
 						"body": {
 							"mode": "formdata",
 							"formdata": [
+								{
+									"key": "trip_report_no",
+									"value": "TR-001",
+									"description": "Required. Unique within the purchase order (string, max 255).",
+									"type": "text"
+								},
 								{
 									"key": "report_date",
 									"value": "2026-07-28",
@@ -3219,7 +3250,7 @@
 								"trip-reports"
 							]
 						},
-						"description": "**Bearer required.** Create a trip report for the purchase order. Prefer `multipart/form-data` when uploading a file.\n\n**Required:** `report_date`, `trip_start`, `trip_end`, `driver` (string), `destinations` (string), `amount` (unsigned integer, min 0).\n\n**Optional:** `trip_report_image` (jpg/jpeg/png/webp/pdf/doc/docx/xls/xlsx, max 10 MB).\n\nResponse attributes: `reportDate`, `tripStart`, `tripEnd`, `driver`, `destinations`, `amount`, `tripReportImageUrl` (null when omitted), `createdAt`, `updatedAt`. Relationships: `purchaseOrder`, `invoice` (null until attached)."
+						"description": "**Bearer required.** Create a trip report for the purchase order. Prefer `multipart/form-data` when uploading a file.\n\n**Required:** `trip_report_no` (string, unique within the purchase order), `report_date`, `trip_start`, `trip_end`, `driver` (string), `destinations` (string), `amount` (unsigned integer, min 0).\n\n**Optional:** `trip_report_image` (jpg/jpeg/png/webp/pdf/doc/docx/xls/xlsx, max 10 MB).\n\nResponse attributes: `tripReportNo`, `reportDate`, `tripStart`, `tripEnd`, `driver`, `destinations`, `amount`, `tripReportImageUrl` (null when omitted), `createdAt`, `updatedAt`. Relationships: `purchaseOrder`, `invoice` (null until attached)."
 					},
 					"event": [
 						{
@@ -3305,6 +3336,12 @@
 							"mode": "formdata",
 							"formdata": [
 								{
+									"key": "trip_report_no",
+									"value": "TR-001",
+									"description": "Optional. Unique within the purchase order (string, max 255).",
+									"type": "text"
+								},
+								{
 									"key": "report_date",
 									"value": "2026-08-01",
 									"description": "Optional. Date.",
@@ -3363,7 +3400,7 @@
 								"{{trip_report_id}}"
 							]
 						},
-						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when replacing the file. When provided, `trip_start` and `trip_end` must be valid dates. Uploading `trip_report_image` replaces the previous single-file media (image, document, or PDF)."
+						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when replacing the file. When provided, `trip_report_no` must be unique within the purchase order; `trip_start` and `trip_end` must be valid dates. Uploading `trip_report_image` replaces the previous single-file media (image, document, or PDF)."
 					}
 				},
 				{
@@ -3421,7 +3458,7 @@
 								{
 									"key": "lddap_adap_no",
 									"value": "LDDAP-2026-001",
-									"description": "Required. LDDAP/ADAP number (string, max 255).",
+									"description": "Optional. LDDAP/ADAP number (string, max 255, nullable).",
 									"type": "text"
 								},
 								{
@@ -3466,7 +3503,7 @@
 								"invoices"
 							]
 						},
-						"description": "**Bearer required.** Create a purchase order invoice. Prefer `multipart/form-data` when uploading files.\n\n**Required:** `invoice_number` (unique), `lddap_adap_no`.\n\n**Optional:** `note`, `status` (`unpaid` default, or `paid`), `payment_receipt`, `disbursement_voucher`.\n\nResponse type `purchase-order-invoice` with attributes `invoiceNumber`, `lddapAdapNo`, `note`, `status`, `paymentReceiptUrl`, `disbursementVoucherUrl`, `createdAt`, `updatedAt`. Relationship: `purchaseOrder`."
+						"description": "**Bearer required.** Create a purchase order invoice. Prefer `multipart/form-data` when uploading files.\n\n**Required:** `invoice_number` (unique).\n\n**Optional:** `lddap_adap_no` (nullable), `note`, `status` (`unpaid` default, or `paid`), `payment_receipt`, `disbursement_voucher`.\n\nResponse type `purchase-order-invoice` with attributes `invoiceNumber`, `lddapAdapNo`, `note`, `status`, `paymentReceiptUrl`, `disbursementVoucherUrl`, `createdAt`, `updatedAt`. Relationship: `purchaseOrder`."
 					},
 					"event": [
 						{
@@ -3560,7 +3597,7 @@
 								{
 									"key": "lddap_adap_no",
 									"value": "LDDAP-UPDATED",
-									"description": "Optional. LDDAP/ADAP number.",
+									"description": "Optional. LDDAP/ADAP number (nullable).",
 									"type": "text"
 								},
 								{
@@ -3619,7 +3656,7 @@
 								"{{invoice_id}}"
 							]
 						},
-						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when replacing or removing files.\n\n**Optional fields:** `invoice_number`, `lddap_adap_no`, `note`, `status` (`unpaid` or `paid`), `payment_receipt`, `disbursement_voucher`, `remove_payment_receipt`, `remove_disbursement_voucher`.\n\nUploading a file replaces the previous single-file media. Setting a remove flag clears that collection. You cannot upload and remove the same file in one request. Omitting file fields leaves existing media unchanged."
+						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when replacing or removing files.\n\n**Optional fields:** `invoice_number`, `lddap_adap_no` (nullable), `note`, `status` (`unpaid` or `paid`), `payment_receipt`, `disbursement_voucher`, `remove_payment_receipt`, `remove_disbursement_voucher`.\n\nUploading a file replaces the previous single-file media. Setting a remove flag clears that collection. You cannot upload and remove the same file in one request. Omitting file fields leaves existing media unchanged."
 					}
 				},
 				{
