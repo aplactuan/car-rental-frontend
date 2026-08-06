@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import DriverAutocomplete from "./DriverAutocomplete";
 
 function toDateInputValue(value) {
   if (!value) return "";
@@ -494,15 +495,12 @@ export default function TripReportActions({
                 >
                   Driver
                 </label>
-                <input
+                <DriverAutocomplete
                   id={`edit-driver-${tripReport.id}`}
-                  type="text"
                   value={form.driver}
-                  onChange={(event) => updateField("driver", event.target.value)}
+                  onChange={(nextValue) => updateField("driver", nextValue)}
                   disabled={isSaving}
-                  maxLength={255}
                   required
-                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                 />
               </div>
 
