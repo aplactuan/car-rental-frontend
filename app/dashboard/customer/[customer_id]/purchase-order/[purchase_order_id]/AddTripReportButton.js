@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import DriverAutocomplete from "./DriverAutocomplete";
 
 const EMPTY_FORM = {
+  trip_report_no: "",
   report_date: "",
   trip_start: "",
   trip_end: "",
@@ -48,6 +49,7 @@ export default function AddTripReportButton({ purchaseOrderId }) {
 
     if (!purchaseOrderId) return;
 
+    const tripReportNo = form.trip_report_no.trim();
     const reportDate = form.report_date.trim();
     const tripStart = form.trip_start.trim();
     const tripEnd = form.trip_end.trim();
@@ -55,6 +57,10 @@ export default function AddTripReportButton({ purchaseOrderId }) {
     const destinations = form.destinations.trim();
     const amountValue = form.amount.trim();
 
+    if (!tripReportNo) {
+      setError("Trip report no is required.");
+      return;
+    }
     if (!reportDate) {
       setError("Report date is required.");
       return;
@@ -91,6 +97,7 @@ export default function AddTripReportButton({ purchaseOrderId }) {
 
     try {
       const body = new FormData();
+      body.append("trip_report_no", tripReportNo);
       body.append("report_date", reportDate);
       body.append("trip_start", tripStart);
       body.append("trip_end", tripEnd);
@@ -119,6 +126,7 @@ export default function AddTripReportButton({ purchaseOrderId }) {
 
       if (!response.ok) {
         const validationMessage =
+          data?.errors?.trip_report_no?.[0] ||
           data?.errors?.report_date?.[0] ||
           data?.errors?.trip_start?.[0] ||
           data?.errors?.trip_end?.[0] ||
@@ -185,6 +193,29 @@ export default function AddTripReportButton({ purchaseOrderId }) {
             </div>
 
             <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+              <div>
+                <label
+                  htmlFor="tripReportNo"
+                  className="mb-2 block text-sm font-medium text-zinc-700"
+                >
+                  Trip report no
+                </label>
+                <input
+                  id="tripReportNo"
+                  type="text"
+                  value={form.trip_report_no}
+                  onChange={(event) =>
+                    updateField("trip_report_no", event.target.value)
+                  }
+                  disabled={isLoading}
+                  maxLength={255}
+                  autoFocus
+                  required
+                  placeholder="e.g. TR-001"
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                />
+              </div>
+
               <div>
                 <label
                   htmlFor="reportDate"
@@ -259,7 +290,6 @@ export default function AddTripReportButton({ purchaseOrderId }) {
                   value={form.driver}
                   onChange={(nextValue) => updateField("driver", nextValue)}
                   disabled={isLoading}
-                  autoFocus
                   required
                   placeholder="e.g. Juan Dela Cruz"
                 />

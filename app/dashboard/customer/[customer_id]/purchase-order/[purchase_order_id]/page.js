@@ -161,6 +161,9 @@ function normalizeTripReports(payload) {
 
       return {
         id: String(pick(["id", "trip_report_id", "tripReportId"]) || ""),
+        tripReportNo: String(
+          pick(["trip_report_no", "tripReportNo"]) || "",
+        ),
         reportDate: String(pick(["report_date", "reportDate"]) || ""),
         tripStart: String(pick(["trip_start", "tripStart"]) || ""),
         tripEnd: String(pick(["trip_end", "tripEnd"]) || ""),
@@ -696,6 +699,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    <th className="pb-3 pr-6">Trip report no</th>
                     <th className="pb-3 pr-6">Report date</th>
                     <th className="pb-3 pr-6">Trip start</th>
                     <th className="pb-3 pr-6">Trip end</th>
@@ -721,6 +725,9 @@ export default async function PurchaseOrderDetailPage({ params }) {
                         className="transition hover:bg-zinc-50/80"
                       >
                         <td className="py-3.5 pr-6 font-medium text-zinc-900">
+                          {report.tripReportNo || "—"}
+                        </td>
+                        <td className="py-3.5 pr-6 text-zinc-700">
                           {formatDate(report.reportDate)}
                         </td>
                         <td className="py-3.5 pr-6 text-zinc-700">

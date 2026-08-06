@@ -76,6 +76,7 @@ export default function TripReportActions({
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [form, setForm] = useState({
+    trip_report_no: "",
     report_date: "",
     trip_start: "",
     trip_end: "",
@@ -106,6 +107,7 @@ export default function TripReportActions({
     setError("");
     setImageFile(null);
     setForm({
+      trip_report_no: tripReport.tripReportNo || "",
       report_date: toDateInputValue(tripReport.reportDate),
       trip_start: toDateInputValue(tripReport.tripStart),
       trip_end: toDateInputValue(tripReport.tripEnd),
@@ -132,6 +134,7 @@ export default function TripReportActions({
     event.preventDefault();
     if (!reportPath || hasInvoice) return;
 
+    const tripReportNo = form.trip_report_no.trim();
     const reportDate = form.report_date.trim();
     const tripStart = form.trip_start.trim();
     const tripEnd = form.trip_end.trim();
@@ -139,6 +142,10 @@ export default function TripReportActions({
     const destinations = form.destinations.trim();
     const amountValue = form.amount.trim();
 
+    if (!tripReportNo) {
+      setError("Trip report no is required.");
+      return;
+    }
     if (!reportDate) {
       setError("Report date is required.");
       return;
@@ -178,6 +185,7 @@ export default function TripReportActions({
 
       if (imageFile) {
         const body = new FormData();
+        body.append("trip_report_no", tripReportNo);
         body.append("report_date", reportDate);
         body.append("trip_start", tripStart);
         body.append("trip_end", tripEnd);
@@ -201,6 +209,7 @@ export default function TripReportActions({
           },
           credentials: "include",
           body: JSON.stringify({
+            trip_report_no: tripReportNo,
             report_date: reportDate,
             trip_start: tripStart,
             trip_end: tripEnd,
@@ -216,6 +225,7 @@ export default function TripReportActions({
       if (!response.ok) {
         setError(
           firstErrorMessage(data, [
+            "trip_report_no",
             "report_date",
             "trip_start",
             "trip_end",
@@ -330,6 +340,9 @@ export default function TripReportActions({
             </div>
 
             <dl className="mt-4 divide-y divide-zinc-100">
+              <DetailRow label="Trip report no">
+                {tripReport.tripReportNo || "—"}
+              </DetailRow>
               <DetailRow label="Report date">
                 {formatDate(tripReport.reportDate)}
               </DetailRow>
@@ -426,6 +439,28 @@ export default function TripReportActions({
             </div>
 
             <form onSubmit={handleSave} className="mt-5 space-y-4">
+              <div>
+                <label
+                  htmlFor={`edit-trip-report-no-${tripReport.id}`}
+                  className="mb-2 block text-sm font-medium text-zinc-700"
+                >
+                  Trip report no
+                </label>
+                <input
+                  id={`edit-trip-report-no-${tripReport.id}`}
+                  type="text"
+                  value={form.trip_report_no}
+                  onChange={(event) =>
+                    updateField("trip_report_no", event.target.value)
+                  }
+                  disabled={isSaving}
+                  maxLength={255}
+                  required
+                  placeholder="e.g. TR-001"
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                />
+              </div>
+
               <div>
                 <label
                   htmlFor={`edit-report-date-${tripReport.id}`}
