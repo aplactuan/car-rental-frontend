@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import DriverAutocomplete from "./DriverAutocomplete";
+import FileUploadWithCamera from "@/app/dashboard/components/FileUploadWithCamera";
 
 function toDateInputValue(value) {
   if (!value) return "";
@@ -602,15 +603,11 @@ export default function TripReportActions({
                     </a>
                   </p>
                 ) : null}
-                <input
+                <FileUploadWithCamera
                   id={`edit-image-${tripReport.id}`}
-                  type="file"
                   accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,image/jpeg,image/png,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                  onChange={(event) =>
-                    setImageFile(event.target.files?.[0] ?? null)
-                  }
+                  onFilesChange={(files) => setImageFile(files[0] ?? null)}
                   disabled={isSaving}
-                  className="w-full text-sm text-zinc-700 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-800 hover:file:bg-zinc-200 disabled:cursor-not-allowed"
                 />
               </div>
 

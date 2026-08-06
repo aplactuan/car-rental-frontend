@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import FileUploadWithCamera from "@/app/dashboard/components/FileUploadWithCamera";
 
 const EMPTY_FORM = {
   po_number: "",
@@ -445,25 +446,14 @@ export default function AddPurchaseOrderButton({ customerId }) {
                     (optional, images/docs/PDF, max 10 MB each)
                   </span>
                 </label>
-                <input
+                <FileUploadWithCamera
                   id="poAttachments"
-                  type="file"
                   multiple
                   accept={ATTACHMENT_ACCEPT}
-                  onChange={(event) =>
-                    setAttachmentFiles(
-                      Array.from(event.target.files ?? []),
-                    )
-                  }
+                  existingFiles={attachmentFiles}
+                  onFilesChange={setAttachmentFiles}
                   disabled={isLoading}
-                  className="w-full text-sm text-zinc-700 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-800 hover:file:bg-zinc-200 disabled:cursor-not-allowed"
                 />
-                {attachmentFiles.length > 0 ? (
-                  <p className="mt-2 text-xs text-zinc-500">
-                    {attachmentFiles.length} file
-                    {attachmentFiles.length === 1 ? "" : "s"} selected
-                  </p>
-                ) : null}
               </div>
 
               {error ? <p className="text-sm text-red-600">{error}</p> : null}
