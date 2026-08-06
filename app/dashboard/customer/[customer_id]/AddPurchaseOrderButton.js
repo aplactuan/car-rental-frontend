@@ -7,6 +7,7 @@ const EMPTY_FORM = {
   po_number: "",
   date: "",
   amount: "",
+  program_id: "",
   request_person: "",
   description: "",
   status: "pending",
@@ -20,22 +21,87 @@ const PO_STATUS_OPTIONS = [
 const ATTACHMENT_ACCEPT =
   ".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,image/jpeg,image/png,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
+function normalizePrograms(payload) {
+  const raw = payload?.data ?? payload?.programs ?? payload?.items ?? payload;
+  const list = Array.isArray(raw) ? raw : [];
+
+  return list
+    .map((record) => {
+      const attrs = record?.attributes ?? {};
+      const id = String(
+        attrs?.id ??
+          record?.id ??
+          attrs?.program_id ??
+          record?.program_id ??
+          attrs?.programId ??
+          record?.programId ??
+          "",
+      );
+      const name = String(
+        attrs?.name ?? record?.name ?? "",
+      );
+
+      return { id, name };
+    })
+    .filter((item) => item.id);
+}
+
 export default function AddPurchaseOrderButton({ customerId }) {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [attachmentFiles, setAttachmentFiles] = useState([]);
+  const [programs, setPrograms] = useState([]);
+  const [isLoadingPrograms, setIsLoadingPrograms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const loadPrograms = async () => {
+    if (!customerId) {
+      setPrograms([]);
+      return;
+    }
+
+    setIsLoadingPrograms(true);
+
+    try {
+      const authToken = localStorage.getItem("auth_token");
+      const response = await fetch(
+        `/api/v1/customers/${encodeURIComponent(customerId)}/programs`,
+        {
+          headers: {
+            Accept: "application/json",
+            ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+          },
+          credentials: "include",
+          cache: "no-store",
+        },
+      );
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setPrograms([]);
+        return;
+      }
+
+      setPrograms(normalizePrograms(data));
+    } catch {
+      setPrograms([]);
+    } finally {
+      setIsLoadingPrograms(false);
+    }
+  };
 
   const openDialog = () => {
     setError("");
     setAttachmentFiles([]);
+    setPrograms([]);
     setForm({
       ...EMPTY_FORM,
       date: new Date().toISOString().slice(0, 10),
     });
     setIsDialogOpen(true);
+    void loadPrograms();
   };
 
   const closeDialog = () => {
@@ -43,6 +109,7 @@ export default function AddPurchaseOrderButton({ customerId }) {
     setIsDialogOpen(false);
     setForm(EMPTY_FORM);
     setAttachmentFiles([]);
+    setPrograms([]);
     setError("");
   };
 
@@ -58,6 +125,7 @@ export default function AddPurchaseOrderButton({ customerId }) {
     const poNumber = form.po_number.trim();
     const date = form.date.trim();
     const amountValue = form.amount.trim();
+    const programId = form.program_id.trim();
     const requestPerson = form.request_person.trim();
     const description = form.description.trim();
     const status = form.status === "ok" ? "ok" : "pending";
@@ -97,6 +165,9 @@ export default function AddPurchaseOrderButton({ customerId }) {
         body.append("date", date);
         body.append("amount", String(amount));
         body.append("status", status);
+        if (programId) {
+          body.append("program_id", programId);
+        }
         if (requestPerson) {
           body.append("request_person", requestPerson);
         }
@@ -127,6 +198,7 @@ export default function AddPurchaseOrderButton({ customerId }) {
             date,
             amount,
             status,
+            ...(programId ? { program_id: programId } : {}),
             ...(requestPerson ? { request_person: requestPerson } : {}),
             ...(description ? { description } : {}),
           }),
@@ -141,6 +213,7 @@ export default function AddPurchaseOrderButton({ customerId }) {
           data?.errors?.date?.[0] ||
           data?.errors?.amount?.[0] ||
           data?.errors?.customer_id?.[0] ||
+          data?.errors?.program_id?.[0] ||
           data?.errors?.status?.[0] ||
           data?.errors?.["attachments[]"]?.[0] ||
           data?.errors?.attachments?.[0] ||
@@ -158,6 +231,7 @@ export default function AddPurchaseOrderButton({ customerId }) {
 
       setForm(EMPTY_FORM);
       setAttachmentFiles([]);
+      setPrograms([]);
       setIsDialogOpen(false);
       router.refresh();
     } catch {
@@ -173,7 +247,7 @@ export default function AddPurchaseOrderButton({ customerId }) {
         type="button"
         onClick={openDialog}
         disabled={!customerId}
-        className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
       >
         Add purchase order
       </button>
@@ -224,6 +298,35 @@ export default function AddPurchaseOrderButton({ customerId }) {
                   placeholder="e.g. PO-1001"
                   className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                 />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="poProgram"
+                  className="mb-2 block text-sm font-medium text-zinc-700"
+                >
+                  Program{" "}
+                  <span className="font-normal text-zinc-400">(optional)</span>
+                </label>
+                <select
+                  id="poProgram"
+                  value={form.program_id}
+                  onChange={(event) =>
+                    updateField("program_id", event.target.value)
+                  }
+                  disabled={isLoading || isLoadingPrograms}
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                >
+                  <option value="">None</option>
+                  {programs.map((program) => (
+                    <option key={program.id} value={program.id}>
+                      {program.name || program.id}
+                    </option>
+                  ))}
+                </select>
+                {isLoadingPrograms ? (
+                  <p className="mt-2 text-xs text-zinc-500">Loading programs…</p>
+                ) : null}
               </div>
 
               <div>

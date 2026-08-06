@@ -59,6 +59,19 @@ function normalizePurchaseOrder(payload) {
     )?.attributes ??
     {};
 
+  const programRelationship =
+    record?.relationships?.program?.data ??
+    attrs?.relationships?.program?.data ??
+    null;
+  const programAttrs =
+    programRelationship?.attributes ??
+    payload?.included?.find?.(
+      (item) =>
+        String(item?.id) === String(programRelationship?.id) &&
+        (item?.type === "programs" || item?.type === "program"),
+    )?.attributes ??
+    {};
+
   const statusRaw = String(pick(["status"]) || "pending").toLowerCase();
   const status = statusRaw === "ok" ? "ok" : "pending";
 
@@ -97,6 +110,12 @@ function normalizePurchaseOrder(payload) {
     ),
     customerName: String(
       readField(customerAttrs, ["name", "customer_name", "customerName"]) || "",
+    ),
+    programId: String(
+      pick(["program_id", "programId"]) || programRelationship?.id || "",
+    ),
+    programName: String(
+      readField(programAttrs, ["name", "program_name", "programName"]) || "",
     ),
   };
 }
@@ -448,7 +467,10 @@ export default async function PurchaseOrderDetailPage({ params }) {
             {purchaseOrderId ? (
               <div className="flex flex-wrap items-center gap-2">
                 {purchaseOrder ? (
-                  <PurchaseOrderActions purchaseOrder={purchaseOrder} />
+                  <PurchaseOrderActions
+                    purchaseOrder={purchaseOrder}
+                    customerId={customerId || purchaseOrder.customerId}
+                  />
                 ) : null}
                 <AddInvoiceButton
                   purchaseOrderId={purchaseOrderId}

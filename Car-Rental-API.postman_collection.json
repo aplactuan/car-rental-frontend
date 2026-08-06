@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "car-rental-api-collection",
 		"name": "Car Rental API",
-		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | Public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` | Public registration route; the server may still return **403** if registration is disabled. |\n| `GET /api/user`, `PUT /api/password`, `POST /api/logout` | Bearer token required. |\n| All other `/api/v1/...` routes | Bearer token required. |\n\nThis collection sets collection-level Bearer auth with `{{token}}`. Public requests override auth to `No Auth`.\n\n## Setup\n1. Set `base_url` (default: `http://localhost`; add a port if needed, for example `http://localhost:8000`).\n2. Run **Login**. The token is stored automatically. Seeded accounts after `php artisan migrate --seed`: `test@example.com` / `password` and `admin@example.com` / `password`.\n3. Reuse saved variables from earlier responses: `car_id`, `driver_id`, `customer_id`, `purchase_order_id`, `purchase_order_attachment_id`, `transaction_id`, `booking_id`, `trip_report_id`, `invoice_id`, `car_import_id`, `driver_import_id`, `bill_payment_id`.\n\n## Notes\n- User registration requires `name`, `email`, `password`, and `password_confirmation`. Optional `role` defaults to `user`; public registration rejects `admin` with **422**.\n- Change password requires `current_password`, `password`, and `password_confirmation`.\n- Car import CSV columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number`.\n- Driver import CSV columns: `first_name`, `last_name`, `license_number`, `license_expiry_date`, `address`, `phone_number`, `email`, `password`.\n- Customers support hierarchy and contact fields: `parent_id`, `contact_person`, `contact_mobile_number`, `contact_email`.\n- `GET /api/v1/bookings` uses global statuses `completed`, `today`, `ongoing`, `incoming`. `GET /api/v1/transactions/{id}/bookings` uses `upcoming` and `previous`, plus `period`, `car_id`, and `driver_id` filters.\n- Bill numbers are generated automatically. Bill payment uploads use `multipart/form-data`.\n- Purchase order and trip report `amount` values are unsigned money integers (smallest currency unit).\n- Purchase order `status` is `pending` (default) or `ok`. Optional multi-file `attachments[]` uploads use `multipart/form-data` (jpg/jpeg/png/webp/pdf/doc/docx/xls/xlsx, max 10 MB each). On update, remove files with `remove_attachment_ids[]` (media UUIDs).\n- Trip reports nest under purchase orders. Optional `trip_report_image` uploads use `multipart/form-data` (jpg/jpeg/png/webp/pdf/doc/docx/xls/xlsx, max 10 MB). `driver` is a free-text string (not a driver model FK).\n- Purchase order invoices nest under purchase orders. Optional `payment_receipt` and `disbursement_voucher` uploads use `multipart/form-data` (jpg/jpeg/png/webp/pdf, max 10 MB). Bulk attach/detach trip reports with `trip_report_ids`.",
+		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | Public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` | Public registration route; the server may still return **403** if registration is disabled. |\n| `GET /api/user`, `PUT /api/password`, `POST /api/logout` | Bearer token required. |\n| All other `/api/v1/...` routes | Bearer token required. |\n\nThis collection sets collection-level Bearer auth with `{{token}}`. Public requests override auth to `No Auth`.\n\n## Setup\n1. Set `base_url` (default: `http://localhost`; add a port if needed, for example `http://localhost:8000`).\n2. Run **Login**. The token is stored automatically. Seeded accounts after `php artisan migrate --seed`: `test@example.com` / `password` and `admin@example.com` / `password`.\n3. Reuse saved variables from earlier responses: `car_id`, `driver_id`, `customer_id`, `program_id`, `purchase_order_id`, `purchase_order_attachment_id`, `transaction_id`, `booking_id`, `trip_report_id`, `invoice_id`, `car_import_id`, `driver_import_id`, `bill_payment_id`.\n\n## Notes\n- User registration requires `name`, `email`, `password`, and `password_confirmation`. Optional `role` defaults to `user`; public registration rejects `admin` with **422**.\n- Change password requires `current_password`, `password`, and `password_confirmation`.\n- Car import CSV columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number`.\n- Driver import CSV columns: `first_name`, `last_name`, `license_number`, `license_expiry_date`, `address`, `phone_number`, `email`, `password`.\n- Customers support hierarchy and contact fields: `parent_id`, `contact_person`, `contact_mobile_number`, `contact_email`.\n- Programs belong to a customer (`customer_id`, `name`, optional `description`). List programs with optional `customer_id` filter, or use `GET /api/v1/customers/{customer}/programs`.\n- `GET /api/v1/bookings` uses global statuses `completed`, `today`, `ongoing`, `incoming`. `GET /api/v1/transactions/{id}/bookings` uses `upcoming` and `previous`, plus `period`, `car_id`, and `driver_id` filters.\n- Bill numbers are generated automatically. Bill payment uploads use `multipart/form-data`.\n- Purchase order and trip report `amount` values are unsigned money integers (smallest currency unit).\n- Purchase order `status` is `pending` (default) or `ok`. Optional `program_id` links a PO to a program. List POs can filter by `customer_id`, `program_id` (UUID), and/or `unprogrammed=1` (null program only; mutually exclusive with `program_id`). Optional multi-file `attachments[]` uploads use `multipart/form-data` (jpg/jpeg/png/webp/pdf/doc/docx/xls/xlsx, max 10 MB each). On update, remove files with `remove_attachment_ids[]` (media UUIDs).\n- Trip reports nest under purchase orders. Optional `trip_report_image` uploads use `multipart/form-data` (jpg/jpeg/png/webp/pdf/doc/docx/xls/xlsx, max 10 MB). `driver` is a free-text string (not a driver model FK).\n- Purchase order invoices nest under purchase orders. Optional `payment_receipt` and `disbursement_voucher` uploads use `multipart/form-data` (jpg/jpeg/png/webp/pdf, max 10 MB). Bulk attach/detach trip reports with `trip_report_ids`.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -28,6 +28,10 @@
 		},
 		{
 			"key": "customer_id",
+			"value": ""
+		},
+		{
+			"key": "program_id",
 			"value": ""
 		},
 		{
@@ -104,8 +108,13 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/login",
-							"host": ["{{base_url}}"],
-							"path": ["api", "login"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"login"
+							]
 						},
 						"description": "Public endpoint - **do not** send `Authorization`. Send JSON `email` and `password`. On success, use `data.token` as `Bearer` for all `/api/v1/*` routes (except register). Response includes `data.role` (`admin` or `user`) and `data.user.attributes.role` with the same stored value. Linked driver users still return `role: user` — driver access is determined by the linked driver profile, not this field.\n\nDefault seeded credentials: `test@example.com` / `password` (user), `admin@example.com` / `password` (admin)."
 					},
@@ -144,8 +153,13 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/logout",
-							"host": ["{{base_url}}"],
-							"path": ["api", "logout"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"logout"
+							]
 						}
 					}
 				},
@@ -162,8 +176,13 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/user",
-							"host": ["{{base_url}}"],
-							"path": ["api", "user"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"user"
+							]
 						}
 					},
 					"event": [
@@ -204,8 +223,13 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/password",
-							"host": ["{{base_url}}"],
-							"path": ["api", "password"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"password"
+							]
 						}
 					}
 				}
@@ -237,8 +261,14 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/users",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "users"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"users"
+							]
 						},
 						"description": "Register a new user account. **No Bearer token** — this route is public.\n\n**Required:** `name`, `email`, `password` (min 8), `password_confirmation`.\n\n**Optional:** `role` — defaults to `user` when omitted. Public registration only accepts `user`; sending `admin` returns **422**.\n\nReturns **403** when registration is disabled server-side (`allow_user_registration`). On success, response includes `data.attributes.role` (`admin` or `user`)."
 					},
@@ -284,8 +314,14 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/cars",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "cars"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"cars"
+							]
 						},
 						"description": "**Bearer required.** Create a car. Required body fields: `type`, `door` (integer), `seats` (integer), `year` (integer), `color`, `make`, `model`, `plate_number` (unique). Response attributes use camelCase (`plateNumber`, etc.)."
 					},
@@ -328,8 +364,15 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/cars/import",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "cars", "import"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"cars",
+								"import"
+							]
 						},
 						"description": "Queue a CSV import of cars (multipart/form-data, `file` required).\n\n**CSV header row (required):**\n`type,door,seats,year,color,make,model,plate_number`\n\n**Example row:**\n`Sedan,4,5,2022,Black,Toyota,Camry,ABC-1234`\n\n`door` and `seats` must be integers. `plate_number` must be unique across the database and within the file."
 					},
@@ -362,8 +405,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/cars/imports/{{car_import_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "cars", "imports", "{{car_import_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"cars",
+								"imports",
+								"{{car_import_id}}"
+							]
 						},
 						"description": "Fetch status/result summary for a queued car import job."
 					}
@@ -380,8 +431,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/cars?per_page=15&type=Sedan&door=4&seats=5&year=2022&color=Black&make=Toyota&model=Camry",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "cars"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"cars"
+							],
 							"query": [
 								{
 									"key": "per_page",
@@ -446,8 +503,15 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/cars/{{car_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "cars", "{{car_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"cars",
+								"{{car_id}}"
+							]
 						},
 						"description": "**Bearer required.** Returns one car. Attributes: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plateNumber`, `createdAt`."
 					}
@@ -472,8 +536,15 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/cars/{{car_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "cars", "{{car_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"cars",
+								"{{car_id}}"
+							]
 						},
 						"description": "**Bearer required.** Partial update supported (`sometimes` rules). All fields optional: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number` (unique except current car)."
 					}
@@ -503,8 +574,14 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/drivers",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "drivers"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"drivers"
+							]
 						},
 						"description": "**Bearer required.** Create a driver and automatically provision a linked user account. Required: `first_name`, `last_name`, `license_number` (unique), `license_expiry_date`, `address`, `phone_number`, `email` (unique user email), `password` (string, min 8). The new user is named `{first_name} {last_name}` with role `user`. Response includes `userId` for the auto-created account."
 					},
@@ -547,8 +624,15 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/drivers/import",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "drivers", "import"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"drivers",
+								"import"
+							]
 						},
 						"description": "Queue a CSV import of drivers (multipart/form-data, `file` required). Each valid row creates a linked user account (same as `POST /api/v1/drivers`).\n\n**CSV header row (required):**\n`first_name,last_name,license_number,license_expiry_date,address,phone_number,email,password`\n\n**Example row:**\n`John,Doe,DL-12345678,2027-12-31,123 Main St,+1234567890,john.doe@example.com,password123`\n\n`license_number` must be unique across the database and within the file. `email` must be unique across users and within the file. `password` must be at least 8 characters."
 					},
@@ -581,8 +665,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/drivers/imports/{{driver_import_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "drivers", "imports", "{{driver_import_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"drivers",
+								"imports",
+								"{{driver_import_id}}"
+							]
 						},
 						"description": "Fetch status/result summary for a queued driver import job."
 					}
@@ -599,8 +691,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/drivers?per_page=15&filter=john&start_date=2026-06-01&end_date=2026-06-30",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "drivers"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"drivers"
+							],
 							"query": [
 								{
 									"key": "per_page",
@@ -639,8 +737,15 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/drivers/{{driver_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "drivers", "{{driver_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"drivers",
+								"{{driver_id}}"
+							]
 						},
 						"description": "**Bearer required.** Returns one driver. Attributes: `firstName`, `lastName`, `licenseNumber`, `licenseExpiryDate`, `address`, `phoneNumber`, `userId` (null if not linked to a user account)."
 					}
@@ -665,8 +770,15 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/drivers/{{driver_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "drivers", "{{driver_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"drivers",
+								"{{driver_id}}"
+							]
 						},
 						"description": "**Bearer required.** Partial update (`sometimes` rules). All fields optional: `first_name`, `last_name`, `license_number` (unique except current driver), `license_expiry_date`, `address`, `phone_number`. **Authorization:** admin users can update any driver; a non-admin user linked to this driver (via `user_id`) can update their own record. All others receive 403. **Admin-only field:** `user_id` (nullable integer) — links or unlinks the driver to a user account; silently ignored for non-admin callers."
 					}
@@ -689,8 +801,15 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/billing/summary?filter[customer_id]={{customer_id}}&filter[as_of]=2026-05-01&filter[paid_at][from]=2026-01-01&filter[paid_at][to]=2026-12-31",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "billing", "summary"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"billing",
+								"summary"
+							],
 							"query": [
 								{
 									"key": "filter[customer_id]",
@@ -729,8 +848,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/bills?per_page=15&sort=-issued_at&include=transaction&filter[status]=draft,issued&filter[invoice_number]=260500123&filter[issued_at][from]=2026-01-01&filter[issued_at][to]=2026-12-31",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "bills"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"bills"
+							],
 							"query": [
 								{
 									"key": "per_page",
@@ -797,8 +922,14 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers"
+							]
 						},
 						"description": "**Bearer required.** Create a customer. Required: `name`, `type` (`personal` or `business`). Optional: `parent_id`, `contact_person`, `contact_mobile_number`, `contact_email`. `parent_id` must reference an existing customer or be omitted/null."
 					},
@@ -831,8 +962,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers?per_page=15",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers"
+							],
 							"query": [
 								{
 									"key": "per_page",
@@ -856,8 +993,15 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers", "{{customer_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers",
+								"{{customer_id}}"
+							]
 						},
 						"description": "**Bearer required.** Returns one customer. Customer attributes include `name`, `type`, `parentId`, `contactPerson`, `contactMobileNumber`, and `contactEmail`. Single-resource responses may include parent attributes such as the parent name under `relationships.parent.data.attributes`."
 					}
@@ -874,8 +1018,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/parent",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers", "{{customer_id}}", "parent"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers",
+								"{{customer_id}}",
+								"parent"
+							]
 						},
 						"description": "**Bearer required.** Returns the immediate parent customer for `{{customer_id}}`. When the customer has no parent, the API returns **404** with `Customer has no parent account`."
 					}
@@ -892,10 +1044,44 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/children",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers", "{{customer_id}}", "children"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers",
+								"{{customer_id}}",
+								"children"
+							]
 						},
 						"description": "**Bearer required.** Returns the immediate child accounts for `{{customer_id}}` as a customer resource collection. When children exist, each item includes parent linkage and may include the parent name under `relationships.parent.data.attributes`. When the customer has no children, the API returns an empty `data` array."
+					}
+				},
+				{
+					"name": "List Customer Programs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/programs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers",
+								"{{customer_id}}",
+								"programs"
+							]
+						},
+						"description": "**Bearer required.** Returns all programs for `{{customer_id}}` as a program resource collection, newest first. Each item includes `name`, `description`, `customerId`, and a `customer` relationship (may include the customer name)."
 					}
 				},
 				{
@@ -918,8 +1104,15 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers", "{{customer_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers",
+								"{{customer_id}}"
+							]
 						},
 						"description": "**Bearer required.** Update any subset of customer fields: `name`, `type`, `parent_id`, `contact_person`, `contact_mobile_number`, `contact_email`. Set `parent_id` to `null` to clear the parent. A customer cannot be its own parent or use one of its descendants as its parent."
 					}
@@ -936,8 +1129,15 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers", "{{customer_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers",
+								"{{customer_id}}"
+							]
 						}
 					}
 				},
@@ -961,8 +1161,16 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers", "{{customer_id}}", "transactions"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers",
+								"{{customer_id}}",
+								"transactions"
+							]
 						},
 						"description": "**Bearer required.** Create a transaction for the customer in the URL. Body must include `name` (string, max 255). Optional `po_number` (string, max 255, unique)."
 					},
@@ -995,8 +1203,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions?per_page=15&has_bill=1&po_number=PO-1001",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers", "{{customer_id}}", "transactions"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers",
+								"{{customer_id}}",
+								"transactions"
+							],
 							"query": [
 								{
 									"key": "per_page",
@@ -1030,8 +1246,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/bills?per_page=15&sort=-issued_at&include=transaction&filter[status]=paid&filter[invoice_number]=260500321&filter[issued_at][from]=2026-01-01&filter[issued_at][to]=2026-12-31",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers", "{{customer_id}}", "bills"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers",
+								"{{customer_id}}",
+								"bills"
+							],
 							"query": [
 								{
 									"key": "per_page",
@@ -1085,8 +1309,17 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions/{{transaction_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers", "{{customer_id}}", "transactions", "{{transaction_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers",
+								"{{customer_id}}",
+								"transactions",
+								"{{transaction_id}}"
+							]
 						}
 					}
 				},
@@ -1110,8 +1343,17 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions/{{transaction_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers", "{{customer_id}}", "transactions", "{{transaction_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers",
+								"{{customer_id}}",
+								"transactions",
+								"{{transaction_id}}"
+							]
 						},
 						"description": "Requires `customer_id` (UUID) and `name` (string, max 255). Optional `po_number` (string, max 255, unique)."
 					}
@@ -1128,9 +1370,192 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/customers/{{customer_id}}/transactions/{{transaction_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "customers", "{{customer_id}}", "transactions", "{{transaction_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"customers",
+								"{{customer_id}}",
+								"transactions",
+								"{{transaction_id}}"
+							]
 						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Programs",
+			"description": "Customer programs CRUD. A program belongs to a customer via `customer_id`. Required on create: `customer_id`, `name`. Optional: `description`. List supports `per_page` and `customer_id` filters. Responses include attributes `name`, `description`, `customerId`, and a `customer` relationship.",
+			"item": [
+				{
+					"name": "Add Program",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"customer_id\": \"{{customer_id}}\",\n    \"name\": \"Infrastructure Support 2026\",\n    \"description\": \"Fleet support for city engineering projects\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/programs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"programs"
+							]
+						},
+						"description": "**Bearer required.** Create a program. Required: `customer_id` (existing customer UUID), `name` (string, max 255). Optional: `description` (nullable string).\n\nResponse attributes: `name`, `description`, `customerId`, `createdAt`. Relationship: `customer` (includes name when loaded)."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const json = pm.response.json();",
+									"    if (json.data && json.data.id) {",
+									"        pm.collectionVariables.set('program_id', json.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "List Programs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/programs?per_page=15",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"programs"
+							],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Optional: 1-100"
+								},
+								{
+									"key": "customer_id",
+									"value": "{{customer_id}}",
+									"description": "Optional: filter by customer UUID",
+									"disabled": true
+								}
+							]
+						},
+						"description": "**Bearer required.** Paginated programs list (latest first). Optional query: `per_page` (1-100), `customer_id`."
+					}
+				},
+				{
+					"name": "Get Single Program",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/programs/{{program_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"programs",
+								"{{program_id}}"
+							]
+						},
+						"description": "**Bearer required.** Returns one program with attributes `name`, `description`, `customerId`, and customer relationship (includes name when loaded)."
+					}
+				},
+				{
+					"name": "Update Program",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Infrastructure Support 2026 Updated\",\n    \"description\": \"Updated program description\",\n    \"customer_id\": \"{{customer_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/programs/{{program_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"programs",
+								"{{program_id}}"
+							]
+						},
+						"description": "**Bearer required.** Partial update (`sometimes` rules). Optional fields: `customer_id` (nullable UUID), `name`, `description` (nullable)."
+					}
+				},
+				{
+					"name": "Delete Program",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/programs/{{program_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"programs",
+								"{{program_id}}"
+							]
+						},
+						"description": "**Bearer required.** Deletes the program. Returns 204 No Content."
 					}
 				}
 			]
@@ -1158,8 +1583,14 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions"
+							]
 						},
 						"description": "**Bearer required.** Requires `customer_id` (UUID) and `name` (string, max 255). Optional `po_number` (string, max 255, unique). Response includes `poNumber`."
 					},
@@ -1192,8 +1623,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions?per_page=15&has_bill=0&po_number=PO-1001",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions"
+							],
 							"query": [
 								{
 									"key": "per_page",
@@ -1227,8 +1664,15 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}"
+							]
 						},
 						"description": "Returns transaction attributes including `name`, `poNumber`, `userId`, `customerId`, and nested `bookings` (newest first) plus `included` booking details when present. Bookings in `included` follow the collection shape: car/driver attributes embedded, `relationships.transaction` linkage only (`type` + `id`)."
 					}
@@ -1253,8 +1697,16 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bill",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bill"
+							]
 						},
 						"description": "**Bearer required.** Create a bill for a transaction. Only one bill per transaction. Body: required `amount` (integer, min 1); optional `notes`, `due_at`. Response includes auto-generated `billNumber` (`INV-YYYYMMDD-####`) and `invoiceNumber` (`INV-YYMM#####`), plus `amountPaid` (0 on create) and `remainingBalance` (equals `amount` on create)."
 					}
@@ -1271,8 +1723,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bill",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bill"
+							]
 						},
 						"description": "**Bearer required.** Returns the bill for the transaction. Attributes include `billNumber`, `invoiceNumber`, `amount`, `amountPaid`, `remainingBalance`, `status`, `notes`, `issuedAt`, `dueAt`, `paidAt`."
 					}
@@ -1289,8 +1749,17 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bill/invoice",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill", "invoice"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bill",
+								"invoice"
+							]
 						},
 						"description": "**Bearer required.** Returns an invoice-shaped payload for the transaction bill including `transaction`, optional `customer`, and `bookings` with embedded `car` and `driver` data."
 					},
@@ -1307,8 +1776,17 @@
 								],
 								"url": {
 									"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bill/invoice",
-									"host": ["{{base_url}}"],
-									"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill", "invoice"]
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"transactions",
+										"{{transaction_id}}",
+										"bill",
+										"invoice"
+									]
 								}
 							},
 							"status": "OK",
@@ -1343,8 +1821,16 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bill",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bill"
+							]
 						},
 						"description": "**Bearer required.** Partial update. Optional: `status` (`issued`, `paid`, `cancelled`), `amount`, `notes`, `due_at`. Manual status transitions: draft→issued/cancelled, issued→paid/cancelled. `partially_paid` is set automatically by the payment system. Bills in `paid` or `cancelled` status cannot be updated. `billNumber` and `invoiceNumber` are read-only."
 					}
@@ -1361,8 +1847,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bill",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bill"
+							]
 						},
 						"description": "Only draft bills can be deleted."
 					}
@@ -1415,8 +1909,17 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bill/payments",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill", "payments"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bill",
+								"payments"
+							]
 						},
 						"description": "**Bearer required.** Record a payment (installment) against the transaction's bill. The request must be `multipart/form-data`.\n\n**Required fields:** `amount` (integer, min 1 — must not exceed remaining balance), `method` (`bank_transfer` | `cash` | `gcash`), `reference_number` (string, max 255).\n\n**Optional:** `notes`, `proof_image` (image: jpg/jpeg/png/webp, max 10 MB).\n\nOnly allowed when the bill status is `issued` or `partially_paid`. After recording, the bill status is recomputed automatically: partial payment → `partially_paid`; full payment → `paid`. Response attributes: `amount`, `method`, `referenceNumber`, `notes`, `proofImageUrl` (null when omitted), `paidAt`, `createdAt`."
 					},
@@ -1449,8 +1952,17 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bill/payments",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill", "payments"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bill",
+								"payments"
+							]
 						},
 						"description": "**Bearer required.** Returns all payments recorded against the transaction's bill, ordered by `paid_at` descending. Response attributes per item: `amount`, `method`, `referenceNumber`, `notes`, `proofImageUrl`, `paidAt`, `createdAt`."
 					}
@@ -1467,8 +1979,18 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bill/payments/{{bill_payment_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bill", "payments", "{{bill_payment_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bill",
+								"payments",
+								"{{bill_payment_id}}"
+							]
 						},
 						"description": "**Bearer required.** Deletes a payment record. After deletion, the bill status is recomputed automatically (e.g. `paid` may revert to `partially_paid` or `issued`). Returns 204 No Content."
 					}
@@ -1491,8 +2013,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/bookings?per_page=15&status=incoming",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "per_page",
@@ -1537,8 +2065,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/bookings?status=completed",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "status",
@@ -1562,8 +2096,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/bookings?status=today",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "status",
@@ -1587,8 +2127,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/bookings?status=ongoing",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "status",
@@ -1612,8 +2158,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/bookings?status=incoming",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "status",
@@ -1645,8 +2197,16 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/book",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "book"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"book"
+							]
 						},
 						"description": "**Bearer required.** Create a booking. Required: `car_id`, `driver_id`, `price` (integer, min 0), `start_date`, `end_date` (≥ start_date). Optional: `note`.\n\nReturns a single booking resource. `relationships.transaction.data` includes attributes: `name`, `userId`, `customerId`, `createdAt` (in addition to `type` and `id`)."
 					},
@@ -1679,8 +2239,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings?per_page=15&status=upcoming&period=week&car_id={{car_id}}&driver_id={{driver_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "per_page",
@@ -1724,8 +2292,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings?status=upcoming",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "status",
@@ -1747,8 +2323,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings?status=previous",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "status",
@@ -1770,8 +2354,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings?period=week",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "period",
@@ -1793,8 +2385,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings?period=month",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "period",
@@ -1816,8 +2416,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings?status=upcoming&car_id={{car_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "status",
@@ -1843,8 +2451,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings?status=upcoming&driver_id={{driver_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "status",
@@ -1870,8 +2486,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings?status=previous&car_id={{car_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "status",
@@ -1897,8 +2521,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings?status=previous&driver_id={{driver_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "status",
@@ -1924,8 +2556,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings?period=week&driver_id={{driver_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "period",
@@ -1951,8 +2591,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings?period=month&driver_id={{driver_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "period",
@@ -1978,8 +2626,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings?period=week&car_id={{car_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "period",
@@ -2005,8 +2661,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings?period=month&car_id={{car_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bookings"
+							],
 							"query": [
 								{
 									"key": "period",
@@ -2032,8 +2696,17 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings/{{booking_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings", "{{booking_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bookings",
+								"{{booking_id}}"
+							]
 						},
 						"description": "**Bearer required.** Returns one booking. Attributes: `note`, `price`, `startDate`, `endDate`. Relationships include embedded car/driver attributes and full transaction attributes (`name`, `userId`, `customerId`, `createdAt`) under `relationships.transaction.data`."
 					}
@@ -2058,8 +2731,17 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings/{{booking_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings", "{{booking_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bookings",
+								"{{booking_id}}"
+							]
 						},
 						"description": "**Bearer required.** Partial update supported. All fields optional: `car_id`, `driver_id`, `price`, `start_date`, `end_date`, `note`. Returns the updated single booking resource with full `relationships.transaction.data.attributes` (`name`, `userId`, `customerId`, `createdAt`)."
 					}
@@ -2076,8 +2758,17 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/transactions/{{transaction_id}}/bookings/{{booking_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "transactions", "{{transaction_id}}", "bookings", "{{booking_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"transactions",
+								"{{transaction_id}}",
+								"bookings",
+								"{{booking_id}}"
+							]
 						}
 					}
 				}
@@ -2085,7 +2776,7 @@
 		},
 		{
 			"name": "Purchase Orders",
-			"description": "Standalone purchase order CRUD. `amount` is an unsigned money integer (min 0). `status` is `pending` (default) or `ok`. Optional multi-file `attachments[]` uploads use `multipart/form-data` (jpg/jpeg/png/webp/pdf/doc/docx/xls/xlsx, max 10 MB each). Responses include `attachments` as an array of `{ id, fileName, mimeType, size, url }`.",
+			"description": "Standalone purchase order CRUD. `amount` is an unsigned money integer (min 0). `status` is `pending` (default) or `ok`. Optional `program_id` associates the PO with a customer program. List supports `unprogrammed=1` to return only POs with no program (mutually exclusive with `program_id`). Optional multi-file `attachments[]` uploads use `multipart/form-data` (jpg/jpeg/png/webp/pdf/doc/docx/xls/xlsx, max 10 MB each). Responses include `attachments` as an array of `{ id, fileName, mimeType, size, url }`, plus `programId` and a `program` relationship.",
 			"item": [
 				{
 					"name": "Add Purchase Order",
@@ -2104,6 +2795,12 @@
 									"key": "customer_id",
 									"value": "{{customer_id}}",
 									"description": "Required. Customer UUID.",
+									"type": "text"
+								},
+								{
+									"key": "program_id",
+									"value": "{{program_id}}",
+									"description": "Optional. Program UUID to associate with this purchase order.",
 									"type": "text"
 								},
 								{
@@ -2161,10 +2858,16 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/purchase-orders",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "purchase-orders"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders"
+							]
 						},
-						"description": "**Bearer required.** Create a purchase order. Prefer `multipart/form-data` when uploading attachments.\n\n**Required:** `customer_id`, `po_number` (unique), `date`, `amount` (unsigned integer, min 0).\n\n**Optional:** `request_person`, `description`, `status` (`pending` default, or `ok`), `attachments[]` (multiple files allowed).\n\nResponse attributes: `poNumber`, `date`, `amount`, `requestPerson`, `description`, `status`, `customerId`, `attachments` (array of `{ id, fileName, mimeType, size, url }`), `createdAt`. Relationship: `customer` (includes name when loaded)."
+						"description": "**Bearer required.** Create a purchase order. Prefer `multipart/form-data` when uploading attachments.\n\n**Required:** `customer_id`, `po_number` (unique), `date`, `amount` (unsigned integer, min 0).\n\n**Optional:** `program_id`, `request_person`, `description`, `status` (`pending` default, or `ok`), `attachments[]` (multiple files allowed).\n\nResponse attributes: `poNumber`, `date`, `amount`, `requestPerson`, `description`, `status`, `customerId`, `programId`, `attachments` (array of `{ id, fileName, mimeType, size, url }`), `createdAt`. Relationships: `customer`, `program` (each includes name when loaded)."
 					},
 					"event": [
 						{
@@ -2199,8 +2902,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/purchase-orders?per_page=15",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "purchase-orders"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders"
+							],
 							"query": [
 								{
 									"key": "per_page",
@@ -2212,10 +2921,64 @@
 									"value": "{{customer_id}}",
 									"description": "Optional: filter by customer UUID",
 									"disabled": true
+								},
+								{
+									"key": "program_id",
+									"value": "{{program_id}}",
+									"description": "Optional: filter by program UUID only (do not send `null`; use `unprogrammed=1` for null program). Mutually exclusive with `unprogrammed`.",
+									"disabled": true
+								},
+								{
+									"key": "unprogrammed",
+									"value": "1",
+									"description": "Optional boolean. When true (e.g. `1`, `true`, `yes`, `on`), return only purchase orders with no program (`program_id` is null). Mutually exclusive with `program_id` (422 if both are used).",
+									"disabled": true
 								}
 							]
 						},
-						"description": "**Bearer required.** Paginated purchase order list ordered by latest date. Each item includes `status` and `attachments`. Optional query: `per_page` (1-100), `customer_id`."
+						"description": "**Bearer required.** Paginated purchase order list ordered by latest date. Each item includes `status`, `programId`, `attachments`, and `customer`/`program` relationships.\n\n**Optional query:**\n- `per_page` (1-100)\n- `customer_id` (UUID)\n- `program_id` (UUID only — not for null matching)\n- `unprogrammed` (boolean; when true, only rows with null `program_id`)\n\n`unprogrammed` and `program_id` are mutually exclusive (422 if both are used). See **List Unprogrammed Purchase Orders** for a ready-made example."
+					}
+				},
+				{
+					"name": "List Unprogrammed Purchase Orders",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/purchase-orders?unprogrammed=1&per_page=15",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders"
+							],
+							"query": [
+								{
+									"key": "unprogrammed",
+									"value": "1",
+									"description": "Required for this example. Returns only purchase orders with no program (`program_id` is null). Do not combine with `program_id`."
+								},
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Optional: 1-100"
+								},
+								{
+									"key": "customer_id",
+									"value": "{{customer_id}}",
+									"description": "Optional: also filter by customer UUID",
+									"disabled": true
+								}
+							]
+						},
+						"description": "**Bearer required.** Example of the `unprogrammed` filter. Returns only purchase orders where `program_id` is null. Response shape is unchanged (`programId: null`, `relationships.program.data: null`).\n\nDo not send `program_id=null` — use `unprogrammed=1`. Combining `unprogrammed` with `program_id` returns **422**."
 					}
 				},
 				{
@@ -2230,10 +2993,17 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders",
+								"{{purchase_order_id}}"
+							]
 						},
-						"description": "**Bearer required.** Returns one purchase order with attributes `poNumber`, `date`, `amount`, `requestPerson`, `description`, `status`, `customerId`, `attachments`, and customer relationship (includes name)."
+						"description": "**Bearer required.** Returns one purchase order with attributes `poNumber`, `date`, `amount`, `requestPerson`, `description`, `status`, `customerId`, `programId`, `attachments`, plus `customer` and `program` relationships (includes names when loaded)."
 					}
 				},
 				{
@@ -2253,6 +3023,13 @@
 									"key": "customer_id",
 									"value": "{{customer_id}}",
 									"description": "Optional. Customer UUID (nullable to clear).",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "program_id",
+									"value": "{{program_id}}",
+									"description": "Optional. Program UUID (nullable to clear).",
 									"type": "text",
 									"disabled": true
 								},
@@ -2310,10 +3087,17 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders",
+								"{{purchase_order_id}}"
+							]
 						},
-						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when adding or removing attachments.\n\n**Optional fields:** `customer_id` (nullable), `po_number` (unique), `date`, `amount`, `request_person`, `description`, `status` (`pending` or `ok`), `attachments[]` (adds files), `remove_attachment_ids[]` (media UUIDs belonging to this purchase order).\n\nUploading attachments appends to the collection. Removing by id deletes only those files. Omitting attachment fields leaves existing media unchanged."
+						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when adding or removing attachments.\n\n**Optional fields:** `customer_id` (nullable), `program_id` (nullable), `po_number` (unique), `date`, `amount`, `request_person`, `description`, `status` (`pending` or `ok`), `attachments[]` (adds files), `remove_attachment_ids[]` (media UUIDs belonging to this purchase order).\n\nUploading attachments appends to the collection. Removing by id deletes only those files. Omitting attachment fields leaves existing media unchanged."
 					},
 					"event": [
 						{
@@ -2345,8 +3129,15 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders",
+								"{{purchase_order_id}}"
+							]
 						},
 						"description": "**Bearer required.** Deletes the purchase order, cascaded trip reports, and media attachments. Returns 204 No Content. Purchase orders with invoices cannot be deleted while those invoices still exist (`restrictOnDelete`)."
 					}
@@ -2417,8 +3208,16 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/trip-reports",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "trip-reports"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders",
+								"{{purchase_order_id}}",
+								"trip-reports"
+							]
 						},
 						"description": "**Bearer required.** Create a trip report for the purchase order. Prefer `multipart/form-data` when uploading a file.\n\n**Required:** `report_date`, `trip_start`, `trip_end`, `driver` (string), `destinations` (string), `amount` (unsigned integer, min 0).\n\n**Optional:** `trip_report_image` (jpg/jpeg/png/webp/pdf/doc/docx/xls/xlsx, max 10 MB).\n\nResponse attributes: `reportDate`, `tripStart`, `tripEnd`, `driver`, `destinations`, `amount`, `tripReportImageUrl` (null when omitted), `createdAt`, `updatedAt`. Relationships: `purchaseOrder`, `invoice` (null until attached)."
 					},
@@ -2451,8 +3250,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/trip-reports",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "trip-reports"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders",
+								"{{purchase_order_id}}",
+								"trip-reports"
+							]
 						},
 						"description": "**Bearer required.** Returns all trip reports for the purchase order, ordered by latest `report_date`."
 					}
@@ -2469,8 +3276,17 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/trip-reports/{{trip_report_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "trip-reports", "{{trip_report_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders",
+								"{{purchase_order_id}}",
+								"trip-reports",
+								"{{trip_report_id}}"
+							]
 						},
 						"description": "**Bearer required.** Returns one trip report. Returns **404** if the trip report does not belong to the given purchase order."
 					}
@@ -2535,8 +3351,17 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/trip-reports/{{trip_report_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "trip-reports", "{{trip_report_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders",
+								"{{purchase_order_id}}",
+								"trip-reports",
+								"{{trip_report_id}}"
+							]
 						},
 						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when replacing the file. When provided, `trip_start` and `trip_end` must be valid dates. Uploading `trip_report_image` replaces the previous single-file media (image, document, or PDF)."
 					}
@@ -2553,8 +3378,17 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/trip-reports/{{trip_report_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "trip-reports", "{{trip_report_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders",
+								"{{purchase_order_id}}",
+								"trip-reports",
+								"{{trip_report_id}}"
+							]
 						},
 						"description": "**Bearer required.** Deletes the trip report. Returns 204 No Content. Returns **404** if the trip report does not belong to the given purchase order."
 					}
@@ -2621,8 +3455,16 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/invoices",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "invoices"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders",
+								"{{purchase_order_id}}",
+								"invoices"
+							]
 						},
 						"description": "**Bearer required.** Create a purchase order invoice. Prefer `multipart/form-data` when uploading files.\n\n**Required:** `invoice_number` (unique), `lddap_adap_no`.\n\n**Optional:** `note`, `status` (`unpaid` default, or `paid`), `payment_receipt`, `disbursement_voucher`.\n\nResponse type `purchase-order-invoice` with attributes `invoiceNumber`, `lddapAdapNo`, `note`, `status`, `paymentReceiptUrl`, `disbursementVoucherUrl`, `createdAt`, `updatedAt`. Relationship: `purchaseOrder`."
 					},
@@ -2655,8 +3497,16 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/invoices",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "invoices"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders",
+								"{{purchase_order_id}}",
+								"invoices"
+							]
 						},
 						"description": "**Bearer required.** Returns all invoices for the purchase order, ordered by latest created."
 					}
@@ -2673,8 +3523,17 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/invoices/{{invoice_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "invoices", "{{invoice_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders",
+								"{{purchase_order_id}}",
+								"invoices",
+								"{{invoice_id}}"
+							]
 						},
 						"description": "**Bearer required.** Returns one purchase order invoice. Returns **404** if the invoice does not belong to the given purchase order."
 					}
@@ -2748,8 +3607,17 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/invoices/{{invoice_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "invoices", "{{invoice_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders",
+								"{{purchase_order_id}}",
+								"invoices",
+								"{{invoice_id}}"
+							]
 						},
 						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when replacing or removing files.\n\n**Optional fields:** `invoice_number`, `lddap_adap_no`, `note`, `status` (`unpaid` or `paid`), `payment_receipt`, `disbursement_voucher`, `remove_payment_receipt`, `remove_disbursement_voucher`.\n\nUploading a file replaces the previous single-file media. Setting a remove flag clears that collection. You cannot upload and remove the same file in one request. Omitting file fields leaves existing media unchanged."
 					}
@@ -2766,8 +3634,17 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/invoices/{{invoice_id}}",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "invoices", "{{invoice_id}}"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders",
+								"{{purchase_order_id}}",
+								"invoices",
+								"{{invoice_id}}"
+							]
 						},
 						"description": "**Bearer required.** Deletes the invoice and its media. Related trip reports keep their rows but get `invoice_id` set to `null`. Returns 204 No Content. Returns **404** if the invoice does not belong to the given purchase order."
 					}
@@ -2792,8 +3669,18 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/invoices/{{invoice_id}}/trip-reports",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "invoices", "{{invoice_id}}", "trip-reports"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders",
+								"{{purchase_order_id}}",
+								"invoices",
+								"{{invoice_id}}",
+								"trip-reports"
+							]
 						},
 						"description": "**Bearer required.** Bulk-attach trip reports to this invoice in one request.\n\n**Body:** `trip_report_ids` — required non-empty array of distinct UUIDs. Each ID must belong to the same purchase order.\n\nReports already linked to another invoice on the same purchase order are moved to this invoice. Returns the attached trip report collection (each with `relationships.invoice` set)."
 					}
@@ -2818,8 +3705,18 @@
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/invoices/{{invoice_id}}/trip-reports",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "purchase-orders", "{{purchase_order_id}}", "invoices", "{{invoice_id}}", "trip-reports"]
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders",
+								"{{purchase_order_id}}",
+								"invoices",
+								"{{invoice_id}}",
+								"trip-reports"
+							]
 						},
 						"description": "**Bearer required.** Bulk-detach trip reports from this invoice in one request.\n\n**Body:** `trip_report_ids` — required non-empty array of distinct UUIDs. Each ID must already be attached to this invoice.\n\nSets `invoice_id` to `null` only for the listed reports; other attachments on the invoice are unchanged. Returns the detached trip report collection (each with `relationships.invoice.data` as `null`)."
 					}
@@ -2841,8 +3738,14 @@
 						],
 						"url": {
 							"raw": "{{base_url}}/api/v1/availability?type=car&start=2026-03-01&end=2026-03-31",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "availability"],
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"availability"
+							],
 							"query": [
 								{
 									"key": "type",
