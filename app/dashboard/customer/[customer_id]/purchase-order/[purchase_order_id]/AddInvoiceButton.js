@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import FileUploadWithCamera from "@/app/dashboard/components/FileUploadWithCamera";
 
 const EMPTY_FORM = {
   invoice_number: "",
@@ -396,15 +397,13 @@ export default function AddInvoiceButton({
                     (optional, image/PDF, max 10 MB)
                   </span>
                 </label>
-                <input
+                <FileUploadWithCamera
                   id="paymentReceipt"
-                  type="file"
                   accept={FILE_ACCEPT}
-                  onChange={(event) =>
-                    setPaymentReceipt(event.target.files?.[0] ?? null)
+                  onFilesChange={(files) =>
+                    setPaymentReceipt(files[0] ?? null)
                   }
                   disabled={isLoading}
-                  className="w-full text-sm text-zinc-700 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-800 hover:file:bg-zinc-200 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -418,15 +417,13 @@ export default function AddInvoiceButton({
                     (optional, image/PDF, max 10 MB)
                   </span>
                 </label>
-                <input
+                <FileUploadWithCamera
                   id="disbursementVoucher"
-                  type="file"
                   accept={FILE_ACCEPT}
-                  onChange={(event) =>
-                    setDisbursementVoucher(event.target.files?.[0] ?? null)
+                  onFilesChange={(files) =>
+                    setDisbursementVoucher(files[0] ?? null)
                   }
                   disabled={isLoading}
-                  className="w-full text-sm text-zinc-700 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-800 hover:file:bg-zinc-200 disabled:cursor-not-allowed"
                 />
               </div>
 

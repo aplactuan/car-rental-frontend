@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import DriverAutocomplete from "./DriverAutocomplete";
+import FileUploadWithCamera from "@/app/dashboard/components/FileUploadWithCamera";
 
 const EMPTY_FORM = {
   trip_report_no: "",
@@ -347,15 +348,11 @@ export default function AddTripReportButton({ purchaseOrderId }) {
                     (optional, jpg/png/webp/pdf/doc/xls, max 10 MB)
                   </span>
                 </label>
-                <input
+                <FileUploadWithCamera
                   id="tripReportImage"
-                  type="file"
                   accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,image/jpeg,image/png,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                  onChange={(event) =>
-                    setImageFile(event.target.files?.[0] ?? null)
-                  }
+                  onFilesChange={(files) => setImageFile(files[0] ?? null)}
                   disabled={isLoading}
-                  className="w-full text-sm text-zinc-700 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-800 hover:file:bg-zinc-200 disabled:cursor-not-allowed"
                 />
               </div>
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import FileUploadWithCamera from "@/app/dashboard/components/FileUploadWithCamera";
 
 const FILE_ACCEPT = "image/jpeg,image/jpg,image/png,image/webp,application/pdf";
 const INVOICE_STATUS_OPTIONS = [
@@ -547,18 +548,15 @@ export default function InvoiceActions({
                     </a>
                   </p>
                 ) : null}
-                <input
+                <FileUploadWithCamera
                   id={`edit-receipt-${invoice.id}`}
-                  type="file"
                   accept={FILE_ACCEPT}
-                  onChange={(event) => {
-                    setPaymentReceipt(event.target.files?.[0] ?? null);
-                    if (event.target.files?.[0]) {
-                      setRemovePaymentReceipt(false);
-                    }
+                  onFilesChange={(files) => {
+                    const next = files[0] ?? null;
+                    setPaymentReceipt(next);
+                    if (next) setRemovePaymentReceipt(false);
                   }}
                   disabled={isSaving || removePaymentReceipt}
-                  className="w-full text-sm text-zinc-700 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-800 hover:file:bg-zinc-200 disabled:cursor-not-allowed"
                 />
                 {invoice.paymentReceiptUrl ? (
                   <label className="mt-2 flex items-center gap-2 text-sm text-zinc-700">
@@ -600,18 +598,15 @@ export default function InvoiceActions({
                     </a>
                   </p>
                 ) : null}
-                <input
+                <FileUploadWithCamera
                   id={`edit-voucher-${invoice.id}`}
-                  type="file"
                   accept={FILE_ACCEPT}
-                  onChange={(event) => {
-                    setDisbursementVoucher(event.target.files?.[0] ?? null);
-                    if (event.target.files?.[0]) {
-                      setRemoveDisbursementVoucher(false);
-                    }
+                  onFilesChange={(files) => {
+                    const next = files[0] ?? null;
+                    setDisbursementVoucher(next);
+                    if (next) setRemoveDisbursementVoucher(false);
                   }}
                   disabled={isSaving || removeDisbursementVoucher}
-                  className="w-full text-sm text-zinc-700 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-800 hover:file:bg-zinc-200 disabled:cursor-not-allowed"
                 />
                 {invoice.disbursementVoucherUrl ? (
                   <label className="mt-2 flex items-center gap-2 text-sm text-zinc-700">

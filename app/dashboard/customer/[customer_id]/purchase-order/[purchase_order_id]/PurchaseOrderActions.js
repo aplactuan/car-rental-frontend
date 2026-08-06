@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import FileUploadWithCamera from "@/app/dashboard/components/FileUploadWithCamera";
 
 const PO_STATUS_OPTIONS = [
   { value: "pending", label: "Pending" },
@@ -531,23 +532,14 @@ export default function PurchaseOrderActions({ purchaseOrder, customerId }) {
                     (optional, does not replace existing)
                   </span>
                 </label>
-                <input
+                <FileUploadWithCamera
                   id="edit-po-attachments"
-                  type="file"
                   multiple
                   accept={ATTACHMENT_ACCEPT}
-                  onChange={(event) =>
-                    setAttachmentFiles(Array.from(event.target.files ?? []))
-                  }
+                  existingFiles={attachmentFiles}
+                  onFilesChange={setAttachmentFiles}
                   disabled={isSaving}
-                  className="w-full text-sm text-zinc-700 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-800 hover:file:bg-zinc-200 disabled:cursor-not-allowed"
                 />
-                {attachmentFiles.length > 0 ? (
-                  <p className="mt-2 text-xs text-zinc-500">
-                    {attachmentFiles.length} new file
-                    {attachmentFiles.length === 1 ? "" : "s"} selected
-                  </p>
-                ) : null}
               </div>
 
               {error ? <p className="text-sm text-red-600">{error}</p> : null}

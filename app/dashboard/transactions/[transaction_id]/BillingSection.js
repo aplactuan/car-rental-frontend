@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import FileUploadWithCamera from "@/app/dashboard/components/FileUploadWithCamera";
 
 const getBearerHeaders = () => {
   const token =
@@ -1156,14 +1157,15 @@ export default function BillingSection({
                   <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                     Proof image
                   </span>
-                  <input
-                    type="file"
+                  <FileUploadWithCamera
+                    id="payment-proof-image"
                     accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-                    onChange={(event) =>
-                      setPaymentProofFile(event.target.files?.[0] ?? null)
+                    onFilesChange={(files) =>
+                      setPaymentProofFile(files[0] ?? null)
                     }
                     disabled={isSubmittingPayment || isSubmitting}
-                    className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                    className="mt-1"
+                    inputClassName="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-100"
                   />
                 </label>
               </div>
