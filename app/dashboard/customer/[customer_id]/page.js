@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import AddProgramButton from "./AddProgramButton";
 import AddPurchaseOrderButton from "./AddPurchaseOrderButton";
+import PurchaseOrdersSection from "./PurchaseOrdersSection";
 
 function readField(source, keys) {
   if (!source || typeof source !== "object") return "";
@@ -72,6 +73,12 @@ function normalizePurchaseOrders(payload) {
             ? Number(amountRaw)
             : null;
 
+      const programRelationship =
+        record?.relationships?.program?.data ??
+        attrs?.relationships?.program?.data ??
+        null;
+      const programAttrs = programRelationship?.attributes ?? {};
+
       return {
         id: String(pick(["id", "purchase_order_id", "purchaseOrderId"]) || ""),
         poNumber: String(pick(["po_number", "poNumber"]) || ""),
@@ -81,6 +88,14 @@ function normalizePurchaseOrders(payload) {
           pick(["request_person", "requestPerson"]) || "",
         ),
         description: String(pick(["description"]) || ""),
+        programId: String(
+          pick(["program_id", "programId"]) || programRelationship?.id || "",
+        ),
+        programName: String(
+          readField(programAttrs, ["name", "program_name", "programName"]) ||
+            pick(["program_name", "programName"]) ||
+            "",
+        ),
         status:
           String(pick(["status"]) || "pending").toLowerCase() === "ok"
             ? "ok"
@@ -130,22 +145,6 @@ function formatDate(value) {
     month: "short",
     year: "numeric",
   });
-}
-
-function PurchaseOrderStatusBadge({ status }) {
-  const isOk = status === "ok";
-
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-        isOk
-          ? "bg-emerald-50 text-emerald-800"
-          : "bg-amber-50 text-amber-800"
-      }`}
-    >
-      {isOk ? "OK" : "Pending"}
-    </span>
-  );
 }
 
 function SummaryCell({ label, children }) {
@@ -498,83 +497,12 @@ export default async function CustomerDetailPage({ params }) {
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-6 py-5">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
-              Purchase orders
-            </h2>
-            <p className="mt-1 text-sm text-zinc-500">
-              Purchase orders linked to this customer.
-            </p>
-          </div>
-          {!purchaseOrdersError && purchaseOrders.length > 0 ? (
-            <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
-              {purchaseOrders.length} order
-              {purchaseOrders.length === 1 ? "" : "s"}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="px-6 py-5">
-          {purchaseOrdersError ? (
-            <p className="text-sm text-red-600">{purchaseOrdersError}</p>
-          ) : purchaseOrders.length === 0 ? (
-            <SectionEmptyState
-              title="No purchase orders yet"
-              description="Add the first purchase order for this customer."
-            />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                    <th className="pb-3 pr-6">PO number</th>
-                    <th className="pb-3 pr-6">Date</th>
-                    <th className="pb-3 pr-6">Amount</th>
-                    <th className="pb-3 pr-6">Status</th>
-                    <th className="pb-3 pr-6">Request person</th>
-                    <th className="pb-3 pr-6">Description</th>
-                    <th className="pb-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100">
-                  {purchaseOrders.map((po) => (
-                    <tr key={po.id} className="transition hover:bg-zinc-50/80">
-                      <td className="py-3.5 pr-6 font-medium text-zinc-900">
-                        {po.poNumber || "—"}
-                      </td>
-                      <td className="py-3.5 pr-6 text-zinc-700">
-                        {formatDate(po.date)}
-                      </td>
-                      <td className="py-3.5 pr-6 text-zinc-700">
-                        {formatPhp(po.amount)}
-                      </td>
-                      <td className="py-3.5 pr-6">
-                        <PurchaseOrderStatusBadge status={po.status} />
-                      </td>
-                      <td className="py-3.5 pr-6 text-zinc-700">
-                        {po.requestPerson || "—"}
-                      </td>
-                      <td className="max-w-xs py-3.5 pr-6 text-zinc-700">
-                        {po.description || "—"}
-                      </td>
-                      <td className="py-3.5 text-right">
-                        <Link
-                          href={`/dashboard/customer/${encodeURIComponent(customerId)}/purchase-order/${encodeURIComponent(po.id)}`}
-                          className="text-xs font-medium text-teal-700 transition hover:text-teal-800"
-                        >
-                          View
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </section>
+      <PurchaseOrdersSection
+        customerId={customerId}
+        initialPurchaseOrders={purchaseOrders}
+        programs={programs}
+        initialError={purchaseOrdersError}
+      />
     </div>
   );
 }
