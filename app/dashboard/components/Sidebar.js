@@ -85,7 +85,7 @@ export default function Sidebar() {
       <div className="px-6 pb-5 pt-6">
         <Link href="/dashboard" className="block">
           <div className="text-lg font-semibold tracking-tight text-teal-400">
-            CarRental
+            Rambo App
           </div>
           <div className="mt-1 text-xs text-zinc-400">Management System</div>
           {role === "driver" ? (
@@ -178,7 +178,7 @@ export default function Sidebar() {
           </svg>
           Logout
         </button>
-        <div className="mt-6 px-2 text-xs text-zinc-500">© 2026 CarRental</div>
+        <div className="mt-6 px-2 text-xs text-zinc-500">© 2026 Rambo App</div>
       </div>
     </aside>
   );

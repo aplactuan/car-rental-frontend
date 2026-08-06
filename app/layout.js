@@ -12,8 +12,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Car Rental - Login",
-  description: "Login to your car rental account",
+  title: "Rambo App Management System",
+  description: "Login to your Rambo App Management System account",
 };
 
 export default function RootLayout({ children }) {

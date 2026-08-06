@@ -63,7 +63,7 @@ export default function Home() {
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
             <div className="text-lg font-semibold tracking-tight text-teal-400">
-              CarRental
+              Rambo App
             </div>
             <div className="mt-1 text-xs text-zinc-500">Management System</div>
           </div>
@@ -176,7 +176,7 @@ export default function Home() {
           </div>
 
           <p className="mt-8 text-center text-xs text-zinc-600">
-            © 2026 CarRental
+            © 2026 Rambo App
           </p>
         </div>
       </main>
