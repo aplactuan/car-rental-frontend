@@ -42,30 +42,92 @@ function firstErrorMessage(data, keys = []) {
   return data?.error || data?.message || null;
 }
 
-export default function PurchaseOrderActions({ purchaseOrder }) {
+function normalizePrograms(payload) {
+  const raw = payload?.data ?? payload?.programs ?? payload?.items ?? payload;
+  const list = Array.isArray(raw) ? raw : [];
+
+  return list
+    .map((record) => {
+      const attrs = record?.attributes ?? {};
+      const id = String(
+        attrs?.id ??
+          record?.id ??
+          attrs?.program_id ??
+          record?.program_id ??
+          attrs?.programId ??
+          record?.programId ??
+          "",
+      );
+      const name = String(attrs?.name ?? record?.name ?? "");
+
+      return { id, name };
+    })
+    .filter((item) => item.id);
+}
+
+export default function PurchaseOrderActions({ purchaseOrder, customerId }) {
   const router = useRouter();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [form, setForm] = useState({
     po_number: "",
     date: "",
     amount: "",
+    program_id: "",
     request_person: "",
     description: "",
     status: "pending",
   });
+  const [programs, setPrograms] = useState([]);
+  const [isLoadingPrograms, setIsLoadingPrograms] = useState(false);
   const [attachmentFiles, setAttachmentFiles] = useState([]);
   const [removeAttachmentIds, setRemoveAttachmentIds] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const resolvedCustomerId =
+    customerId || purchaseOrder?.customerId || "";
+
   const purchaseOrderPath = purchaseOrder?.id
     ? `/api/v1/purchase-orders/${encodeURIComponent(purchaseOrder.id)}`
     : "";
+
+  const loadPrograms = async () => {
+    if (!resolvedCustomerId) {
+      setPrograms([]);
+      return;
+    }
+
+    setIsLoadingPrograms(true);
+
+    try {
+      const response = await fetch(
+        `/api/v1/customers/${encodeURIComponent(resolvedCustomerId)}/programs`,
+        {
+          headers: getAuthHeaders(),
+          credentials: "include",
+          cache: "no-store",
+        },
+      );
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setPrograms([]);
+        return;
+      }
+
+      setPrograms(normalizePrograms(data));
+    } catch {
+      setPrograms([]);
+    } finally {
+      setIsLoadingPrograms(false);
+    }
+  };
 
   const openEdit = () => {
     setError("");
     setAttachmentFiles([]);
     setRemoveAttachmentIds([]);
+    setPrograms([]);
     setForm({
       po_number: purchaseOrder.poNumber || "",
       date: toDateInputValue(purchaseOrder.date),
@@ -73,11 +135,13 @@ export default function PurchaseOrderActions({ purchaseOrder }) {
         typeof purchaseOrder.amount === "number"
           ? String(purchaseOrder.amount)
           : "",
+      program_id: purchaseOrder.programId || "",
       request_person: purchaseOrder.requestPerson || "",
       description: purchaseOrder.description || "",
       status: purchaseOrder.status === "ok" ? "ok" : "pending",
     });
     setIsEditOpen(true);
+    void loadPrograms();
   };
 
   const closeEdit = () => {
@@ -86,6 +150,7 @@ export default function PurchaseOrderActions({ purchaseOrder }) {
     setError("");
     setAttachmentFiles([]);
     setRemoveAttachmentIds([]);
+    setPrograms([]);
   };
 
   const updateField = (key, value) => {
@@ -107,6 +172,7 @@ export default function PurchaseOrderActions({ purchaseOrder }) {
     const poNumber = form.po_number.trim();
     const date = form.date.trim();
     const amountValue = form.amount.trim();
+    const programId = form.program_id.trim();
     const requestPerson = form.request_person.trim();
     const description = form.description.trim();
     const status = form.status === "ok" ? "ok" : "pending";
@@ -141,6 +207,7 @@ export default function PurchaseOrderActions({ purchaseOrder }) {
         body.append("po_number", poNumber);
         body.append("date", date);
         body.append("amount", String(amount));
+        body.append("program_id", programId);
         body.append("request_person", requestPerson);
         body.append("description", description);
         body.append("status", status);
@@ -169,6 +236,7 @@ export default function PurchaseOrderActions({ purchaseOrder }) {
             po_number: poNumber,
             date,
             amount,
+            program_id: programId || null,
             request_person: requestPerson,
             description,
             status,
@@ -184,6 +252,7 @@ export default function PurchaseOrderActions({ purchaseOrder }) {
             "po_number",
             "date",
             "amount",
+            "program_id",
             "request_person",
             "description",
             "status",
@@ -197,6 +266,7 @@ export default function PurchaseOrderActions({ purchaseOrder }) {
       }
 
       setIsEditOpen(false);
+      setPrograms([]);
       router.refresh();
     } catch {
       setError("Network error. Please try again.");
@@ -269,6 +339,41 @@ export default function PurchaseOrderActions({ purchaseOrder }) {
                   required
                   className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                 />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="edit-po-program"
+                  className="mb-2 block text-sm font-medium text-zinc-700"
+                >
+                  Program{" "}
+                  <span className="font-normal text-zinc-400">(optional)</span>
+                </label>
+                <select
+                  id="edit-po-program"
+                  value={form.program_id}
+                  onChange={(event) =>
+                    updateField("program_id", event.target.value)
+                  }
+                  disabled={isSaving || isLoadingPrograms}
+                  className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                >
+                  <option value="">None</option>
+                  {form.program_id &&
+                  !programs.some((program) => program.id === form.program_id) ? (
+                    <option value={form.program_id}>
+                      {purchaseOrder.programName || form.program_id}
+                    </option>
+                  ) : null}
+                  {programs.map((program) => (
+                    <option key={program.id} value={program.id}>
+                      {program.name || program.id}
+                    </option>
+                  ))}
+                </select>
+                {isLoadingPrograms ? (
+                  <p className="mt-2 text-xs text-zinc-500">Loading programs…</p>
+                ) : null}
               </div>
 
               <div>
