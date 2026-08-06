@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "car-rental-api-collection",
 		"name": "Car Rental API",
-		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | Public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` | Public registration route; the server may still return **403** if registration is disabled. |\n| `GET /api/user`, `PUT /api/password`, `POST /api/logout` | Bearer token required. |\n| All other `/api/v1/...` routes | Bearer token required. |\n\nThis collection sets collection-level Bearer auth with `{{token}}`. Public requests override auth to `No Auth`.\n\n## Setup\n1. Set `base_url` (default: `http://localhost`; add a port if needed, for example `http://localhost:8000`).\n2. Run **Login**. The token is stored automatically. Seeded accounts after `php artisan migrate --seed`: `test@example.com` / `password` and `admin@example.com` / `password`.\n3. Reuse saved variables from earlier responses: `car_id`, `driver_id`, `customer_id`, `program_id`, `purchase_order_id`, `purchase_order_attachment_id`, `transaction_id`, `booking_id`, `trip_report_id`, `invoice_id`, `car_import_id`, `driver_import_id`, `bill_payment_id`.\n\n## Notes\n- User registration requires `name`, `email`, `password`, and `password_confirmation`. Optional `role` defaults to `user`; public registration rejects `admin` with **422**.\n- Change password requires `current_password`, `password`, and `password_confirmation`.\n- Car import CSV columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number`.\n- Driver import CSV columns: `first_name`, `last_name`, `license_number`, `license_expiry_date`, `address`, `phone_number`, `email`, `password`.\n- Customers support hierarchy and contact fields: `parent_id`, `contact_person`, `contact_mobile_number`, `contact_email`.\n- Programs belong to a customer (`customer_id`, `name`, optional `description`). List programs with optional `customer_id` filter, or use `GET /api/v1/customers/{customer}/programs`.\n- `GET /api/v1/bookings` uses global statuses `completed`, `today`, `ongoing`, `incoming`. `GET /api/v1/transactions/{id}/bookings` uses `upcoming` and `previous`, plus `period`, `car_id`, and `driver_id` filters.\n- Bill numbers are generated automatically. Bill payment uploads use `multipart/form-data`.\n- Purchase order and trip report `amount` values are unsigned money integers (smallest currency unit).\n- Purchase order `status` is `pending` (default) or `ok`. Optional `program_id` links a PO to a program. List POs can filter by `customer_id` and/or `program_id`. Optional multi-file `attachments[]` uploads use `multipart/form-data` (jpg/jpeg/png/webp/pdf/doc/docx/xls/xlsx, max 10 MB each). On update, remove files with `remove_attachment_ids[]` (media UUIDs).\n- Trip reports nest under purchase orders. Optional `trip_report_image` uploads use `multipart/form-data` (jpg/jpeg/png/webp/pdf/doc/docx/xls/xlsx, max 10 MB). `driver` is a free-text string (not a driver model FK).\n- Purchase order invoices nest under purchase orders. Optional `payment_receipt` and `disbursement_voucher` uploads use `multipart/form-data` (jpg/jpeg/png/webp/pdf, max 10 MB). Bulk attach/detach trip reports with `trip_report_ids`.",
+		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | Public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` | Public registration route; the server may still return **403** if registration is disabled. |\n| `GET /api/user`, `PUT /api/password`, `POST /api/logout` | Bearer token required. |\n| All other `/api/v1/...` routes | Bearer token required. |\n\nThis collection sets collection-level Bearer auth with `{{token}}`. Public requests override auth to `No Auth`.\n\n## Setup\n1. Set `base_url` (default: `http://localhost`; add a port if needed, for example `http://localhost:8000`).\n2. Run **Login**. The token is stored automatically. Seeded accounts after `php artisan migrate --seed`: `test@example.com` / `password` and `admin@example.com` / `password`.\n3. Reuse saved variables from earlier responses: `car_id`, `driver_id`, `customer_id`, `program_id`, `purchase_order_id`, `purchase_order_attachment_id`, `transaction_id`, `booking_id`, `trip_report_id`, `invoice_id`, `car_import_id`, `driver_import_id`, `bill_payment_id`.\n\n## Notes\n- User registration requires `name`, `email`, `password`, and `password_confirmation`. Optional `role` defaults to `user`; public registration rejects `admin` with **422**.\n- Change password requires `current_password`, `password`, and `password_confirmation`.\n- Car import CSV columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number`.\n- Driver import CSV columns: `first_name`, `last_name`, `license_number`, `license_expiry_date`, `address`, `phone_number`, `email`, `password`.\n- Customers support hierarchy and contact fields: `parent_id`, `contact_person`, `contact_mobile_number`, `contact_email`.\n- Programs belong to a customer (`customer_id`, `name`, optional `description`). List programs with optional `customer_id` filter, or use `GET /api/v1/customers/{customer}/programs`.\n- `GET /api/v1/bookings` uses global statuses `completed`, `today`, `ongoing`, `incoming`. `GET /api/v1/transactions/{id}/bookings` uses `upcoming` and `previous`, plus `period`, `car_id`, and `driver_id` filters.\n- Bill numbers are generated automatically. Bill payment uploads use `multipart/form-data`.\n- Purchase order and trip report `amount` values are unsigned money integers (smallest currency unit).\n- Purchase order `status` is `pending` (default) or `ok`. Optional `program_id` links a PO to a program. List POs can filter by `customer_id`, `program_id` (UUID), and/or `unprogrammed=1` (null program only; mutually exclusive with `program_id`). Optional multi-file `attachments[]` uploads use `multipart/form-data` (jpg/jpeg/png/webp/pdf/doc/docx/xls/xlsx, max 10 MB each). On update, remove files with `remove_attachment_ids[]` (media UUIDs).\n- Trip reports nest under purchase orders. Optional `trip_report_image` uploads use `multipart/form-data` (jpg/jpeg/png/webp/pdf/doc/docx/xls/xlsx, max 10 MB). `driver` is a free-text string (not a driver model FK).\n- Purchase order invoices nest under purchase orders. Optional `payment_receipt` and `disbursement_voucher` uploads use `multipart/form-data` (jpg/jpeg/png/webp/pdf, max 10 MB). Bulk attach/detach trip reports with `trip_report_ids`.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -2776,7 +2776,7 @@
 		},
 		{
 			"name": "Purchase Orders",
-			"description": "Standalone purchase order CRUD. `amount` is an unsigned money integer (min 0). `status` is `pending` (default) or `ok`. Optional `program_id` associates the PO with a customer program. Optional multi-file `attachments[]` uploads use `multipart/form-data` (jpg/jpeg/png/webp/pdf/doc/docx/xls/xlsx, max 10 MB each). Responses include `attachments` as an array of `{ id, fileName, mimeType, size, url }`, plus `programId` and a `program` relationship.",
+			"description": "Standalone purchase order CRUD. `amount` is an unsigned money integer (min 0). `status` is `pending` (default) or `ok`. Optional `program_id` associates the PO with a customer program. List supports `unprogrammed=1` to return only POs with no program (mutually exclusive with `program_id`). Optional multi-file `attachments[]` uploads use `multipart/form-data` (jpg/jpeg/png/webp/pdf/doc/docx/xls/xlsx, max 10 MB each). Responses include `attachments` as an array of `{ id, fileName, mimeType, size, url }`, plus `programId` and a `program` relationship.",
 			"item": [
 				{
 					"name": "Add Purchase Order",
@@ -2925,12 +2925,60 @@
 								{
 									"key": "program_id",
 									"value": "{{program_id}}",
-									"description": "Optional: filter by program UUID",
+									"description": "Optional: filter by program UUID only (do not send `null`; use `unprogrammed=1` for null program). Mutually exclusive with `unprogrammed`.",
+									"disabled": true
+								},
+								{
+									"key": "unprogrammed",
+									"value": "1",
+									"description": "Optional boolean. When true (e.g. `1`, `true`, `yes`, `on`), return only purchase orders with no program (`program_id` is null). Mutually exclusive with `program_id` (422 if both are used).",
 									"disabled": true
 								}
 							]
 						},
-						"description": "**Bearer required.** Paginated purchase order list ordered by latest date. Each item includes `status`, `programId`, `attachments`, and `customer`/`program` relationships. Optional query: `per_page` (1-100), `customer_id`, `program_id`."
+						"description": "**Bearer required.** Paginated purchase order list ordered by latest date. Each item includes `status`, `programId`, `attachments`, and `customer`/`program` relationships.\n\n**Optional query:**\n- `per_page` (1-100)\n- `customer_id` (UUID)\n- `program_id` (UUID only — not for null matching)\n- `unprogrammed` (boolean; when true, only rows with null `program_id`)\n\n`unprogrammed` and `program_id` are mutually exclusive (422 if both are used). See **List Unprogrammed Purchase Orders** for a ready-made example."
+					}
+				},
+				{
+					"name": "List Unprogrammed Purchase Orders",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/purchase-orders?unprogrammed=1&per_page=15",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders"
+							],
+							"query": [
+								{
+									"key": "unprogrammed",
+									"value": "1",
+									"description": "Required for this example. Returns only purchase orders with no program (`program_id` is null). Do not combine with `program_id`."
+								},
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Optional: 1-100"
+								},
+								{
+									"key": "customer_id",
+									"value": "{{customer_id}}",
+									"description": "Optional: also filter by customer UUID",
+									"disabled": true
+								}
+							]
+						},
+						"description": "**Bearer required.** Example of the `unprogrammed` filter. Returns only purchase orders where `program_id` is null. Response shape is unchanged (`programId: null`, `relationships.program.data: null`).\n\nDo not send `program_id=null` — use `unprogrammed=1`. Combining `unprogrammed` with `program_id` returns **422**."
 					}
 				},
 				{
