@@ -194,10 +194,6 @@ export default function InvoiceActions({
       setError("Invoice number is required.");
       return;
     }
-    if (!lddapAdapNo) {
-      setError("LDDAP/ADAP number is required.");
-      return;
-    }
     if (paymentReceipt && removePaymentReceipt) {
       setError("Cannot upload and remove the payment receipt in one request.");
       return;
@@ -421,7 +417,8 @@ export default function InvoiceActions({
                   htmlFor={`edit-lddap-${invoice.id}`}
                   className="mb-2 block text-sm font-medium text-zinc-700"
                 >
-                  LDDAP/ADAP number
+                  LDDAP/ADAP number{" "}
+                  <span className="font-normal text-zinc-400">(optional)</span>
                 </label>
                 <input
                   id={`edit-lddap-${invoice.id}`}
@@ -432,7 +429,6 @@ export default function InvoiceActions({
                   }
                   disabled={isSaving}
                   maxLength={255}
-                  required
                   className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                 />
               </div>
@@ -510,6 +506,9 @@ export default function InvoiceActions({
                           />
                           <span className="min-w-0 flex-1">
                             <span className="block text-sm font-medium text-zinc-900">
+                              {report.tripReportNo
+                                ? `${report.tripReportNo} · `
+                                : ""}
                               {formatDate(report.reportDate)} ·{" "}
                               {report.driver || "—"}
                             </span>
