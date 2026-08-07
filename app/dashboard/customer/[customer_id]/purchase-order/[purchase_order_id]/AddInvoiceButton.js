@@ -49,6 +49,7 @@ export default function AddInvoiceButton({
   const [form, setForm] = useState(EMPTY_FORM);
   const [paymentReceipt, setPaymentReceipt] = useState(null);
   const [disbursementVoucher, setDisbursementVoucher] = useState(null);
+  const [invoicePicture, setInvoicePicture] = useState(null);
   const [selectedTripReportIds, setSelectedTripReportIds] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -58,6 +59,7 @@ export default function AddInvoiceButton({
     setError("");
     setPaymentReceipt(null);
     setDisbursementVoucher(null);
+    setInvoicePicture(null);
     setSelectedTripReportIds([]);
     setInvoiceCreated(false);
     setForm(EMPTY_FORM);
@@ -70,6 +72,7 @@ export default function AddInvoiceButton({
     setForm(EMPTY_FORM);
     setPaymentReceipt(null);
     setDisbursementVoucher(null);
+    setInvoicePicture(null);
     setSelectedTripReportIds([]);
     setInvoiceCreated(false);
     setError("");
@@ -121,6 +124,9 @@ export default function AddInvoiceButton({
       if (disbursementVoucher) {
         body.append("disbursement_voucher", disbursementVoucher);
       }
+      if (invoicePicture) {
+        body.append("invoice_picture", invoicePicture);
+      }
 
       const authToken = localStorage.getItem("auth_token");
       const authHeaders = {
@@ -148,6 +154,7 @@ export default function AddInvoiceButton({
           data?.errors?.status?.[0] ||
           data?.errors?.payment_receipt?.[0] ||
           data?.errors?.disbursement_voucher?.[0] ||
+          data?.errors?.invoice_picture?.[0] ||
           (typeof data?.errors === "object"
             ? Object.values(data.errors).flat()?.[0]
             : null);
@@ -196,6 +203,7 @@ export default function AddInvoiceButton({
           setForm(EMPTY_FORM);
           setPaymentReceipt(null);
           setDisbursementVoucher(null);
+          setInvoicePicture(null);
           setSelectedTripReportIds([]);
           router.refresh();
           return;
@@ -205,6 +213,7 @@ export default function AddInvoiceButton({
       setForm(EMPTY_FORM);
       setPaymentReceipt(null);
       setDisbursementVoucher(null);
+      setInvoicePicture(null);
       setSelectedTripReportIds([]);
       setIsDialogOpen(false);
       router.refresh();
@@ -387,6 +396,26 @@ export default function AddInvoiceButton({
                   </div>
                 )}
               </fieldset>
+
+              <div>
+                <label
+                  htmlFor="invoicePicture"
+                  className="mb-2 block text-sm font-medium text-zinc-700"
+                >
+                  Invoice picture{" "}
+                  <span className="font-normal text-zinc-400">
+                    (optional, image/PDF, max 10 MB)
+                  </span>
+                </label>
+                <FileUploadWithCamera
+                  id="invoicePicture"
+                  accept={FILE_ACCEPT}
+                  onFilesChange={(files) =>
+                    setInvoicePicture(files[0] ?? null)
+                  }
+                  disabled={isLoading}
+                />
+              </div>
 
               <div>
                 <label

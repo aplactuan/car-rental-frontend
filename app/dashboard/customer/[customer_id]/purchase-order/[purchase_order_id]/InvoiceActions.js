@@ -72,9 +72,11 @@ export default function InvoiceActions({
   });
   const [paymentReceipt, setPaymentReceipt] = useState(null);
   const [disbursementVoucher, setDisbursementVoucher] = useState(null);
+  const [invoicePicture, setInvoicePicture] = useState(null);
   const [removePaymentReceipt, setRemovePaymentReceipt] = useState(false);
   const [removeDisbursementVoucher, setRemoveDisbursementVoucher] =
     useState(false);
+  const [removeInvoicePicture, setRemoveInvoicePicture] = useState(false);
   const [selectedTripReportIds, setSelectedTripReportIds] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -97,8 +99,10 @@ export default function InvoiceActions({
     setError("");
     setPaymentReceipt(null);
     setDisbursementVoucher(null);
+    setInvoicePicture(null);
     setRemovePaymentReceipt(false);
     setRemoveDisbursementVoucher(false);
+    setRemoveInvoicePicture(false);
     setForm({
       invoice_number: invoice.invoiceNumber || "",
       lddap_adap_no: invoice.lddapAdapNo || "",
@@ -115,8 +119,10 @@ export default function InvoiceActions({
     setError("");
     setPaymentReceipt(null);
     setDisbursementVoucher(null);
+    setInvoicePicture(null);
     setRemovePaymentReceipt(false);
     setRemoveDisbursementVoucher(false);
+    setRemoveInvoicePicture(false);
   };
 
   const updateField = (key, value) => {
@@ -206,6 +212,10 @@ export default function InvoiceActions({
       );
       return;
     }
+    if (invoicePicture && removeInvoicePicture) {
+      setError("Cannot upload and remove the invoice picture in one request.");
+      return;
+    }
 
     setError("");
     setIsSaving(true);
@@ -215,8 +225,10 @@ export default function InvoiceActions({
       const hasFileChanges =
         Boolean(paymentReceipt) ||
         Boolean(disbursementVoucher) ||
+        Boolean(invoicePicture) ||
         removePaymentReceipt ||
-        removeDisbursementVoucher;
+        removeDisbursementVoucher ||
+        removeInvoicePicture;
 
       let response;
 
@@ -232,11 +244,17 @@ export default function InvoiceActions({
         if (disbursementVoucher) {
           body.append("disbursement_voucher", disbursementVoucher);
         }
+        if (invoicePicture) {
+          body.append("invoice_picture", invoicePicture);
+        }
         if (removePaymentReceipt) {
           body.append("remove_payment_receipt", "1");
         }
         if (removeDisbursementVoucher) {
           body.append("remove_disbursement_voucher", "1");
+        }
+        if (removeInvoicePicture) {
+          body.append("remove_invoice_picture", "1");
         }
 
         response = await fetch(invoiceBasePath, {
@@ -273,8 +291,10 @@ export default function InvoiceActions({
             "status",
             "payment_receipt",
             "disbursement_voucher",
+            "invoice_picture",
             "remove_payment_receipt",
             "remove_disbursement_voucher",
+            "remove_invoice_picture",
           ]) || "Failed to update invoice.",
         );
         return;
@@ -525,6 +545,56 @@ export default function InvoiceActions({
                   </div>
                 )}
               </fieldset>
+
+              <div>
+                <label
+                  htmlFor={`edit-invoice-picture-${invoice.id}`}
+                  className="mb-2 block text-sm font-medium text-zinc-700"
+                >
+                  Invoice picture{" "}
+                  <span className="font-normal text-zinc-400">
+                    (optional, image/PDF, max 10 MB)
+                  </span>
+                </label>
+                {invoice.invoicePictureUrl ? (
+                  <p className="mb-2 text-xs text-zinc-500">
+                    Current:{" "}
+                    <a
+                      href={invoice.invoicePictureUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-teal-700 hover:text-teal-800"
+                    >
+                      View file
+                    </a>
+                  </p>
+                ) : null}
+                <FileUploadWithCamera
+                  id={`edit-invoice-picture-${invoice.id}`}
+                  accept={FILE_ACCEPT}
+                  onFilesChange={(files) => {
+                    const next = files[0] ?? null;
+                    setInvoicePicture(next);
+                    if (next) setRemoveInvoicePicture(false);
+                  }}
+                  disabled={isSaving || removeInvoicePicture}
+                />
+                {invoice.invoicePictureUrl ? (
+                  <label className="mt-2 flex items-center gap-2 text-sm text-zinc-700">
+                    <input
+                      type="checkbox"
+                      checked={removeInvoicePicture}
+                      onChange={(event) => {
+                        setRemoveInvoicePicture(event.target.checked);
+                        if (event.target.checked) setInvoicePicture(null);
+                      }}
+                      disabled={isSaving || Boolean(invoicePicture)}
+                      className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-400"
+                    />
+                    Remove current invoice picture
+                  </label>
+                ) : null}
+              </div>
 
               <div>
                 <label

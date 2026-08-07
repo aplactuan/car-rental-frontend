@@ -206,6 +206,9 @@ function normalizeInvoices(payload) {
         disbursementVoucherUrl: String(
           pick(["disbursement_voucher_url", "disbursementVoucherUrl"]) || "",
         ),
+        invoicePictureUrl: String(
+          pick(["invoice_picture_url", "invoicePictureUrl"]) || "",
+        ),
         createdAt: String(pick(["created_at", "createdAt"]) || ""),
       };
     })
@@ -565,7 +568,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
               Invoices
             </h2>
             <p className="mt-1 text-sm text-zinc-500">
-              Purchase order invoices with payment and disbursement documents.
+              Purchase order invoices with picture, payment, and disbursement documents.
             </p>
           </div>
           {!invoicesError && invoices.length > 0 ? (
@@ -597,6 +600,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
                     <th className="pb-3 pr-6">LDDAP/ADAP</th>
                     <th className="pb-3 pr-6">Note</th>
                     <th className="pb-3 pr-6">Created</th>
+                    <th className="pb-3 pr-6">Picture</th>
                     <th className="pb-3 pr-6">Receipt</th>
                     <th className="pb-3 pr-6">Voucher</th>
                     <th className="pb-3 text-right">Actions</th>
@@ -627,6 +631,12 @@ export default async function PurchaseOrderDetailPage({ params }) {
                         </td>
                         <td className="py-3.5 pr-6 text-zinc-700">
                           {formatDate(invoice.createdAt)}
+                        </td>
+                        <td className="py-3.5 pr-6">
+                          <DocumentLink
+                            href={invoice.invoicePictureUrl}
+                            label="View"
+                          />
                         </td>
                         <td className="py-3.5 pr-6">
                           <DocumentLink
