@@ -1159,7 +1159,7 @@ export default function BillingSection({
                   </span>
                   <FileUploadWithCamera
                     id="payment-proof-image"
-                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                    accept=".jpg,.jpeg,.png,.webp,.heic,.heif,image/jpeg,image/png,image/webp,image/heic,image/heif"
                     onFilesChange={(files) =>
                       setPaymentProofFile(files[0] ?? null)
                     }
