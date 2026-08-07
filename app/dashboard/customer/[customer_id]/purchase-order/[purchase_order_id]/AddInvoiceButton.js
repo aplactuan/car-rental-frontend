@@ -11,7 +11,8 @@ const EMPTY_FORM = {
   status: "unpaid",
 };
 
-const FILE_ACCEPT = "image/jpeg,image/jpg,image/png,image/webp,application/pdf";
+const FILE_ACCEPT =
+  "image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,.heic,.heif,application/pdf";
 const INVOICE_STATUS_OPTIONS = [
   { value: "unpaid", label: "Unpaid" },
   { value: "paid", label: "Paid" },

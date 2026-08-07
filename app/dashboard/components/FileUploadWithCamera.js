@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { convertFilesHeicToJpeg } from "@/app/dashboard/lib/convertHeicToJpeg";
 
 const DEFAULT_INPUT_CLASS =
   "w-full text-sm text-zinc-700 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-800 hover:file:bg-zinc-200 disabled:cursor-not-allowed";
@@ -8,9 +9,19 @@ const DEFAULT_INPUT_CLASS =
 const DEFAULT_CAMERA_BUTTON_CLASS =
   "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50";
 
+const HEIC_ACCEPT_EXTRA =
+  ".heic,.heif,image/heic,image/heif,image/heic-sequence,image/heif-sequence";
+
+function withHeicAccept(accept) {
+  const value = String(accept || "").trim();
+  if (!value) return HEIC_ACCEPT_EXTRA;
+  if (/\.heic\b|image\/heic/i.test(value)) return value;
+  return `${value},${HEIC_ACCEPT_EXTRA}`;
+}
+
 /**
  * File picker plus optional “Take photo” (rear camera on supporting mobile browsers).
- * Camera captures are always images; the main input keeps the full `accept` list.
+ * HEIC/HEIF selections are converted to JPEG before onFilesChange / API upload.
  */
 export default function FileUploadWithCamera({
   id,
@@ -25,6 +36,11 @@ export default function FileUploadWithCamera({
 }) {
   const cameraInputRef = useRef(null);
   const [selectedNames, setSelectedNames] = useState([]);
+  const [isConverting, setIsConverting] = useState(false);
+  const [convertError, setConvertError] = useState("");
+
+  const resolvedAccept = withHeicAccept(accept);
+  const isDisabled = disabled || isConverting;
 
   function emitFiles(files) {
     const list = Array.isArray(files) ? files : [];
@@ -32,8 +48,32 @@ export default function FileUploadWithCamera({
     onFilesChange?.(list);
   }
 
+  async function processAndEmit(incomingFiles, { append = false } = {}) {
+    const incoming = Array.isArray(incomingFiles) ? incomingFiles : [];
+    if (incoming.length === 0) return;
+
+    setConvertError("");
+    setIsConverting(true);
+    try {
+      const converted = await convertFilesHeicToJpeg(incoming);
+      if (append && Array.isArray(existingFiles)) {
+        emitFiles([...existingFiles, ...converted]);
+      } else {
+        emitFiles(converted);
+      }
+    } catch (error) {
+      console.error(error);
+      setConvertError(
+        "Could not convert HEIC image to JPEG. Try another photo or format.",
+      );
+    } finally {
+      setIsConverting(false);
+    }
+  }
+
   function handlePickerChange(event) {
-    emitFiles(Array.from(event.target.files ?? []));
+    const files = Array.from(event.target.files ?? []);
+    void processAndEmit(files);
   }
 
   function handleCameraChange(event) {
@@ -41,12 +81,9 @@ export default function FileUploadWithCamera({
     event.target.value = "";
     if (!file) return;
 
-    if (multiple && Array.isArray(existingFiles)) {
-      emitFiles([...existingFiles, file]);
-      return;
-    }
-
-    emitFiles([file]);
+    void processAndEmit([file], {
+      append: multiple && Array.isArray(existingFiles),
+    });
   }
 
   const namesToShow =
@@ -62,27 +99,27 @@ export default function FileUploadWithCamera({
         <input
           id={id}
           type="file"
-          accept={accept}
+          accept={resolvedAccept}
           multiple={multiple}
           onChange={handlePickerChange}
-          disabled={disabled}
+          disabled={isDisabled}
           className={`min-w-0 flex-1 ${inputClassName}`.trim()}
         />
         <input
           ref={cameraInputRef}
           type="file"
-          accept="image/*"
+          accept={`image/*,${HEIC_ACCEPT_EXTRA}`}
           capture="environment"
           className="sr-only"
           tabIndex={-1}
           aria-hidden
           onChange={handleCameraChange}
-          disabled={disabled}
+          disabled={isDisabled}
         />
         <button
           type="button"
           onClick={() => cameraInputRef.current?.click()}
-          disabled={disabled}
+          disabled={isDisabled}
           className={cameraButtonClassName}
         >
           <svg
@@ -105,10 +142,16 @@ export default function FileUploadWithCamera({
               d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
             />
           </svg>
-          Take photo
+          {isConverting ? "Converting…" : "Take photo"}
         </button>
       </div>
-      {namesToShow.length > 0 ? (
+      {isConverting ? (
+        <p className="mt-2 text-xs text-zinc-500">Converting HEIC to JPEG…</p>
+      ) : null}
+      {convertError ? (
+        <p className="mt-2 text-xs text-red-600">{convertError}</p>
+      ) : null}
+      {!isConverting && namesToShow.length > 0 ? (
         <p className="mt-2 text-xs text-zinc-500">
           {namesToShow.length === 1
             ? namesToShow[0]
