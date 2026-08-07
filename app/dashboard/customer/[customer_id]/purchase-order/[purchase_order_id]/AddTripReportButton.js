@@ -22,13 +22,20 @@ export default function AddTripReportButton({ purchaseOrderId }) {
   const [imageFile, setImageFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [tripStartTouched, setTripStartTouched] = useState(false);
+  const [tripEndTouched, setTripEndTouched] = useState(false);
 
   const openDialog = () => {
+    const today = new Date().toISOString().slice(0, 10);
     setError("");
     setImageFile(null);
+    setTripStartTouched(false);
+    setTripEndTouched(false);
     setForm({
       ...EMPTY_FORM,
-      report_date: new Date().toISOString().slice(0, 10),
+      report_date: today,
+      trip_start: today,
+      trip_end: today,
     });
     setIsDialogOpen(true);
   };
@@ -38,11 +45,32 @@ export default function AddTripReportButton({ purchaseOrderId }) {
     setIsDialogOpen(false);
     setForm(EMPTY_FORM);
     setImageFile(null);
+    setTripStartTouched(false);
+    setTripEndTouched(false);
     setError("");
   };
 
   const updateField = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }));
+  };
+
+  const updateReportDate = (value) => {
+    setForm((current) => ({
+      ...current,
+      report_date: value,
+      trip_start: tripStartTouched ? current.trip_start : value,
+      trip_end: tripEndTouched ? current.trip_end : value,
+    }));
+  };
+
+  const updateTripStart = (value) => {
+    setTripStartTouched(true);
+    updateField("trip_start", value);
+  };
+
+  const updateTripEnd = (value) => {
+    setTripEndTouched(true);
+    updateField("trip_end", value);
   };
 
   const handleSubmit = async (event) => {
@@ -228,9 +256,7 @@ export default function AddTripReportButton({ purchaseOrderId }) {
                   id="reportDate"
                   type="date"
                   value={form.report_date}
-                  onChange={(event) =>
-                    updateField("report_date", event.target.value)
-                  }
+                  onChange={(event) => updateReportDate(event.target.value)}
                   disabled={isLoading}
                   required
                   className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
@@ -249,9 +275,7 @@ export default function AddTripReportButton({ purchaseOrderId }) {
                     id="tripStart"
                     type="date"
                     value={form.trip_start}
-                    onChange={(event) =>
-                      updateField("trip_start", event.target.value)
-                    }
+                    onChange={(event) => updateTripStart(event.target.value)}
                     disabled={isLoading}
                     required
                     className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
@@ -268,9 +292,7 @@ export default function AddTripReportButton({ purchaseOrderId }) {
                     id="tripEnd"
                     type="date"
                     value={form.trip_end}
-                    onChange={(event) =>
-                      updateField("trip_end", event.target.value)
-                    }
+                    onChange={(event) => updateTripEnd(event.target.value)}
                     disabled={isLoading}
                     required
                     min={form.trip_start || undefined}
