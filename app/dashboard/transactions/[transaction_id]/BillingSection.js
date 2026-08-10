@@ -873,21 +873,21 @@ export default function BillingSection({
 
   return (
     <section
-      className={`overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100 ${className}`}
+      className={`min-w-0 overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100 ${className}`}
     >
-      <div className="border-b border-zinc-100 bg-gradient-to-r from-amber-50/90 via-white to-zinc-50 px-5 py-4">
+      <div className="border-b border-zinc-100 bg-gradient-to-r from-amber-50/90 via-white to-zinc-50 px-4 py-4 sm:px-5">
         <h2 className="text-base font-semibold tracking-tight text-zinc-900">Billing</h2>
         <p className="mt-0.5 text-xs text-zinc-500">Payment for this transaction</p>
       </div>
 
       {isLoading && (
-        <div className="px-5 py-6">
+        <div className="px-4 py-6 sm:px-5">
           <p className="text-sm text-zinc-500">Loading billing details...</p>
         </div>
       )}
 
       {!isLoading && error && (
-        <div className="px-5 py-6">
+        <div className="px-4 py-6 sm:px-5">
           <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </p>
@@ -895,8 +895,8 @@ export default function BillingSection({
       )}
 
       {!isLoading && !error && !bill && (
-        <div className="px-5 py-6">
-          <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50/60 px-4 py-8 text-center">
+        <div className="px-4 py-6 sm:px-5">
+          <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50/60 px-3 py-8 text-center sm:px-4">
             <p className="text-sm font-medium text-zinc-700">
               No bill has been created yet
             </p>
@@ -915,11 +915,11 @@ export default function BillingSection({
           {showCreateForm && (
             <form
               onSubmit={handleCreateSubmit}
-              className="mt-4 rounded-2xl border border-zinc-200 bg-white p-5"
+              className="mt-4 min-w-0 rounded-2xl border border-zinc-200 bg-white p-4 sm:p-5"
             >
               <h3 className="text-sm font-semibold text-zinc-900">Create bill</h3>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <label className="block">
+              <div className="mt-4 grid min-w-0 gap-4">
+                <label className="min-w-0">
                   <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                     Amount
                   </span>
@@ -939,7 +939,7 @@ export default function BillingSection({
                       : `Defaulted from ${bookingsForTotal.length} booking${bookingsForTotal.length !== 1 ? "s" : ""}: ${formatCurrency(defaultBillAmount)}`}
                   </p>
                 </label>
-                <label className="block">
+                <label className="min-w-0">
                   <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                     Due date
                   </span>
@@ -968,11 +968,11 @@ export default function BillingSection({
               {formError ? (
                 <p className="mt-3 text-sm text-red-600">{formError}</p>
               ) : null}
-              <div className="mt-4 flex justify-end">
+              <div className="mt-4 flex">
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                   {isSubmitting ? "Saving..." : "Save bill"}
                 </button>
@@ -983,7 +983,7 @@ export default function BillingSection({
       )}
 
       {!isLoading && !error && bill && (
-        <div className="px-5 py-5">
+        <div className="min-w-0 px-4 py-5 sm:px-5">
           <div className="mb-3 flex flex-col gap-2">
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
@@ -1007,13 +1007,13 @@ export default function BillingSection({
             </p>
           </div>
 
-          <div className="mb-4 flex flex-wrap gap-2">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               {canPrintInvoice ? (
                 <a
                   href={`/invoice/${transactionId}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
+                  className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-2 text-center text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 sm:w-auto"
                 >
                   Print Invoice
                 </a>
@@ -1024,7 +1024,7 @@ export default function BillingSection({
                   type="button"
                   onClick={handleEditToggle}
                   disabled={isSubmitting}
-                  className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                   {isEditing ? "Cancel edit" : "Edit bill"}
                 </button>
@@ -1038,7 +1038,7 @@ export default function BillingSection({
                       handleStatusChange("issued", "Issue this bill to the customer?")
                     }
                     disabled={isSubmitting || isEditing}
-                    className="rounded-xl border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="w-full rounded-xl border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                   >
                     Issue
                   </button>
@@ -1051,7 +1051,7 @@ export default function BillingSection({
                       )
                     }
                     disabled={isSubmitting || isEditing}
-                    className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="w-full rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                   >
                     Cancel
                   </button>
@@ -1059,7 +1059,7 @@ export default function BillingSection({
                     type="button"
                     onClick={handleDeleteBill}
                     disabled={isSubmitting || isEditing}
-                    className="rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="w-full rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                   >
                     Delete
                   </button>
@@ -1076,7 +1076,7 @@ export default function BillingSection({
                     )
                   }
                   disabled={isSubmitting}
-                  className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                   Cancel
                 </button>
@@ -1087,7 +1087,7 @@ export default function BillingSection({
                   type="button"
                   onClick={handleDeleteBill}
                   disabled={isSubmitting}
-                  className="rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                   Delete
                 </button>
@@ -1097,15 +1097,15 @@ export default function BillingSection({
           {canRecordPayment ? (
             <form
               onSubmit={handlePaymentSubmit}
-              className="mb-4 rounded-2xl border border-zinc-200 bg-zinc-50/40 p-5"
+              className="mb-4 min-w-0 rounded-2xl border border-zinc-200 bg-zinc-50/40 p-4 sm:p-5"
             >
               <h3 className="text-sm font-semibold text-zinc-900">Record payment</h3>
               <p className="mt-1 text-xs text-zinc-500">
                 Add an installment payment. Bill status updates automatically based on
                 total payments.
               </p>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <label className="block">
+              <div className="mt-4 grid min-w-0 gap-4">
+                <label className="min-w-0">
                   <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                     Amount
                   </span>
@@ -1123,7 +1123,7 @@ export default function BillingSection({
                     Max: {formatCurrency(remainingBalance)}
                   </p>
                 </label>
-                <label className="block">
+                <label className="min-w-0">
                   <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                     Method
                   </span>
@@ -1140,7 +1140,7 @@ export default function BillingSection({
                     ))}
                   </select>
                 </label>
-                <label className="block">
+                <label className="min-w-0">
                   <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                     Reference number
                   </span>
@@ -1153,7 +1153,7 @@ export default function BillingSection({
                     className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                   />
                 </label>
-                <label className="block">
+                <label className="min-w-0">
                   <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                     Proof image
                   </span>
@@ -1165,7 +1165,7 @@ export default function BillingSection({
                     }
                     disabled={isSubmittingPayment || isSubmitting}
                     className="mt-1"
-                    inputClassName="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                    inputClassName="block w-full min-w-0 rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-100"
                   />
                 </label>
               </div>
@@ -1184,11 +1184,11 @@ export default function BillingSection({
               {paymentError ? (
                 <p className="mt-3 text-sm text-red-600">{paymentError}</p>
               ) : null}
-              <div className="mt-4 flex justify-end">
+              <div className="mt-4 flex">
                 <button
                   type="submit"
                   disabled={isSubmittingPayment || isSubmitting || remainingBalance <= 0}
-                  className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                   {isSubmittingPayment ? "Saving payment..." : "Save payment"}
                 </button>
@@ -1214,12 +1214,12 @@ export default function BillingSection({
                       key={payment.id}
                       className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                     >
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold text-zinc-900">
+                      <div className="min-w-0 space-y-1">
+                        <p className="break-words text-sm font-semibold text-zinc-900">
                           {formatCurrency(payment.amount)} •{" "}
                           {String(payment.method || "").replaceAll("_", " ") || "—"}
                         </p>
-                        <p className="text-xs text-zinc-600">
+                        <p className="break-words text-xs text-zinc-600">
                           Ref: {payment.referenceNumber || "—"} • Paid{" "}
                           {formatDateTime(payment.paidAt || payment.createdAt)}
                         </p>
@@ -1255,11 +1255,11 @@ export default function BillingSection({
           {isEditing ? (
             <form
               onSubmit={handleUpdateSubmit}
-              className="rounded-2xl border border-zinc-200 bg-white p-5"
+              className="min-w-0 rounded-2xl border border-zinc-200 bg-white p-4 sm:p-5"
             >
               <h3 className="text-sm font-semibold text-zinc-900">Update draft bill</h3>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <label className="block">
+              <div className="mt-4 grid min-w-0 gap-4">
+                <label className="min-w-0">
                   <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                     Amount
                   </span>
@@ -1274,7 +1274,7 @@ export default function BillingSection({
                     className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                   />
                 </label>
-                <label className="block">
+                <label className="min-w-0">
                   <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                     Due date
                   </span>
@@ -1303,11 +1303,11 @@ export default function BillingSection({
               {formError ? (
                 <p className="mt-3 text-sm text-red-600">{formError}</p>
               ) : null}
-              <div className="mt-4 flex justify-end">
+              <div className="mt-4 flex">
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                   {isSubmitting ? "Saving..." : "Save changes"}
                 </button>

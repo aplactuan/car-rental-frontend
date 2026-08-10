@@ -86,7 +86,7 @@ function TransactionHero({
 
   return (
     <header className="shrink-0 overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-      <div className="relative bg-gradient-to-br from-blue-800 via-teal-700 to-zinc-900 px-6 py-5 text-white sm:px-8">
+      <div className="relative bg-gradient-to-br from-blue-800 via-teal-700 to-zinc-900 px-4 py-5 text-white sm:px-8">
         <div
           className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10 blur-2xl"
           aria-hidden
@@ -96,7 +96,7 @@ function TransactionHero({
           aria-hidden
         />
 
-        <div className="relative flex flex-wrap items-start justify-between gap-4">
+        <div className="relative flex flex-col items-start justify-between gap-4 sm:flex-row">
           <div className="min-w-0">
             <Link
               href={backHref}
@@ -119,7 +119,7 @@ function TransactionHero({
               Back to customer
             </Link>
 
-            <div className="mt-4 flex items-start gap-4">
+            <div className="mt-4 flex items-start gap-3 sm:gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25 backdrop-blur-sm">
                 <svg
                   viewBox="0 0 24 24"
@@ -139,7 +139,7 @@ function TransactionHero({
                 </svg>
               </div>
               <div className="min-w-0">
-                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                <h1 className="break-words text-2xl font-bold tracking-tight sm:text-3xl">
                   {displayName}
                 </h1>
                 {customerName ? (
@@ -159,13 +159,13 @@ function TransactionHero({
             </div>
           </div>
 
-          <div className="relative flex flex-wrap gap-2">
+          <div className="relative flex max-w-full flex-wrap gap-2">
             <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
               {bookingCount} booking{bookingCount !== 1 ? "s" : ""}
             </span>
             {transactionId ? (
               <span
-                className="max-w-[220px] truncate rounded-full bg-white/10 px-3 py-1 font-mono text-xs text-blue-50/90"
+                className="max-w-full truncate rounded-full bg-white/10 px-3 py-1 font-mono text-xs text-blue-50/90 sm:max-w-[220px]"
                 title={transactionId}
               >
                 {transactionId}
@@ -238,7 +238,7 @@ export default async function CustomerTransactionDetailPage({ params }) {
   const bookingCount = bookings.length;
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] min-h-[32rem] flex-col gap-4 pr-6">
+    <div className="flex min-w-0 flex-col gap-4 pr-3 sm:pr-6 lg:h-[calc(100vh-4rem)] lg:min-h-[32rem]">
       <TransactionHero
         customerId={customerId}
         customerName={customerName}

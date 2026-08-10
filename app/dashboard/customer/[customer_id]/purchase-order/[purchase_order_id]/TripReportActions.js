@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import DriverAutocomplete from "./DriverAutocomplete";
 import FileUploadWithCamera from "@/app/dashboard/components/FileUploadWithCamera";
+import ModalShell from "@/app/dashboard/components/ModalShell";
 
 function toDateInputValue(value) {
   if (!value) return "";
@@ -60,9 +61,9 @@ function formatDate(value) {
 
 function DetailRow({ label, children }) {
   return (
-    <div className="grid grid-cols-[7.5rem_1fr] gap-x-4 gap-y-1 py-2.5 sm:grid-cols-[9rem_1fr]">
+    <div className="grid gap-1 py-2.5 min-[400px]:grid-cols-[7.5rem_1fr] min-[400px]:gap-x-4 sm:grid-cols-[9rem_1fr]">
       <dt className="text-sm text-zinc-500">{label}</dt>
-      <dd className="text-sm font-medium text-zinc-900">{children}</dd>
+      <dd className="min-w-0 break-words text-sm font-medium text-zinc-900">{children}</dd>
     </div>
   );
 }
@@ -324,23 +325,12 @@ export default function TripReportActions({
       ) : null}
 
       {isViewOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 px-4">
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="text-lg font-semibold text-zinc-900">
-                Trip report details
-              </h2>
-              <button
-                type="button"
-                onClick={closeView}
-                aria-label="Close trip report details dialog"
-                className="rounded-md p-2 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-700"
-              >
-                x
-              </button>
-            </div>
-
-            <dl className="mt-4 divide-y divide-zinc-100">
+        <ModalShell
+          title="Trip report details"
+          onClose={closeView}
+          closeLabel="Close trip report details dialog"
+        >
+            <dl className="divide-y divide-zinc-100">
               <DetailRow label="Trip report no">
                 {tripReport.tripReportNo || "—"}
               </DetailRow>
@@ -412,34 +402,18 @@ export default function TripReportActions({
                 Close
               </button>
             </div>
-          </div>
-        </div>
+        </ModalShell>
       ) : null}
 
       {isEditOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 px-4">
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold text-zinc-900">
-                  Edit trip report
-                </h2>
-                <p className="mt-1 text-sm text-zinc-500">
-                  Update trip details for this purchase order.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={closeEdit}
-                disabled={isSaving}
-                aria-label="Close edit trip report dialog"
-                className="rounded-md p-2 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                x
-              </button>
-            </div>
-
-            <form onSubmit={handleSave} className="mt-5 space-y-4">
+        <ModalShell
+          title="Edit trip report"
+          description="Update trip details for this purchase order."
+          onClose={closeEdit}
+          closeDisabled={isSaving}
+          closeLabel="Close edit trip report dialog"
+        >
+            <form onSubmit={handleSave} className="space-y-4">
               <div>
                 <label
                   htmlFor={`edit-trip-report-no-${tripReport.id}`}
@@ -482,7 +456,7 @@ export default function TripReportActions({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label
                     htmlFor={`edit-trip-start-${tripReport.id}`}
@@ -613,7 +587,7 @@ export default function TripReportActions({
 
               {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-              <div className="mt-5 flex justify-end gap-3">
+              <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={closeEdit}
@@ -631,8 +605,7 @@ export default function TripReportActions({
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+        </ModalShell>
       ) : null}
     </div>
   );

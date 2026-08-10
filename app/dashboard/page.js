@@ -53,7 +53,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="w-full pr-8">
+    <div className="w-full min-w-0 pr-0 sm:pr-8">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
@@ -101,7 +101,7 @@ export default async function DashboardPage() {
 
         <div className="mt-4 grid gap-4 lg:grid-cols-3">
           <div className="rounded-xl border border-zinc-200 bg-white shadow-sm lg:col-span-2">
-            <div className="border-b border-zinc-100 px-6 py-4">
+            <div className="border-b border-zinc-100 px-4 py-4 sm:px-6">
               <div className="text-sm font-semibold text-zinc-900">
                 Booking volume
               </div>
@@ -109,7 +109,7 @@ export default async function DashboardPage() {
                 Dummy last 7 days
               </div>
             </div>
-            <div className="flex h-48 items-end gap-2 px-6 pb-6 pt-4">
+            <div className="flex h-48 items-end gap-1.5 px-4 pb-6 pt-4 sm:gap-2 sm:px-6">
               {dummyAnalytics.trend.map((bar) => (
                 <div
                   key={bar.label}
@@ -131,7 +131,7 @@ export default async function DashboardPage() {
           </div>
 
           <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-            <div className="border-b border-zinc-100 px-6 py-4">
+            <div className="border-b border-zinc-100 px-4 py-4 sm:px-6">
               <div className="text-sm font-semibold text-zinc-900">
                 Recent activity
               </div>
@@ -139,7 +139,7 @@ export default async function DashboardPage() {
                 Sample events
               </div>
             </div>
-            <ul className="divide-y divide-zinc-100 px-6 py-2">
+            <ul className="divide-y divide-zinc-100 px-4 py-2 sm:px-6">
               {dummyAnalytics.recent.map((item) => (
                 <li
                   key={item.title}
@@ -154,7 +154,6 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      
     </div>
   );
 }

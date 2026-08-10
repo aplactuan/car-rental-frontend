@@ -466,40 +466,40 @@ export default function BillingReportPage() {
   }, [fetchBills]);
 
   return (
-    <div className="w-full pr-8">
+    <div className="min-w-0 w-full">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Billing report</h1>
-          <p className="mt-2 text-sm text-zinc-500">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Billing report</h1>
+          <p className="mt-2 break-words text-sm text-zinc-500">
             Paginated bills (all statuses). Summary cards show unpaid vs paid totals only.
           </p>
         </div>
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-zinc-200 bg-white p-5 text-left shadow-sm">
+        <div className="min-w-0 rounded-xl border border-zinc-200 bg-white p-4 text-left shadow-sm sm:p-5">
           <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
             Unpaid billing
           </div>
-          <div className="mt-2 text-2xl font-bold text-zinc-900">
+          <div className="mt-2 break-words text-xl font-bold text-zinc-900 sm:text-2xl">
             {amountsLoading ? "…" : formatCurrency(unpaidAmountTotal)}
           </div>
           <p className="mt-1 text-xs text-zinc-500">
             Outstanding balance for issued and partially paid bills.
           </p>
         </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-5 text-left shadow-sm">
+        <div className="min-w-0 rounded-xl border border-zinc-200 bg-white p-4 text-left shadow-sm sm:p-5">
           <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
             Paid billing
           </div>
-          <div className="mt-2 text-2xl font-bold text-zinc-900">
+          <div className="mt-2 break-words text-xl font-bold text-zinc-900 sm:text-2xl">
             {amountsLoading ? "…" : formatCurrency(paidAmountTotal)}
           </div>
           <p className="mt-1 text-xs text-zinc-500">Sum of amounts for bills marked as paid.</p>
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+      <div className="mt-6 min-w-0 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
             <label className={labelClass} htmlFor="billing-customer">
@@ -527,8 +527,8 @@ export default function BillingReportPage() {
             <label className={labelClass} htmlFor="billing-invoice-search">
               Search by invoice number
             </label>
-            <p className="mt-0.5 text-xs text-zinc-500">
-              Partial match via <code className="rounded bg-zinc-100 px-1">filter[invoice_number]</code>{" "}
+            <p className="mt-0.5 break-words text-xs text-zinc-500">
+              Partial match via <code className="break-all rounded bg-zinc-100 px-1">filter[invoice_number]</code>{" "}
               (e.g. <span className="font-mono">260500123</span> or{" "}
               <span className="font-mono">INV-260500123</span>).
             </p>
@@ -545,7 +545,7 @@ export default function BillingReportPage() {
               <div className="flex shrink-0 gap-2">
                 <button
                   type="submit"
-                  className="rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800"
+                  className="min-h-11 flex-1 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800"
                 >
                   Search
                 </button>
@@ -553,7 +553,7 @@ export default function BillingReportPage() {
                   type="button"
                   disabled={!invoiceSearch && !invoiceSearchInput.trim()}
                   onClick={clearInvoiceSearch}
-                  className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="min-h-11 flex-1 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Clear
                 </button>
@@ -561,17 +561,17 @@ export default function BillingReportPage() {
             </div>
           </form>
         </div>
-        <p className="mt-3 text-xs text-zinc-500">
-          Bills load from <code className="rounded bg-zinc-100 px-1">GET /api/v1/bills</code> or{" "}
-          <code className="rounded bg-zinc-100 px-1">GET /api/v1/customers/:customer_id/bills</code>{" "}
+        <p className="mt-3 break-words text-xs text-zinc-500">
+          Bills load from <code className="break-all rounded bg-zinc-100 px-1">GET /api/v1/bills</code> or{" "}
+          <code className="break-all rounded bg-zinc-100 px-1">GET /api/v1/customers/:customer_id/bills</code>{" "}
           when a customer is selected.
         </p>
       </div>
 
-      <div className="mt-6 rounded-xl border border-zinc-200 bg-white shadow-sm">
-        <div className="border-b border-zinc-100 px-6 py-4">
+      <div className="mt-6 min-w-0 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+        <div className="border-b border-zinc-100 px-4 py-4 sm:px-6">
           <div className="text-sm font-semibold text-zinc-900">All bills</div>
-          <div className="mt-1 text-xs text-zinc-500">
+          <div className="mt-1 break-words text-xs text-zinc-500">
             All statuses (draft, issued, partially paid, paid, cancelled). Sorted by issue date (newest first).{" "}
             {billsLoading
               ? "Loading…"
@@ -586,11 +586,19 @@ export default function BillingReportPage() {
         </div>
 
         {billsError && (
-          <div className="px-6 py-3 text-sm text-red-600">{billsError}</div>
+          <div className="break-words px-4 py-3 text-sm text-red-600 sm:px-6">{billsError}</div>
         )}
 
-        <div className="overflow-x-auto px-2 pb-2">
-          <table className="min-w-full text-left text-sm">
+        <p className="border-b border-zinc-100 bg-zinc-50 px-4 py-2 text-xs text-zinc-500 md:hidden">
+          Scroll horizontally to view the full 10-column report.
+        </p>
+        <div
+          className="max-w-full overflow-x-auto overscroll-x-contain px-2 pb-2"
+          role="region"
+          aria-label="Billing report table"
+          tabIndex={0}
+        >
+          <table className="w-full min-w-[1180px] text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-100 text-xs uppercase tracking-wide text-zinc-500">
                 <th className="px-4 py-3 font-medium">Invoice number</th>
@@ -687,27 +695,27 @@ export default function BillingReportPage() {
         </div>
 
         {!billsLoading && (
-          <div className="flex flex-col items-stretch justify-between gap-3 border-t border-zinc-100 px-6 py-4 sm:flex-row sm:items-center">
-            <p className="text-xs text-zinc-500">
+          <div className="flex flex-col items-stretch justify-between gap-3 border-t border-zinc-100 px-4 py-4 sm:flex-row sm:items-center sm:px-6">
+            <p className="break-words text-xs text-zinc-500">
               {formatBillRangeLabel(page, bills.length, pagination.total)}
             </p>
-            <div className="flex items-center justify-end gap-2">
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:flex sm:justify-end">
               <button
                 type="button"
                 disabled={page <= 1 || billsLoading}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-11 rounded-md border border-zinc-300 bg-white px-2 py-2 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3"
               >
                 Previous
               </button>
-              <span className="text-xs text-zinc-600">
+              <span className="whitespace-nowrap text-center text-xs text-zinc-600">
                 Page {page} of {pagination.lastPage}
               </span>
               <button
                 type="button"
                 disabled={page >= pagination.lastPage || billsLoading}
                 onClick={() => setPage((p) => p + 1)}
-                className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-11 rounded-md border border-zinc-300 bg-white px-2 py-2 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3"
               >
                 Next
               </button>

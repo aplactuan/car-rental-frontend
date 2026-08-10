@@ -87,7 +87,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="w-full pr-8">
+    <div className="w-full min-w-0 pr-0 sm:pr-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Account</h1>
         <p className="mt-2 text-sm text-zinc-500">
@@ -96,7 +96,7 @@ export default function AccountPage() {
       </div>
 
       <section className="mt-8 max-w-lg">
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
           <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
             Change password
           </h2>
@@ -216,7 +216,7 @@ export default function AccountPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="inline-flex items-center justify-center rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex w-full items-center justify-center rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
               {isLoading ? "Updating..." : "Update password"}
             </button>

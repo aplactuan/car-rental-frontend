@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import ModalShell from "@/app/dashboard/components/ModalShell";
 
 export default function AddCustomerTransactionButton({ customerId }) {
   const router = useRouter();
@@ -113,31 +114,14 @@ export default function AddCustomerTransactionButton({ customerId }) {
       </button>
 
       {isDialogOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold text-zinc-900">
-                  Add transaction
-                </h2>
-                <p className="mt-1 text-sm text-zinc-500">
-                  Enter a name and optional PO number for this customer
-                  transaction.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={closeDialog}
-                disabled={isLoading}
-                aria-label="Close add transaction dialog"
-                className="rounded-md p-2 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                x
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+        <ModalShell
+          title="Add transaction"
+          description="Enter a name and optional PO number for this customer transaction."
+          onClose={closeDialog}
+          closeDisabled={isLoading}
+          closeLabel="Close add transaction dialog"
+        >
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label
                   htmlFor="transactionName"
@@ -181,7 +165,7 @@ export default function AddCustomerTransactionButton({ customerId }) {
 
               {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-              <div className="mt-5 flex justify-end gap-3">
+              <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={closeDialog}
@@ -199,8 +183,7 @@ export default function AddCustomerTransactionButton({ customerId }) {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+        </ModalShell>
       ) : null}
     </div>
   );

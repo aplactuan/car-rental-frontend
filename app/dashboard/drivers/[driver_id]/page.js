@@ -219,7 +219,7 @@ function DriverDetailSection({ driver, fullName }) {
 
   return (
     <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-      <div className="relative bg-gradient-to-br from-violet-900 via-indigo-800 to-teal-700 px-6 pb-8 pt-6 text-white sm:px-8">
+      <div className="relative bg-gradient-to-br from-violet-900 via-indigo-800 to-teal-700 px-4 pb-6 pt-5 text-white sm:px-8 sm:pb-8 sm:pt-6">
         <div
           className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 blur-2xl"
           aria-hidden
@@ -232,12 +232,12 @@ function DriverDetailSection({ driver, fullName }) {
         <BackLink href="/dashboard/drivers" label="Back to driver list" />
 
         <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex items-start gap-4">
+          <div className="flex min-w-0 items-start gap-3 sm:gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-lg font-bold tracking-tight text-white ring-1 ring-white/25 backdrop-blur-sm">
               {initials}
             </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <div className="min-w-0">
+              <h1 className="break-words text-2xl font-bold tracking-tight sm:text-3xl">
                 {fullName || "Unknown driver"}
               </h1>
               <p className="mt-1 text-sm text-violet-100">
@@ -261,7 +261,7 @@ function DriverDetailSection({ driver, fullName }) {
         </div>
       </div>
 
-      <div className="px-6 py-6 sm:px-8">
+      <div className="px-4 py-5 sm:px-8 sm:py-6">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
           Contact & license
         </h2>
@@ -340,7 +340,7 @@ function DriverDetailSection({ driver, fullName }) {
 function BookingCard({ booking }) {
   return (
     <article className="group rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:border-violet-200 hover:shadow-md">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
         <div className="min-w-0">
           <h3 className="truncate font-semibold text-zinc-900">
             {booking.transaction_name}
@@ -354,7 +354,7 @@ function BookingCard({ booking }) {
         </span>
       </div>
 
-      <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
+      <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
         <div>
           <dt className="text-xs font-medium uppercase tracking-wide text-zinc-400">
             Start
@@ -387,7 +387,7 @@ function UpcomingBookingsSection({ bookings, error }) {
 
   return (
     <section className="mt-6 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-white px-6 py-5 sm:px-8">
+      <div className="flex flex-col items-start gap-3 border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-white px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
             Upcoming bookings
@@ -401,7 +401,7 @@ function UpcomingBookingsSection({ bookings, error }) {
         </span>
       </div>
 
-      <div className="px-6 py-6 sm:px-8">
+      <div className="px-4 py-5 sm:px-8 sm:py-6">
         {error ? (
           <p className="text-sm text-red-600">{error}</p>
         ) : count === 0 ? (
@@ -555,7 +555,7 @@ export default async function DriverDetailPage({ params }) {
     .trim();
 
   return (
-    <div className="w-full pr-8">
+    <div className="w-full min-w-0 pr-0 sm:pr-8">
       {driverError ? (
         <div className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
           <BackLink href="/dashboard/drivers" label="Back to driver list" />

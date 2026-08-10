@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
@@ -24,6 +24,10 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [role, setRole] = useState("admin");
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const drawerRef = useRef(null);
+  const menuButtonRef = useRef(null);
+  const closeButtonRef = useRef(null);
 
   useEffect(() => {
     let isCurrent = true;
@@ -54,6 +58,41 @@ export default function Sidebar() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isMobileOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    const menuButton = menuButtonRef.current;
+    document.body.style.overflow = "hidden";
+    closeButtonRef.current?.focus();
+
+    function closeOnEscape(event) {
+      if (event.key === "Escape") setIsMobileOpen(false);
+      if (event.key !== "Tab") return;
+
+      const focusable = drawerRef.current?.querySelectorAll(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+      menuButton?.focus();
+    };
+  }, [isMobileOpen]);
+
   const visibleNavItems = useMemo(() => {
     if (role === "driver") {
       return navItems.filter((item) => item.href === "/dashboard/bookings");
@@ -80,10 +119,10 @@ export default function Sidebar() {
     }
   }
 
-  return (
-    <aside className="relative z-0 flex w-72 shrink-0 flex-col bg-[#0B0F14]">
+  const navigation = (
+    <>
       <div className="px-6 pb-5 pt-6">
-        <Link href="/dashboard" className="block">
+        <Link href="/dashboard" className="block" onClick={() => setIsMobileOpen(false)}>
           <div className="text-lg font-semibold tracking-tight text-teal-400">
             Rambo App
           </div>
@@ -95,14 +134,15 @@ export default function Sidebar() {
           ) : null}
         </Link>
       </div>
-      <nav className="flex-1 px-4">
+      <nav className="flex-1 overflow-y-auto px-4">
         {visibleNavItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+              onClick={() => setIsMobileOpen(false)}
+              className={`mb-2 flex min-h-11 items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
                 isActive
                   ? "bg-[#0F766E] text-white"
                   : "text-zinc-300 hover:bg-white/5 hover:text-white"
@@ -133,7 +173,8 @@ export default function Sidebar() {
         </div>
         <Link
           href={accountNavItem.href}
-          className={`mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+          onClick={() => setIsMobileOpen(false)}
+          className={`mb-2 flex min-h-11 items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
             pathname === accountNavItem.href
               ? "bg-[#0F766E] text-white"
               : "text-zinc-300 hover:bg-white/5 hover:text-white"
@@ -158,9 +199,10 @@ export default function Sidebar() {
       </div>
       <div className="mt-auto px-4 pb-5">
         <button
+          ref={menuButtonRef}
           type="button"
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white"
+          className="flex min-h-11 w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white"
         >
           <svg
             className="h-5 w-5 shrink-0"
@@ -180,6 +222,69 @@ export default function Sidebar() {
         </button>
         <div className="mt-6 px-2 text-xs text-zinc-500">© 2026 Rambo App</div>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-zinc-800 bg-[#0B0F14] px-4 text-white lg:hidden">
+        <Link href="/dashboard" className="min-w-0" onClick={() => setIsMobileOpen(false)}>
+          <span className="block truncate text-sm font-semibold text-teal-400">Rambo App</span>
+          <span className="block text-[10px] text-zinc-400">Management System</span>
+        </Link>
+        <button
+          type="button"
+          onClick={() => setIsMobileOpen(true)}
+          className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-zinc-700 text-zinc-200 transition hover:bg-white/10"
+          aria-label="Open navigation"
+          aria-controls="mobile-dashboard-navigation"
+          aria-expanded={isMobileOpen}
+        >
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </header>
+
+      <aside className="relative z-0 hidden w-72 shrink-0 flex-col bg-[#0B0F14] lg:flex">
+        {navigation}
+      </aside>
+
+      {isMobileOpen ? (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/55"
+            onClick={() => setIsMobileOpen(false)}
+            aria-label="Close navigation"
+          />
+          <aside
+            ref={drawerRef}
+            id="mobile-dashboard-navigation"
+            className="relative flex h-full w-[min(18rem,88vw)] flex-col bg-[#0B0F14] shadow-2xl"
+            aria-label="Dashboard navigation"
+          >
+            <button
+              ref={closeButtonRef}
+              type="button"
+              onClick={() => setIsMobileOpen(false)}
+              className="absolute right-3 top-3 z-10 inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-300 hover:bg-white/10 hover:text-white"
+              aria-label="Close navigation"
+            >
+              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
+                <path d="M6 6l12 12M18 6 6 18" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+            {navigation}
+          </aside>
+        </div>
+      ) : null}
+    </>
   );
 }

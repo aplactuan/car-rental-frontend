@@ -4,8 +4,8 @@ export default function DashboardLayout({ children }) {
   return (
     <div className="relative flex min-h-screen bg-[#F4F6F8] text-zinc-900">
       <Sidebar />
-      <main className="relative z-10 min-w-0 flex-1 overflow-auto py-8 pl-8 pr-0">
-        {children}
+      <main className="relative z-10 min-w-0 flex-1 overflow-x-hidden px-4 pb-6 pt-20 sm:px-6 sm:pb-8 lg:px-8 lg:py-8">
+        <div className="mx-auto w-full min-w-0 max-w-[1600px] [&>div]:!pr-0">{children}</div>
       </main>
     </div>
   );

@@ -45,7 +45,7 @@ export default function Home() {
 
       router.push("/dashboard");
       router.refresh();
-    } catch (err) {
+    } catch {
       setError("Network error. Is the backend running?");
     } finally {
       setIsLoading(false);
@@ -59,24 +59,24 @@ export default function Home() {
         aria-hidden
       />
 
-      <main className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-10 sm:px-8">
+      <main className="relative z-10 flex min-h-screen flex-col items-center justify-center px-3 py-6 sm:px-8 sm:py-10">
         <div className="w-full max-w-md">
-          <div className="mb-8 text-center">
+          <div className="mb-5 text-center sm:mb-8">
             <div className="text-lg font-semibold tracking-tight text-teal-400">
               Rambo App
             </div>
             <div className="mt-1 text-xs text-zinc-500">Management System</div>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-zinc-900/40 p-6 shadow-xl shadow-black/20 backdrop-blur-sm sm:p-8">
-            <h1 className="text-3xl font-bold tracking-tight text-white">
+          <div className="rounded-xl border border-white/10 bg-zinc-900/40 p-4 shadow-xl shadow-black/20 backdrop-blur-sm sm:p-8">
+            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
               Sign in
             </h1>
             <p className="mt-2 text-sm text-zinc-400">
               Use your credentials to open the dashboard.
             </p>
 
-            <form onSubmit={onSubmit} className="mt-8 space-y-5">
+            <form onSubmit={onSubmit} className="mt-6 space-y-4 sm:mt-8 sm:space-y-5">
               <div>
                 <label
                   htmlFor="email"
@@ -175,7 +175,7 @@ export default function Home() {
             </form>
           </div>
 
-          <p className="mt-8 text-center text-xs text-zinc-600">
+          <p className="mt-5 text-center text-xs text-zinc-600 sm:mt-8">
             © 2026 Rambo App
           </p>
         </div>
