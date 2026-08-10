@@ -906,7 +906,7 @@ export default function BillingSection({
             <button
               type="button"
               onClick={handleCreateToggle}
-              className="mt-4 rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800"
+              className="mt-4 rounded-xl bg-red-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500"
             >
               {showCreateForm ? "Close form" : "Create bill"}
             </button>
@@ -972,7 +972,7 @@ export default function BillingSection({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                  className="w-full rounded-xl bg-red-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                   {isSubmitting ? "Saving..." : "Save bill"}
                 </button>
@@ -1188,7 +1188,7 @@ export default function BillingSection({
                 <button
                   type="submit"
                   disabled={isSubmittingPayment || isSubmitting || remainingBalance <= 0}
-                  className="w-full rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                  className="w-full rounded-xl bg-red-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                   {isSubmittingPayment ? "Saving payment..." : "Save payment"}
                 </button>
@@ -1307,7 +1307,7 @@ export default function BillingSection({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                  className="w-full rounded-xl bg-red-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
                   {isSubmitting ? "Saving..." : "Save changes"}
                 </button>

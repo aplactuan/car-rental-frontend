@@ -226,7 +226,7 @@ function DetailRow({ label, value, href }) {
       <dt className="text-sm font-medium text-zinc-500">{label}</dt>
       <dd className="min-w-0 break-words text-left text-sm font-semibold text-zinc-900 sm:text-right">
         {href && value ? (
-          <Link href={href} className="text-teal-700 transition hover:text-teal-800">
+          <Link href={href} className="text-red-700 transition hover:text-red-800">
             {content}
           </Link>
         ) : (
@@ -326,7 +326,7 @@ export default async function BookingDetailPage({ params, searchParams }) {
   return (
       <div className="w-full min-w-0 pr-0 sm:pr-8">
         <header className="overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-          <div className="relative bg-gradient-to-br from-teal-700 via-cyan-700 to-blue-900 px-4 py-5 text-white sm:px-8 sm:py-6">
+          <div className="relative bg-gradient-to-br from-red-800 via-red-900 to-zinc-900 px-4 py-5 text-white sm:px-8 sm:py-6">
             <div
               className="pointer-events-none absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/15 blur-2xl"
               aria-hidden
@@ -340,7 +340,7 @@ export default async function BookingDetailPage({ params, searchParams }) {
               <div className="min-w-0">
                 <Link
                   href="/dashboard/bookings"
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-cyan-100 transition hover:text-white"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-red-100/90 transition hover:text-white"
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -357,7 +357,7 @@ export default async function BookingDetailPage({ params, searchParams }) {
                 <h1 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">
                   Booking details
                 </h1>
-                <p className="mt-1 text-sm text-cyan-50/90">
+                <p className="mt-1 text-sm text-red-50/90">
                   {booking?.transactionName || "Single booking record"}
                 </p>
               </div>

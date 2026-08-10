@@ -264,17 +264,29 @@ export default async function CustomerDetailPage({ params }) {
   const pendingPurchaseOrders = purchaseOrders.filter(
     (po) => po.status !== "ok",
   ).length;
+  const okPurchaseOrders = purchaseOrders.filter((po) => po.status === "ok").length;
+  const poOkRate =
+    !purchaseOrdersError && purchaseOrders.length > 0
+      ? Math.round((okPurchaseOrders / purchaseOrders.length) * 100)
+      : null;
+
+  // Placeholder until customer-level invoice / trip-report rollups are wired.
+  const outstandingPlaceholder = "PHP 128,400";
+  const tripReportsPlaceholder = {
+    total: 9,
+    unattached: 2,
+  };
 
   return (
     <div className="min-w-0 w-full space-y-6 lg:pr-8">
       <header className="overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-        <div className="relative bg-gradient-to-br from-teal-800 via-emerald-700 to-zinc-900 px-4 py-6 text-white sm:px-8">
+        <div className="relative bg-gradient-to-br from-red-800 via-red-900 to-zinc-900 px-4 py-6 text-white sm:px-8">
           <div
             className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -bottom-16 left-1/3 h-32 w-32 rounded-full bg-emerald-300/20 blur-2xl"
+            className="pointer-events-none absolute -bottom-16 left-1/3 h-32 w-32 rounded-full bg-red-500/20 blur-2xl"
             aria-hidden
           />
 
@@ -282,7 +294,7 @@ export default async function CustomerDetailPage({ params }) {
             <div className="min-w-0">
               <Link
                 href="/dashboard/customer"
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-100/90 transition hover:text-white"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-red-100/90 transition hover:text-white"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -325,7 +337,7 @@ export default async function CustomerDetailPage({ params }) {
                   </svg>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-100/80">
+                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-red-100/80">
                     Customer
                   </p>
                   <h1 className="mt-1 truncate text-2xl font-bold tracking-tight sm:text-3xl">
@@ -333,14 +345,14 @@ export default async function CustomerDetailPage({ params }) {
                   </h1>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     {customer?.type ? (
-                      <span className="inline-flex items-center rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium text-emerald-50 ring-1 ring-white/20">
+                      <span className="inline-flex items-center rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium text-red-50 ring-1 ring-white/20">
                         {customer.type}
                       </span>
                     ) : null}
                     {customerId ? (
-                      <p className="truncate text-xs text-emerald-100/80">
+                      <p className="truncate text-xs text-red-100/80">
                         ID{" "}
-                        <span className="font-medium text-emerald-50">
+                        <span className="font-medium text-red-50">
                           {customerId}
                         </span>
                       </p>
@@ -367,33 +379,53 @@ export default async function CustomerDetailPage({ params }) {
 
         {!error && customer ? (
           <div className="grid gap-px bg-zinc-200 sm:grid-cols-2 lg:grid-cols-4">
-            <SummaryCell label="Contact person">
-              <p className="truncate text-lg font-semibold text-zinc-900">
-                {customer.contact_person || "—"}
-              </p>
-            </SummaryCell>
-            <SummaryCell label="Contact mobile">
-              <p className="truncate text-lg font-semibold text-zinc-900">
-                {customer.contact_mobile_number || "—"}
-              </p>
-            </SummaryCell>
-            <SummaryCell label="Programs">
-              <p className="text-2xl font-semibold tracking-tight text-zinc-900">
-                {programsError ? "—" : programs.length}
-              </p>
-            </SummaryCell>
             <SummaryCell label="Purchase orders">
               <p className="text-2xl font-semibold tracking-tight text-zinc-900">
                 {purchaseOrdersError ? "—" : purchaseOrders.length}
               </p>
-              {!purchaseOrdersError && purchaseOrders.length > 0 ? (
+              {!purchaseOrdersError ? (
                 <p className="mt-1 text-xs text-zinc-500">
-                  {formatPhp(purchaseOrderTotal)}
                   {pendingPurchaseOrders > 0
-                    ? ` · ${pendingPurchaseOrders} pending`
-                    : ""}
+                    ? `${pendingPurchaseOrders} pending`
+                    : purchaseOrders.length > 0
+                      ? "All OK"
+                      : "No POs yet"}
+                  {poOkRate != null ? ` · ${poOkRate}% OK` : ""}
                 </p>
               ) : null}
+            </SummaryCell>
+            <SummaryCell label="PO value">
+              <p className="text-2xl font-semibold tracking-tight text-zinc-900">
+                {purchaseOrdersError
+                  ? "—"
+                  : purchaseOrders.length > 0
+                    ? formatPhp(purchaseOrderTotal)
+                    : "PHP 0"}
+              </p>
+              {!purchaseOrdersError && programs.length > 0 ? (
+                <p className="mt-1 text-xs text-zinc-500">
+                  Across {programs.length} program
+                  {programs.length === 1 ? "" : "s"}
+                </p>
+              ) : (
+                <p className="mt-1 text-xs text-zinc-500">Sum of PO amounts</p>
+              )}
+            </SummaryCell>
+            <SummaryCell label="Outstanding">
+              <p className="text-2xl font-semibold tracking-tight text-zinc-900">
+                {outstandingPlaceholder}
+              </p>
+              <p className="mt-1 text-xs text-zinc-400">
+                Placeholder · unpaid invoices
+              </p>
+            </SummaryCell>
+            <SummaryCell label="Trip reports">
+              <p className="text-2xl font-semibold tracking-tight text-zinc-900">
+                {tripReportsPlaceholder.total}
+              </p>
+              <p className="mt-1 text-xs text-zinc-400">
+                Placeholder · {tripReportsPlaceholder.unattached} unattached
+              </p>
             </SummaryCell>
           </div>
         ) : null}
@@ -412,12 +444,21 @@ export default async function CustomerDetailPage({ params }) {
 
           <div className="grid gap-px bg-zinc-100 sm:grid-cols-2 lg:grid-cols-3">
             {[
+              { label: "Contact person", value: customer.contact_person },
+              {
+                label: "Contact mobile",
+                value: customer.contact_mobile_number,
+              },
+              { label: "Contact email", value: customer.contact_email },
               { label: "Email", value: customer.email },
               { label: "Phone number", value: customer.phone_number },
-              { label: "Contact email", value: customer.contact_email },
               { label: "Address", value: customer.address },
               { label: "Created at", value: formatDate(customer.created_at) },
               { label: "Updated at", value: formatDate(customer.updated_at) },
+              {
+                label: "Programs",
+                value: programsError ? "—" : String(programs.length),
+              },
             ].map((item) => (
               <div key={item.label} className="min-w-0 bg-white px-4 py-5 sm:px-6">
                 <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">

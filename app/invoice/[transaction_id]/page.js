@@ -170,7 +170,7 @@ export default function InvoicePrintPage() {
           type="button"
           onClick={() => window.print()}
           disabled={isLoading || !!error || !invoice}
-          className="w-full rounded-lg bg-zinc-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 min-[360px]:w-auto"
+          className="w-full rounded-lg bg-red-400 px-5 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50 min-[360px]:w-auto"
         >
           Print / Save PDF
         </button>

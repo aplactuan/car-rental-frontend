@@ -306,7 +306,7 @@ export default function TripReportActions({
           onClick={openEdit}
           disabled={busy || !purchaseOrderId || hasInvoice}
           title={lockedTitle}
-          className="text-xs font-medium text-teal-700 transition hover:text-teal-800 disabled:cursor-not-allowed disabled:opacity-40"
+          className="text-xs font-medium text-red-700 transition hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Edit
         </button>
@@ -369,7 +369,7 @@ export default function TripReportActions({
                     href={tripReport.tripReportImageUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 font-medium text-teal-700 transition hover:text-teal-800"
+                    className="inline-flex items-center gap-1 font-medium text-red-700 transition hover:text-red-800"
                   >
                     View file
                     <svg
@@ -571,7 +571,7 @@ export default function TripReportActions({
                       href={tripReport.tripReportImageUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-medium text-teal-700 hover:text-teal-800"
+                      className="font-medium text-red-700 hover:text-red-800"
                     >
                       View file
                     </a>
@@ -599,7 +599,7 @@ export default function TripReportActions({
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSaving ? "Saving..." : "Save changes"}
                 </button>

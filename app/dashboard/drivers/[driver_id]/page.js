@@ -159,7 +159,7 @@ const LICENSE_TONE_CLASSES = {
   neutral: "bg-white/15 text-white ring-white/25",
   success: "bg-emerald-500/25 text-emerald-50 ring-emerald-300/40",
   warning: "bg-amber-500/25 text-amber-50 ring-amber-300/40",
-  danger: "bg-red-500/30 text-red-50 ring-red-300/40",
+  danger: "bg-red-400/30 text-red-50 ring-red-300/40",
 };
 
 function BackLink({ href, label }) {
@@ -219,13 +219,13 @@ function DriverDetailSection({ driver, fullName }) {
 
   return (
     <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-      <div className="relative bg-gradient-to-br from-violet-900 via-indigo-800 to-teal-700 px-4 pb-6 pt-5 text-white sm:px-8 sm:pb-8 sm:pt-6">
+      <div className="relative bg-gradient-to-br from-red-800 via-red-900 to-zinc-900 px-4 pb-6 pt-5 text-white sm:px-8 sm:pb-8 sm:pt-6">
         <div
           className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 blur-2xl"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -bottom-12 left-1/3 h-32 w-32 rounded-full bg-teal-400/20 blur-2xl"
+          className="pointer-events-none absolute -bottom-12 left-1/3 h-32 w-32 rounded-full bg-red-500/20 blur-2xl"
           aria-hidden
         />
 
@@ -240,7 +240,7 @@ function DriverDetailSection({ driver, fullName }) {
               <h1 className="break-words text-2xl font-bold tracking-tight sm:text-3xl">
                 {fullName || "Unknown driver"}
               </h1>
-              <p className="mt-1 text-sm text-violet-100">
+              <p className="mt-1 text-sm text-red-100/90">
                 {phone || "No phone on file"}
               </p>
             </div>

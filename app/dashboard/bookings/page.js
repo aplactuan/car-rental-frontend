@@ -218,7 +218,7 @@ function BookingCard({ booking, hideTransactionLink = false }) {
   const statusLabel = status === "unscheduled" ? "Unscheduled" : status;
 
   return (
-    <article className="min-w-0 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md sm:p-5">
+    <article className="min-w-0 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-md sm:p-5">
       <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="break-words text-sm font-semibold text-zinc-900">
@@ -260,7 +260,7 @@ function BookingCard({ booking, hideTransactionLink = false }) {
       </div>
 
       {booking.note ? (
-        <p className="mt-4 line-clamp-2 rounded-lg border border-teal-100 bg-teal-50/70 px-3 py-2 text-xs text-teal-800">
+        <p className="mt-4 line-clamp-2 rounded-lg border border-red-100 bg-red-50/70 px-3 py-2 text-xs text-red-800">
           {booking.note}
         </p>
       ) : null}
@@ -273,7 +273,7 @@ function BookingCard({ booking, hideTransactionLink = false }) {
                 ? `/dashboard/bookings/${encodeURIComponent(booking.id)}?transaction_id=${encodeURIComponent(booking.transactionId)}`
                 : `/dashboard/bookings/${encodeURIComponent(booking.id)}`
             }
-            className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg border border-teal-100 px-3 text-center text-xs font-semibold text-teal-700 transition hover:bg-teal-50 hover:text-teal-800"
+            className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg border border-red-100 px-3 text-center text-xs font-semibold text-red-700 transition hover:bg-red-50 hover:text-red-800"
           >
             View booking details
             <svg
@@ -408,55 +408,42 @@ export default function BookingsPage() {
 
   return (
     <div className="min-w-0 w-full">
-      <header className="overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-        <div className="relative bg-gradient-to-br from-indigo-800 via-blue-700 to-cyan-700 px-4 py-5 text-white sm:px-8 sm:py-6">
-          <div
-            className="pointer-events-none absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/15 blur-2xl"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute -bottom-12 left-1/3 h-24 w-24 rounded-full bg-cyan-300/25 blur-2xl"
-            aria-hidden
-          />
-
-          <div className="relative flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:justify-between sm:gap-4">
-            <div className="min-w-0">
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Bookings</h1>
-              <p className="mt-1 break-words text-sm text-blue-50/90">
-                View and track all rental bookings by status
-              </p>
-            </div>
-            <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide">
-              {isLoading ? "Loading..." : `${pagination.total.toLocaleString()} records`}
-            </span>
-          </div>
-
-          <div className="relative mt-5 grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 min-[420px]:flex min-[420px]:flex-wrap">
-            {FILTERS.map((filter) => {
-              const isActive = activeFilter === filter.key;
-              return (
-                <button
-                  key={filter.key}
-                  type="button"
-                  onClick={() => {
-                    setActiveFilter(filter.key);
-                    setPage(1);
-                  }}
-                  className={`min-h-11 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-wide transition min-[420px]:px-4 ${
-                    isActive
-                      ? "bg-white text-indigo-700 shadow-sm"
-                      : "bg-white/15 text-white hover:bg-white/25"
-                  }`}
-                >
-                  {filter.label}
-                </button>
-              );
-            })}
-          </div>
+      <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">Bookings</h1>
+          <p className="mt-2 break-words text-sm text-zinc-500">
+            View and track all rental bookings by status
+          </p>
         </div>
-      </header>
+        <span className="inline-flex shrink-0 items-center rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold text-zinc-600">
+          {isLoading ? "Loading..." : `${pagination.total.toLocaleString()} records`}
+        </span>
+      </div>
 
-      <section className="mt-6 rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
+      <div className="mt-4 grid grid-cols-2 gap-2 min-[420px]:flex min-[420px]:flex-wrap">
+        {FILTERS.map((filter) => {
+          const isActive = activeFilter === filter.key;
+          return (
+            <button
+              key={filter.key}
+              type="button"
+              onClick={() => {
+                setActiveFilter(filter.key);
+                setPage(1);
+              }}
+              className={`min-h-11 rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition min-[420px]:px-4 ${
+                isActive
+                  ? "border-red-400 bg-red-400 text-white shadow-sm"
+                  : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
+              }`}
+            >
+              {filter.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <section className="mt-4 rounded-xl border border-zinc-200 bg-white shadow-sm">
         <div className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-white px-4 py-4 sm:px-8">
           <h2 className="text-sm font-semibold text-zinc-900">{titleFilter} bookings</h2>
           <p className="mt-0.5 text-xs text-zinc-500">

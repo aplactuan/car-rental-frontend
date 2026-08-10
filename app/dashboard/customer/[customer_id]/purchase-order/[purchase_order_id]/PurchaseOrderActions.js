@@ -486,7 +486,7 @@ export default function PurchaseOrderActions({ purchaseOrder, customerId }) {
                             className={`min-w-0 truncate text-sm ${
                               marked
                                 ? "text-zinc-400 line-through"
-                                : "font-medium text-teal-700 hover:text-teal-800"
+                                : "font-medium text-red-700 hover:text-red-800"
                             }`}
                           >
                             {attachment.fileName || "Attachment"}
@@ -542,7 +542,7 @@ export default function PurchaseOrderActions({ purchaseOrder, customerId }) {
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isSaving ? "Saving..." : "Save changes"}
                 </button>

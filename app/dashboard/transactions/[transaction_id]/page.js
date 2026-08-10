@@ -101,12 +101,12 @@ export default async function TransactionDetailPage({ params }) {
   return (
     <div className="flex min-w-0 flex-col gap-4 pr-3 sm:pr-6 lg:h-[calc(100vh-4rem)] lg:min-h-[32rem]">
       <header className="shrink-0 overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-        <div className="bg-gradient-to-r from-teal-600 via-teal-700 to-zinc-900 px-4 py-5 text-white sm:px-6">
+        <div className="bg-gradient-to-r from-red-800 via-red-900 to-zinc-900 px-4 py-5 text-white sm:px-6">
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
             <div className="min-w-0">
               <Link
                 href="/dashboard/transactions"
-                className="text-xs font-medium text-teal-100/90 transition hover:text-white"
+                className="text-xs font-medium text-red-100/90 transition hover:text-white"
               >
                 ← Back to transactions
               </Link>
@@ -114,7 +114,7 @@ export default async function TransactionDetailPage({ params }) {
                 Transaction
               </h1>
               {customerName ? (
-                <p className="mt-1 text-sm text-teal-50/95">{customerName}</p>
+                <p className="mt-1 text-sm text-red-50/95">{customerName}</p>
               ) : null}
             </div>
             <div className="flex max-w-full flex-wrap gap-2">
@@ -122,7 +122,7 @@ export default async function TransactionDetailPage({ params }) {
                 {bookingCount} booking{bookingCount !== 1 ? "s" : ""}
               </span>
               <span
-                className="max-w-full truncate rounded-full bg-white/10 px-3 py-1 font-mono text-xs text-teal-50/90 sm:max-w-[220px]"
+                className="max-w-full truncate rounded-full bg-white/10 px-3 py-1 font-mono text-xs text-red-50/90 sm:max-w-[220px]"
                 title={transactionId}
               >
                 {transactionId}

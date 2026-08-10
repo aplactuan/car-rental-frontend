@@ -7,6 +7,40 @@ function normalizeRole(value) {
   return "";
 }
 
+function pickDisplayName(payload) {
+  const attrs = payload?.data?.attributes ?? payload?.attributes ?? {};
+  const user = payload?.data ?? payload?.user ?? payload ?? {};
+  const nestedUser = payload?.data?.user ?? payload?.user ?? {};
+  const nestedAttrs = nestedUser?.attributes ?? {};
+
+  const candidates = [
+    attrs?.name,
+    attrs?.full_name,
+    attrs?.fullName,
+    nestedAttrs?.name,
+    nestedAttrs?.full_name,
+    nestedAttrs?.fullName,
+    user?.name,
+    nestedUser?.name,
+    attrs?.email,
+    nestedAttrs?.email,
+    user?.email,
+    nestedUser?.email,
+  ];
+
+  for (const value of candidates) {
+    const cleaned = String(value || "").trim();
+    if (!cleaned) continue;
+    if (cleaned.includes("@")) {
+      const local = cleaned.split("@")[0]?.trim();
+      if (local) return local;
+    }
+    return cleaned;
+  }
+
+  return "";
+}
+
 async function fetchCurrentUser(backendBase, token) {
   try {
     const userRes = await fetch(new URL("/api/user", backendBase).toString(), {
@@ -114,7 +148,18 @@ export async function POST(req) {
     );
   }
 
-  const res = NextResponse.json({ ok: true, token, role: resolvedRole });
+  const displayName =
+    pickDisplayName(currentUser) ||
+    pickDisplayName(upstreamJson) ||
+    String(email).split("@")[0] ||
+    "";
+
+  const res = NextResponse.json({
+    ok: true,
+    token,
+    role: resolvedRole,
+    name: displayName || null,
+  });
 
   res.cookies.set("auth_token", token, {
     httpOnly: true,

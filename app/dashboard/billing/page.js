@@ -12,7 +12,7 @@ const BILLS_PER_PAGE = 10;
 const BILLS_INCLUDE = "transaction.customer";
 
 const inputClass =
-  "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100";
+  "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-red-600 focus:ring-2 focus:ring-red-100";
 const labelClass = "block text-xs font-medium text-zinc-700";
 
 function readField(source, keys) {
@@ -469,7 +469,7 @@ export default function BillingReportPage() {
     <div className="min-w-0 w-full">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Billing report</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">Billing report</h1>
           <p className="mt-2 break-words text-sm text-zinc-500">
             Paginated bills (all statuses). Summary cards show unpaid vs paid totals only.
           </p>
@@ -545,7 +545,7 @@ export default function BillingReportPage() {
               <div className="flex shrink-0 gap-2">
                 <button
                   type="submit"
-                  className="min-h-11 flex-1 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800"
+                  className="min-h-11 flex-1 rounded-md bg-red-400 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500"
                 >
                   Search
                 </button>
@@ -600,7 +600,7 @@ export default function BillingReportPage() {
         >
           <table className="w-full min-w-[1180px] text-left text-sm">
             <thead>
-              <tr className="border-b border-zinc-100 text-xs uppercase tracking-wide text-zinc-500">
+              <tr className="border-b border-zinc-200 bg-zinc-50/60 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                 <th className="px-4 py-3 font-medium">Invoice number</th>
                 <th className="px-4 py-3 font-medium">Customer</th>
                 <th className="px-4 py-3 font-medium">Status</th>
@@ -665,7 +665,7 @@ export default function BillingReportPage() {
                       {row.transactionId ? (
                         <Link
                           href={`/dashboard/transactions/${encodeURIComponent(row.transactionId)}`}
-                          className="text-teal-700 underline-offset-2 hover:underline"
+                          className="text-red-700 underline-offset-2 hover:underline"
                         >
                           {row.transactionName || `Transaction ${String(row.transactionId).slice(0, 8)}…`}
                         </Link>

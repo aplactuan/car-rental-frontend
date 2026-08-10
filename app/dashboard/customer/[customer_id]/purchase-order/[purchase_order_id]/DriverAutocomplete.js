@@ -238,7 +238,7 @@ export default function DriverAutocomplete({
                   onMouseEnter={() => setHighlightIndex(index)}
                   className={`block w-full px-3 py-2 text-left text-sm transition ${
                     isActive
-                      ? "bg-teal-50 text-teal-900"
+                      ? "bg-red-50 text-red-900"
                       : "text-zinc-800 hover:bg-zinc-50"
                   }`}
                 >
