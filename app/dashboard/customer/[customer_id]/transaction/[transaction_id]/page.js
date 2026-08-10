@@ -86,13 +86,13 @@ function TransactionHero({
 
   return (
     <header className="shrink-0 overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-      <div className="relative bg-gradient-to-br from-blue-800 via-teal-700 to-zinc-900 px-4 py-5 text-white sm:px-8">
+      <div className="relative bg-gradient-to-br from-red-800 via-red-900 to-zinc-900 px-4 py-5 text-white sm:px-8">
         <div
           className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10 blur-2xl"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -bottom-14 left-1/4 h-28 w-28 rounded-full bg-teal-400/20 blur-2xl"
+          className="pointer-events-none absolute -bottom-14 left-1/4 h-28 w-28 rounded-full bg-red-500/20 blur-2xl"
           aria-hidden
         />
 
@@ -100,7 +100,7 @@ function TransactionHero({
           <div className="min-w-0">
             <Link
               href={backHref}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-100/90 transition hover:text-white"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-red-100/90 transition hover:text-white"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -143,14 +143,14 @@ function TransactionHero({
                   {displayName}
                 </h1>
                 {customerName ? (
-                  <p className="mt-1 text-sm text-blue-50/95">{customerName}</p>
+                  <p className="mt-1 text-sm text-red-50/95">{customerName}</p>
                 ) : (
-                  <p className="mt-1 text-sm text-blue-50/80">
+                  <p className="mt-1 text-sm text-red-50/80">
                     Customer transaction
                   </p>
                 )}
                 {poNumber ? (
-                  <p className="mt-1 text-sm text-blue-100/90">
+                  <p className="mt-1 text-sm text-red-100/90">
                     PO number:{" "}
                     <span className="font-medium text-white">{poNumber}</span>
                   </p>
@@ -165,7 +165,7 @@ function TransactionHero({
             </span>
             {transactionId ? (
               <span
-                className="max-w-full truncate rounded-full bg-white/10 px-3 py-1 font-mono text-xs text-blue-50/90 sm:max-w-[220px]"
+                className="max-w-full truncate rounded-full bg-white/10 px-3 py-1 font-mono text-xs text-red-50/90 sm:max-w-[220px]"
                 title={transactionId}
               >
                 {transactionId}

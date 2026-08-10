@@ -599,7 +599,7 @@ export default function BookingListSection({
 
   return (
     <div className={shellClass}>
-      <div className="shrink-0 border-b border-zinc-100 bg-gradient-to-r from-teal-50/80 via-white to-zinc-50 px-4 py-4 sm:px-5">
+      <div className="shrink-0 border-b border-zinc-100 bg-gradient-to-r from-red-50/80 via-white to-zinc-50 px-4 py-4 sm:px-5">
         <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
           <div>
             <h2 className="text-base font-semibold tracking-tight text-zinc-900">
@@ -613,7 +613,7 @@ export default function BookingListSection({
             <button
               type="button"
               onClick={() => (showForm ? handleCancel() : beginAdd())}
-              className="w-full rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800 active:scale-[0.98] sm:w-auto"
+              className="w-full rounded-lg bg-red-400 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 active:scale-[0.98] sm:w-auto"
             >
               {showForm ? "Close" : "Add booking"}
             </button>
@@ -678,8 +678,8 @@ export default function BookingListSection({
                 {bookings.map((b) => (
                   <Fragment key={b.id}>
                     <tr
-                      className={`border-b border-zinc-100 transition-colors hover:bg-teal-50/40 ${
-                        editingId === b.id ? "bg-teal-50/60" : "bg-white"
+                      className={`border-b border-zinc-100 transition-colors hover:bg-red-50/40 ${
+                        editingId === b.id ? "bg-red-50/60" : "bg-white"
                       }`}
                     >
                       <td className="max-w-[200px] px-5 py-3 align-top">
@@ -721,7 +721,7 @@ export default function BookingListSection({
                                   editingId === b.id ? handleCancel() : beginEdit(b)
                                 }
                                 disabled={deletingId === b.id}
-                                className="rounded-lg border border-teal-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-teal-800 transition hover:bg-teal-50 disabled:opacity-50"
+                                className="rounded-lg border border-red-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-red-800 transition hover:bg-red-50 disabled:opacity-50"
                               >
                                 {editingId === b.id ? "Cancel" : "Edit"}
                               </button>
@@ -780,7 +780,7 @@ function BookingScheduleFields({
   const start = splitDatetimeLocalValue(startTime);
   const end = splitDatetimeLocalValue(endTime);
   const fieldClass =
-    "w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-teal-500/30 focus:ring-2";
+    "w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-red-500/30 focus:ring-2";
 
   return (
     <div className="w-full min-w-0 basis-full">
@@ -967,7 +967,7 @@ function BookingFormShell({
             onChange={(e) => setDriverId(e.target.value)}
             required
             disabled={!isTimeValid || isLoadingAvailability}
-            className="w-full min-w-0 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-teal-500/30 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100 sm:min-w-[160px]"
+            className="w-full min-w-0 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-red-500/30 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100 sm:min-w-[160px]"
           >
             <option value="">
               {!isTimeValid
@@ -996,7 +996,7 @@ function BookingFormShell({
             onChange={(e) => setCarId(e.target.value)}
             required
             disabled={!isTimeValid || isLoadingAvailability}
-            className="w-full min-w-0 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-teal-500/30 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100 sm:min-w-[160px]"
+            className="w-full min-w-0 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-red-500/30 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100 sm:min-w-[160px]"
           >
             <option value="">
               {!isTimeValid
@@ -1028,7 +1028,7 @@ function BookingFormShell({
             onChange={(e) => setPrice(e.target.value)}
             required
             placeholder="e.g. 500000"
-            className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-teal-500/30 focus:ring-2"
+            className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-red-500/30 focus:ring-2"
           />
         </div>
         <div className="min-w-0 flex-1 basis-full sm:min-w-[200px] sm:basis-auto">
@@ -1044,7 +1044,7 @@ function BookingFormShell({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Optional"
-            className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-teal-500/30 focus:ring-2"
+            className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-red-500/30 focus:ring-2"
           />
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
@@ -1066,7 +1066,7 @@ function BookingFormShell({
               !carId ||
               price.trim() === ""
             }
-            className="w-full rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:opacity-50 sm:w-auto"
+            className="w-full rounded-xl bg-red-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:opacity-50 sm:w-auto"
           >
             {submitLabel}
           </button>

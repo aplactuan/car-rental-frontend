@@ -241,7 +241,7 @@ function DocumentLink({ href, label }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex max-w-full min-w-0 items-center gap-1 break-all text-xs font-medium text-teal-700 transition hover:text-teal-800"
+      className="inline-flex max-w-full min-w-0 items-center gap-1 break-all text-xs font-medium text-red-700 transition hover:text-red-800"
     >
       {label}
       <svg
@@ -395,13 +395,13 @@ export default async function PurchaseOrderDetailPage({ params }) {
   return (
     <div className="min-w-0 w-full space-y-6 lg:pr-8">
       <header className="overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-        <div className="relative bg-gradient-to-br from-teal-800 via-emerald-700 to-zinc-900 px-4 py-6 text-white sm:px-8">
+        <div className="relative bg-gradient-to-br from-red-800 via-red-900 to-zinc-900 px-4 py-6 text-white sm:px-8">
           <div
             className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -bottom-16 left-1/3 h-32 w-32 rounded-full bg-emerald-300/20 blur-2xl"
+            className="pointer-events-none absolute -bottom-16 left-1/3 h-32 w-32 rounded-full bg-red-500/20 blur-2xl"
             aria-hidden
           />
 
@@ -409,7 +409,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
             <div className="min-w-0">
               <Link
                 href={backHref}
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-100/90 transition hover:text-white"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-red-100/90 transition hover:text-white"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -451,18 +451,18 @@ export default async function PurchaseOrderDetailPage({ params }) {
                   </svg>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-100/80">
+                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-red-100/80">
                     Purchase order
                   </p>
                   <h1 className="mt-1 break-words text-2xl font-bold tracking-tight sm:text-3xl">
                     {displayPoNumber}
                   </h1>
                   {purchaseOrder?.customerName ? (
-                    <p className="mt-1 text-sm text-emerald-50/95">
+                    <p className="mt-1 text-sm text-red-50/95">
                       {purchaseOrder.customerName}
                     </p>
                   ) : (
-                    <p className="mt-1 text-sm text-emerald-50/80">
+                    <p className="mt-1 text-sm text-red-50/80">
                       Customer purchase order
                     </p>
                   )}

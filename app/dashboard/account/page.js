@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 const inputClass =
-  "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100";
+  "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-red-600 focus:ring-2 focus:ring-red-100";
 const labelClass = "block text-xs font-medium text-zinc-700";
 
 function extractErrorMessage(data) {
@@ -89,7 +89,7 @@ export default function AccountPage() {
   return (
     <div className="w-full min-w-0 pr-0 sm:pr-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Account</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">Account</h1>
         <p className="mt-2 text-sm text-zinc-500">
           Manage your account settings
         </p>
@@ -115,7 +115,7 @@ export default function AccountPage() {
 
           {successMessage ? (
             <div
-              className="mt-4 rounded-md border border-teal-200 bg-teal-50 px-3 py-2 text-sm text-teal-800"
+              className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
               role="status"
             >
               {successMessage}
@@ -216,7 +216,7 @@ export default function AccountPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="inline-flex w-full items-center justify-center rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+              className="inline-flex w-full items-center justify-center rounded-md bg-red-400 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
               {isLoading ? "Updating..." : "Update password"}
             </button>

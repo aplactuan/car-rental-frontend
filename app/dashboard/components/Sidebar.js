@@ -121,20 +121,32 @@ export default function Sidebar() {
 
   const navigation = (
     <>
-      <div className="px-6 pb-5 pt-6">
-        <Link href="/dashboard" className="block" onClick={() => setIsMobileOpen(false)}>
-          <div className="text-lg font-semibold tracking-tight text-teal-400">
-            Rambo App
+      <div className="px-5 pb-5 pt-6">
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-3"
+          onClick={() => setIsMobileOpen(false)}
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-red-400 to-red-600 text-sm font-bold text-white shadow-sm">
+            R
           </div>
-          <div className="mt-1 text-xs text-zinc-400">Management System</div>
-          {role === "driver" ? (
-            <span className="mt-3 inline-flex items-center rounded-full border border-teal-400/30 bg-teal-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-teal-300">
-              Driver mode
-            </span>
-          ) : null}
+          <div className="min-w-0">
+            <div className="truncate text-sm font-semibold leading-tight tracking-tight text-white">
+              Rambo App
+            </div>
+            <div className="mt-0.5 truncate text-[11px] leading-tight text-zinc-500">
+              Fleet Management System
+            </div>
+          </div>
         </Link>
+        {role === "driver" ? (
+          <span className="mt-3 inline-flex items-center rounded-full border border-red-400/30 bg-red-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-red-300">
+            Driver mode
+          </span>
+        ) : null}
       </div>
-      <nav className="flex-1 overflow-y-auto px-4">
+      <div className="mx-5 border-t border-white/10" />
+      <nav className="flex-1 overflow-y-auto px-3 pt-4">
         {visibleNavItems.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -142,14 +154,19 @@ export default function Sidebar() {
               key={item.href}
               href={item.href}
               onClick={() => setIsMobileOpen(false)}
-              className={`mb-2 flex min-h-11 items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+              className={`group relative mb-1 flex min-h-11 items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-[#0F766E] text-white"
-                  : "text-zinc-300 hover:bg-white/5 hover:text-white"
+                  ? "bg-red-400/15 text-white"
+                  : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100"
               }`}
             >
+              {isActive ? (
+                <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-red-400" aria-hidden />
+              ) : null}
               <svg
-                className="h-5 w-5 shrink-0"
+                className={`h-5 w-5 shrink-0 transition-colors ${
+                  isActive ? "text-red-400" : "text-zinc-500 group-hover:text-zinc-300"
+                }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -167,21 +184,26 @@ export default function Sidebar() {
           );
         })}
       </nav>
-      <div className="px-4 pt-2">
-        <div className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+      <div className="px-3 pt-2">
+        <div className="mx-1 mb-2 border-t border-white/10 pt-3 text-[10px] font-semibold uppercase tracking-wide text-zinc-600">
           Account
         </div>
         <Link
           href={accountNavItem.href}
           onClick={() => setIsMobileOpen(false)}
-          className={`mb-2 flex min-h-11 items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
+          className={`group relative mb-1 flex min-h-11 items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium transition-colors ${
             pathname === accountNavItem.href
-              ? "bg-[#0F766E] text-white"
-              : "text-zinc-300 hover:bg-white/5 hover:text-white"
+              ? "bg-red-400/15 text-white"
+              : "text-zinc-400 hover:bg-white/5 hover:text-zinc-100"
           }`}
         >
+          {pathname === accountNavItem.href ? (
+            <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-red-400" aria-hidden />
+          ) : null}
           <svg
-            className="h-5 w-5 shrink-0"
+            className={`h-5 w-5 shrink-0 transition-colors ${
+              pathname === accountNavItem.href ? "text-red-400" : "text-zinc-500 group-hover:text-zinc-300"
+            }`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -197,15 +219,15 @@ export default function Sidebar() {
           {accountNavItem.label}
         </Link>
       </div>
-      <div className="mt-auto px-4 pb-5">
+      <div className="mt-auto px-3 pb-5">
         <button
           ref={menuButtonRef}
           type="button"
           onClick={handleLogout}
-          className="flex min-h-11 w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white"
+          className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-100"
         >
           <svg
-            className="h-5 w-5 shrink-0"
+            className="h-5 w-5 shrink-0 text-zinc-500"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -220,22 +242,27 @@ export default function Sidebar() {
           </svg>
           Logout
         </button>
-        <div className="mt-6 px-2 text-xs text-zinc-500">© 2026 Rambo App</div>
+        <div className="mt-5 px-2 text-[11px] text-zinc-600">© 2026 Rambo App</div>
       </div>
     </>
   );
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-zinc-800 bg-[#0B0F14] px-4 text-white lg:hidden">
-        <Link href="/dashboard" className="min-w-0" onClick={() => setIsMobileOpen(false)}>
-          <span className="block truncate text-sm font-semibold text-teal-400">Rambo App</span>
-          <span className="block text-[10px] text-zinc-400">Management System</span>
+      <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-white/10 bg-[#0B0F14] px-4 text-white lg:hidden">
+        <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5" onClick={() => setIsMobileOpen(false)}>
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-red-400 to-red-600 text-xs font-bold text-white">
+            R
+          </div>
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-semibold leading-tight">Rambo App</span>
+            <span className="block truncate text-[10px] leading-tight text-zinc-500">Fleet Management System</span>
+          </span>
         </Link>
         <button
           type="button"
           onClick={() => setIsMobileOpen(true)}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-zinc-700 text-zinc-200 transition hover:bg-white/10"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 text-zinc-200 transition hover:bg-white/10"
           aria-label="Open navigation"
           aria-controls="mobile-dashboard-navigation"
           aria-expanded={isMobileOpen}
@@ -252,7 +279,7 @@ export default function Sidebar() {
         </button>
       </header>
 
-      <aside className="relative z-0 hidden w-72 shrink-0 flex-col bg-[#0B0F14] lg:flex">
+      <aside className="relative z-0 hidden w-64 shrink-0 flex-col border-r border-white/10 bg-[#0B0F14] lg:flex">
         {navigation}
       </aside>
 

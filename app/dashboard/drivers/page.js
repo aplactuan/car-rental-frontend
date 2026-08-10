@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 
 const inputClass =
-  "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100";
+  "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-red-600 focus:ring-2 focus:ring-red-100";
 const labelClass = "block text-xs font-medium text-zinc-700";
 
 function readField(source, keys) {
@@ -356,7 +356,7 @@ export default function DriversPage() {
     <div className="min-w-0 w-full">
       <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Drivers</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">Drivers</h1>
           <p className="mt-2 text-sm text-zinc-500">
             Manage your driver database
           </p>
@@ -369,7 +369,7 @@ export default function DriversPage() {
               setImportError("");
               setImportStatus("");
             }}
-            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-md border border-blue-900 bg-white px-4 py-2 text-sm font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50 sm:flex-none"
+            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 sm:flex-none"
           >
             <svg
               className="h-4 w-4"
@@ -390,7 +390,7 @@ export default function DriversPage() {
           <button
             type="button"
             onClick={openAddForm}
-            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 sm:flex-none"
+            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-md bg-red-400 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 sm:flex-none"
           >
             <svg
               className="h-4 w-4"
@@ -432,7 +432,7 @@ export default function DriversPage() {
               <button
                 type="submit"
                 disabled={isImporting}
-                className="min-h-11 flex-1 rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:opacity-50 sm:flex-none"
+                className="min-h-11 flex-1 rounded-md bg-red-400 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 disabled:opacity-50 sm:flex-none"
               >
                 {isImporting ? "Importing..." : "Import CSV"}
               </button>
@@ -458,7 +458,7 @@ export default function DriversPage() {
             <p className="mt-2 text-xs text-red-600">{importError}</p>
           )}
           {importStatus && (
-            <p className="mt-2 text-xs text-teal-700">{importStatus}</p>
+            <p className="mt-2 text-xs text-red-700">{importStatus}</p>
           )}
         </div>
       )}
@@ -561,7 +561,7 @@ export default function DriversPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="min-h-11 flex-1 rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:opacity-50 sm:flex-none"
+                className="min-h-11 flex-1 rounded-md bg-red-400 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 disabled:opacity-50 sm:flex-none"
               >
                 {isLoading
                   ? formMode === "edit"
@@ -621,7 +621,7 @@ export default function DriversPage() {
                 <div className="flex shrink-0 gap-2">
                   <button
                     type="submit"
-                    className="min-h-11 flex-1 rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
+                    className="min-h-11 flex-1 rounded-md bg-red-400 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500"
                   >
                     Search
                   </button>
@@ -683,7 +683,7 @@ export default function DriversPage() {
                       {driver.id ? (
                         <Link
                           href={`/dashboard/drivers/${encodeURIComponent(driver.id)}`}
-                          className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-teal-200 bg-white px-3 text-sm font-semibold text-teal-700"
+                          className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-red-200 bg-white px-3 text-sm font-semibold text-red-700"
                         >
                           View
                         </Link>
@@ -710,7 +710,7 @@ export default function DriversPage() {
             <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[760px] border-collapse">
               <thead>
-                <tr className="border-b border-zinc-200 text-left text-sm font-semibold text-zinc-800">
+                <tr className="border-b border-zinc-200 bg-zinc-50/60 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   <th className="py-3 pr-4">Name</th>
                   <th className="py-3 pr-4">License</th>
                   <th className="py-3 pr-4">Phone</th>
@@ -744,7 +744,7 @@ export default function DriversPage() {
                           {driver.id ? (
                             <Link
                               href={`/dashboard/drivers/${encodeURIComponent(driver.id)}`}
-                              className="text-teal-600 transition hover:text-teal-700"
+                              className="text-red-600 transition hover:text-red-700"
                               title="View driver"
                               aria-label={`View ${rowName || "driver"}`}
                             >

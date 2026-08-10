@@ -272,7 +272,7 @@ export default function PurchaseOrdersSection({
           >
             <table className="min-w-[64rem] text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
+                <tr className="border-b border-zinc-200 bg-zinc-50/60 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                   <th className="pb-3 pr-6">PO number</th>
                   <th className="pb-3 pr-6">Program</th>
                   <th className="pb-3 pr-6">Date</th>
@@ -317,7 +317,7 @@ export default function PurchaseOrdersSection({
                       <td className="py-3.5 text-right">
                         <Link
                           href={`/dashboard/customer/${encodeURIComponent(customerId)}/purchase-order/${encodeURIComponent(po.id)}`}
-                          className="text-xs font-medium text-teal-700 transition hover:text-teal-800"
+                          className="text-xs font-medium text-red-700 transition hover:text-red-800"
                         >
                           View
                         </Link>

@@ -268,13 +268,13 @@ export default async function CustomerDetailPage({ params }) {
   return (
     <div className="min-w-0 w-full space-y-6 lg:pr-8">
       <header className="overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-        <div className="relative bg-gradient-to-br from-teal-800 via-emerald-700 to-zinc-900 px-4 py-6 text-white sm:px-8">
+        <div className="relative bg-gradient-to-br from-red-800 via-red-900 to-zinc-900 px-4 py-6 text-white sm:px-8">
           <div
             className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute -bottom-16 left-1/3 h-32 w-32 rounded-full bg-emerald-300/20 blur-2xl"
+            className="pointer-events-none absolute -bottom-16 left-1/3 h-32 w-32 rounded-full bg-red-500/20 blur-2xl"
             aria-hidden
           />
 
@@ -282,7 +282,7 @@ export default async function CustomerDetailPage({ params }) {
             <div className="min-w-0">
               <Link
                 href="/dashboard/customer"
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-100/90 transition hover:text-white"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-red-100/90 transition hover:text-white"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -325,7 +325,7 @@ export default async function CustomerDetailPage({ params }) {
                   </svg>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-100/80">
+                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-red-100/80">
                     Customer
                   </p>
                   <h1 className="mt-1 truncate text-2xl font-bold tracking-tight sm:text-3xl">
@@ -333,14 +333,14 @@ export default async function CustomerDetailPage({ params }) {
                   </h1>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     {customer?.type ? (
-                      <span className="inline-flex items-center rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium text-emerald-50 ring-1 ring-white/20">
+                      <span className="inline-flex items-center rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium text-red-50 ring-1 ring-white/20">
                         {customer.type}
                       </span>
                     ) : null}
                     {customerId ? (
-                      <p className="truncate text-xs text-emerald-100/80">
+                      <p className="truncate text-xs text-red-100/80">
                         ID{" "}
-                        <span className="font-medium text-emerald-50">
+                        <span className="font-medium text-red-50">
                           {customerId}
                         </span>
                       </p>

@@ -119,8 +119,8 @@ function resolveSwatch(color) {
 function SpecCard({ icon, label, value }) {
   const shown = displayValue(value);
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-zinc-200/80 bg-zinc-50/80 p-4 transition hover:border-teal-200 hover:bg-teal-50/40">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-teal-700 shadow-sm ring-1 ring-zinc-200/80">
+    <div className="flex items-start gap-3 rounded-xl border border-zinc-200/80 bg-zinc-50/80 p-4 transition hover:border-red-200 hover:bg-red-50/40">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-red-700 shadow-sm ring-1 ring-zinc-200/80">
         {icon}
       </div>
       <div className="min-w-0">
@@ -165,19 +165,19 @@ function CarDetailSection({ car, carName }) {
 
   return (
     <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-      <div className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-teal-700 px-4 pb-6 pt-5 text-white sm:px-8 sm:pb-8 sm:pt-6">
+      <div className="relative bg-gradient-to-br from-red-800 via-red-900 to-zinc-900 px-4 pb-6 pt-5 text-white sm:px-8 sm:pb-8 sm:pt-6">
         <div
           className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 blur-2xl"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -bottom-12 left-1/3 h-32 w-32 rounded-full bg-teal-400/20 blur-2xl"
+          className="pointer-events-none absolute -bottom-12 left-1/3 h-32 w-32 rounded-full bg-red-400/20 blur-2xl"
           aria-hidden
         />
 
         <Link
           href="/dashboard/cars"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-100 transition hover:text-white"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-red-100 transition hover:text-white"
         >
           <svg
             viewBox="0 0 24 24"
@@ -205,7 +205,7 @@ function CarDetailSection({ car, carName }) {
               <h1 className="break-words text-2xl font-bold tracking-tight sm:text-3xl">
                 {carName || "Unknown vehicle"}
               </h1>
-              <p className="mt-1 text-sm text-blue-100">
+              <p className="mt-1 text-sm text-red-100/90">
                 {[type, year].filter(Boolean).join(" · ") || "Vehicle profile"}
               </p>
             </div>
@@ -437,7 +437,7 @@ export default async function CarDetailPage({ params }) {
         <div className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
           <Link
             href="/dashboard/cars"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-700 transition hover:text-teal-800"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-red-700 transition hover:text-red-800"
           >
             <svg
               viewBox="0 0 24 24"
@@ -463,7 +463,7 @@ export default async function CarDetailPage({ params }) {
         <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
           <Link
             href="/dashboard/cars"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-700 transition hover:text-teal-800"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-red-700 transition hover:text-red-800"
           >
             <svg
               viewBox="0 0 24 24"

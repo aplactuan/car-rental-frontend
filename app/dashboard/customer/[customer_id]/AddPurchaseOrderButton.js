@@ -455,7 +455,7 @@ export default function AddPurchaseOrderButton({ customerId }) {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isLoading ? "Adding..." : "Create purchase order"}
                 </button>

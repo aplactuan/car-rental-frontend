@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const inputClass =
-  "mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100";
+  "mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-red-600 focus:ring-2 focus:ring-red-100";
 const labelClass = "block text-xs font-medium text-zinc-700";
 
 function readField(source, keys) {
@@ -92,7 +92,7 @@ function getTypeMeta(type) {
   if (normalized === "personal") {
     return {
       label: "Personal",
-      className: "bg-teal-100 text-teal-800 ring-teal-200/80",
+      className: "bg-red-100 text-red-800 ring-red-200/80",
     };
   }
   return {
@@ -113,9 +113,9 @@ function CustomerCard({ customer, onEdit }) {
     contactPerson || contactEmail || contactPhone || customer.address;
 
   return (
-    <article className="group flex min-w-0 flex-col rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:border-teal-200 hover:shadow-md sm:p-5">
+    <article className="group flex min-w-0 flex-col rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:border-red-200 hover:shadow-md sm:p-5">
       <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-700 to-teal-600 text-sm font-bold text-white shadow-sm ring-2 ring-white sm:h-12 sm:w-12">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-400 to-red-600 text-sm font-bold text-white shadow-sm ring-2 ring-white sm:h-12 sm:w-12">
           {initials}
         </div>
         <div className="min-w-0 flex-1">
@@ -218,7 +218,7 @@ function CustomerCard({ customer, onEdit }) {
         {customer.id ? (
           <Link
             href={`/dashboard/customer/${customer.id}`}
-            className="inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-zinc-900 px-3 py-2 text-center text-sm font-medium text-white transition group-hover:bg-teal-800"
+            className="inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-red-400 px-3 py-2 text-center text-sm font-medium text-white transition group-hover:bg-red-500"
           >
             View customer
             <svg
@@ -408,87 +408,52 @@ export default function CustomerDashboardPage() {
 
   return (
     <div className="min-w-0 w-full">
-      <header className="overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-        <div className="relative bg-gradient-to-br from-blue-800 via-teal-700 to-zinc-900 px-4 py-5 text-white sm:px-8 sm:py-6">
-          <div
-            className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10 blur-2xl"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute -bottom-14 left-1/4 h-28 w-28 rounded-full bg-teal-400/20 blur-2xl"
-            aria-hidden
-          />
-
-          <div className="relative flex flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
-            <div className="min-w-0">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25 backdrop-blur-sm">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.75"
-                    className="h-6 w-6"
-                    aria-hidden
-                  >
-                    <circle cx="12" cy="8" r="3.5" />
-                    <path
-                      d="M5 20v-1.2a5 5 0 0 1 14 0V20"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
-                <div className="min-w-0">
-                  <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                    Customers
-                  </h1>
-                  <p className="mt-1 break-words text-sm text-blue-50/90">
-                    Manage personal and business accounts
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={openAddForm}
-              className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50 sm:w-auto"
-            >
-              <svg
-                className="h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                aria-hidden
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
-              </svg>
-              Add customer
-            </button>
-          </div>
-
-          <div className="relative mt-5 flex flex-wrap gap-2">
-            <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur-sm">
+      <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">
+            Customers
+          </h1>
+          <p className="mt-2 text-sm text-zinc-500">
+            Manage personal and business accounts
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600">
               {isLoading ? "Loading…" : `${customers.length} total`}
             </span>
             {!isLoading && customers.length > 0 ? (
               <>
-                <span className="rounded-full bg-teal-500/25 px-3 py-1 text-xs font-medium text-teal-50 ring-1 ring-teal-300/30">
+                <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
                   {personalCount} personal
                 </span>
-                <span className="rounded-full bg-blue-500/25 px-3 py-1 text-xs font-medium text-blue-50 ring-1 ring-blue-300/30">
+                <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
                   {businessCount} business
                 </span>
               </>
             ) : null}
           </div>
         </div>
-      </header>
+
+        <button
+          type="button"
+          onClick={openAddForm}
+          className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-red-400 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 sm:w-auto"
+        >
+          <svg
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+          </svg>
+          Add customer
+        </button>
+      </div>
 
       {formMode && (
-        <div className="mt-6 min-w-0 overflow-hidden rounded-2xl border border-teal-200/80 bg-gradient-to-br from-teal-50/80 to-white p-4 shadow-sm ring-1 ring-teal-100 sm:p-6">
+        <div className="mt-6 min-w-0 overflow-hidden rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
           <h2 className="text-base font-semibold text-zinc-900">
             {formMode === "edit" ? "Edit customer" : "Add new customer"}
           </h2>
@@ -573,7 +538,7 @@ export default function CustomerDashboardPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="min-h-11 flex-1 rounded-lg bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:opacity-50 sm:flex-none"
+                className="min-h-11 flex-1 rounded-lg bg-red-400 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 disabled:opacity-50 sm:flex-none"
               >
                 {isSubmitting
                   ? "Saving…"
@@ -594,7 +559,7 @@ export default function CustomerDashboardPage() {
         </div>
       )}
 
-      <section className="mt-6 overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
+      <section className="mt-6 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
         <div className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-white px-4 py-4 sm:px-8">
           <h2 className="text-sm font-semibold text-zinc-900">All customers</h2>
           <p className="mt-0.5 text-xs text-zinc-500">
@@ -648,7 +613,7 @@ export default function CustomerDashboardPage() {
               <button
                 type="button"
                 onClick={openAddForm}
-                className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-blue-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
+                className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-red-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500"
               >
                 <svg
                   className="h-4 w-4"

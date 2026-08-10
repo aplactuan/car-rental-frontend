@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 const inputClass =
-  "mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-100";
+  "mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-red-600 focus:ring-2 focus:ring-red-100";
 const labelClass = "block text-xs font-medium text-zinc-700";
 
 function readField(source, keys) {
@@ -165,7 +165,7 @@ export default function CustomerSubAccountsSection({ customerId }) {
             resetForm();
             setShowForm((current) => !current);
           }}
-          className="w-full rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 sm:w-auto"
+          className="w-full rounded-lg bg-red-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 sm:w-auto"
         >
           {showForm ? "Cancel" : "Add sub-account"}
         </button>
@@ -174,7 +174,7 @@ export default function CustomerSubAccountsSection({ customerId }) {
       {showForm ? (
         <form
           onSubmit={handleSubmit}
-          className="mt-5 grid gap-4 rounded-xl border border-teal-100 bg-teal-50/50 p-4 sm:grid-cols-2"
+          className="mt-5 grid gap-4 rounded-xl border border-red-100 bg-red-50/50 p-4 sm:grid-cols-2"
         >
           <div className="sm:col-span-2">
             <label htmlFor="sub-account-name" className={labelClass}>
@@ -249,7 +249,7 @@ export default function CustomerSubAccountsSection({ customerId }) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full rounded-lg bg-blue-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:opacity-50 sm:w-auto"
+              className="w-full rounded-lg bg-red-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:opacity-50 sm:w-auto"
             >
               {isSubmitting ? "Saving…" : "Save sub-account"}
             </button>
@@ -285,7 +285,7 @@ export default function CustomerSubAccountsSection({ customerId }) {
                   {account.id ? (
                     <Link
                       href={`/dashboard/customer/${encodeURIComponent(account.id)}`}
-                      className="shrink-0 text-sm font-medium text-teal-700 hover:text-teal-800"
+                      className="shrink-0 text-sm font-medium text-red-700 hover:text-red-800"
                     >
                       View
                     </Link>

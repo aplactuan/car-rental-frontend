@@ -58,7 +58,7 @@ export default function TransactionsPage() {
     <div className="min-w-0 w-full">
       <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Transactions</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">Transactions</h1>
           <p className="mt-2 break-words text-sm text-zinc-500">
             View and manage rental transactions and billing
           </p>
@@ -68,8 +68,18 @@ export default function TransactionsPage() {
           <button
             type="button"
             onClick={() => setShowTransactionForm((prev) => !prev)}
-            className="min-h-11 w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 sm:w-auto"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-red-400 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 sm:w-auto"
           >
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+            </svg>
             Add Transaction
           </button>
         </div>
@@ -95,7 +105,7 @@ export default function TransactionsPage() {
               onChange={(event) => setCustomerName(event.target.value)}
               disabled={isLoading}
               required
-              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2"
+              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10"
               placeholder="Enter customer name"
             />
           </div>
@@ -104,7 +114,7 @@ export default function TransactionsPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="min-h-11 w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 sm:w-auto"
+              className="min-h-11 w-full rounded-lg bg-red-400 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 disabled:opacity-50 sm:w-auto"
             >
               {isLoading ? "Saving..." : "Save Transaction"}
             </button>

@@ -419,7 +419,7 @@ function TripReportForm({
             <button
               type="button"
               onClick={addDestination}
-              className="text-sm font-medium text-teal-700 transition hover:text-teal-800"
+              className="text-sm font-medium text-red-700 transition hover:text-red-800"
             >
               Add destination
             </button>
@@ -730,7 +730,7 @@ export default function BookingTripReportsSection({ transactionId, bookingId }) 
         <button
           type="button"
           onClick={openCreateModal}
-          className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-800"
+          className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500"
         >
           Add trip report
         </button>
@@ -795,7 +795,7 @@ export default function BookingTripReportsSection({ transactionId, bookingId }) 
                     <button
                       type="button"
                       onClick={() => openReportModal(report.id)}
-                      className="rounded-lg px-3 py-1.5 text-sm font-medium text-teal-700 transition hover:bg-teal-50"
+                      className="rounded-lg px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-50"
                     >
                       View
                     </button>
@@ -835,7 +835,7 @@ export default function BookingTripReportsSection({ transactionId, bookingId }) 
               <button
                 type="submit"
                 disabled={isCreating}
-                className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isCreating ? "Creating…" : "Create report"}
               </button>
@@ -888,7 +888,7 @@ export default function BookingTripReportsSection({ transactionId, bookingId }) 
                   <button
                     type="submit"
                     disabled={isSaving || isDeleting}
-                    className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isSaving ? "Saving…" : "Save changes"}
                   </button>
@@ -1014,7 +1014,7 @@ export default function BookingTripReportsSection({ transactionId, bookingId }) 
                     setDetailError("");
                   }}
                   disabled={isDetailLoading || !selectedReport.reportDate}
-                  className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Edit report
                 </button>
