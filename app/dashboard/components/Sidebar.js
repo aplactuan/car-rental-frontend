@@ -24,6 +24,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [role, setRole] = useState("admin");
+  const [userName, setUserName] = useState("");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const drawerRef = useRef(null);
   const menuButtonRef = useRef(null);
@@ -37,17 +38,30 @@ export default function Sidebar() {
         const res = await fetch("/api/session", { cache: "no-store" });
         const data = await res.json().catch(() => ({}));
         if (!isCurrent) return;
-        if (res.ok && data?.role) {
-          setRole(data.role === "driver" ? "driver" : "admin");
+        if (res.ok) {
+          if (data?.role) {
+            setRole(data.role === "driver" ? "driver" : "admin");
+          }
+          if (typeof data?.name === "string" && data.name.trim()) {
+            setUserName(data.name.trim());
+            if (typeof window !== "undefined") {
+              localStorage.setItem("auth_name", data.name.trim());
+            }
+          } else if (typeof window !== "undefined") {
+            const localName = localStorage.getItem("auth_name");
+            if (localName) setUserName(localName);
+          }
           return;
         }
       } catch {
-        // Fall back to local storage role.
+        // Fall back to local storage role/name.
       }
 
       if (typeof window !== "undefined" && isCurrent) {
         const localRole = localStorage.getItem("auth_role");
         setRole(localRole === "driver" ? "driver" : "admin");
+        const localName = localStorage.getItem("auth_name");
+        if (localName) setUserName(localName);
       }
     }
 
@@ -106,6 +120,7 @@ export default function Sidebar() {
       if (typeof window !== "undefined") {
         localStorage.removeItem("auth_token");
         localStorage.removeItem("auth_role");
+        localStorage.removeItem("auth_name");
       }
       router.push("/");
       router.refresh();
@@ -113,11 +128,14 @@ export default function Sidebar() {
       if (typeof window !== "undefined") {
         localStorage.removeItem("auth_token");
         localStorage.removeItem("auth_role");
+        localStorage.removeItem("auth_name");
       }
       router.push("/");
       router.refresh();
     }
   }
+
+  const greetingName = userName || (role === "driver" ? "Driver" : "there");
 
   const navigation = (
     <>
@@ -185,8 +203,13 @@ export default function Sidebar() {
         })}
       </nav>
       <div className="px-3 pt-2">
-        <div className="mx-1 mb-2 border-t border-white/10 pt-3 text-[10px] font-semibold uppercase tracking-wide text-zinc-600">
-          Account
+        <div className="mx-1 mb-2 border-t border-white/10 pt-3">
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-zinc-600">
+            Account
+          </div>
+          <p className="mt-1.5 truncate text-sm font-medium text-zinc-200">
+            Hi {greetingName}
+          </p>
         </div>
         <Link
           href={accountNavItem.href}

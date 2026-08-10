@@ -264,6 +264,18 @@ export default async function CustomerDetailPage({ params }) {
   const pendingPurchaseOrders = purchaseOrders.filter(
     (po) => po.status !== "ok",
   ).length;
+  const okPurchaseOrders = purchaseOrders.filter((po) => po.status === "ok").length;
+  const poOkRate =
+    !purchaseOrdersError && purchaseOrders.length > 0
+      ? Math.round((okPurchaseOrders / purchaseOrders.length) * 100)
+      : null;
+
+  // Placeholder until customer-level invoice / trip-report rollups are wired.
+  const outstandingPlaceholder = "PHP 128,400";
+  const tripReportsPlaceholder = {
+    total: 9,
+    unattached: 2,
+  };
 
   return (
     <div className="min-w-0 w-full space-y-6 lg:pr-8">
@@ -367,33 +379,53 @@ export default async function CustomerDetailPage({ params }) {
 
         {!error && customer ? (
           <div className="grid gap-px bg-zinc-200 sm:grid-cols-2 lg:grid-cols-4">
-            <SummaryCell label="Contact person">
-              <p className="truncate text-lg font-semibold text-zinc-900">
-                {customer.contact_person || "—"}
-              </p>
-            </SummaryCell>
-            <SummaryCell label="Contact mobile">
-              <p className="truncate text-lg font-semibold text-zinc-900">
-                {customer.contact_mobile_number || "—"}
-              </p>
-            </SummaryCell>
-            <SummaryCell label="Programs">
-              <p className="text-2xl font-semibold tracking-tight text-zinc-900">
-                {programsError ? "—" : programs.length}
-              </p>
-            </SummaryCell>
             <SummaryCell label="Purchase orders">
               <p className="text-2xl font-semibold tracking-tight text-zinc-900">
                 {purchaseOrdersError ? "—" : purchaseOrders.length}
               </p>
-              {!purchaseOrdersError && purchaseOrders.length > 0 ? (
+              {!purchaseOrdersError ? (
                 <p className="mt-1 text-xs text-zinc-500">
-                  {formatPhp(purchaseOrderTotal)}
                   {pendingPurchaseOrders > 0
-                    ? ` · ${pendingPurchaseOrders} pending`
-                    : ""}
+                    ? `${pendingPurchaseOrders} pending`
+                    : purchaseOrders.length > 0
+                      ? "All OK"
+                      : "No POs yet"}
+                  {poOkRate != null ? ` · ${poOkRate}% OK` : ""}
                 </p>
               ) : null}
+            </SummaryCell>
+            <SummaryCell label="PO value">
+              <p className="text-2xl font-semibold tracking-tight text-zinc-900">
+                {purchaseOrdersError
+                  ? "—"
+                  : purchaseOrders.length > 0
+                    ? formatPhp(purchaseOrderTotal)
+                    : "PHP 0"}
+              </p>
+              {!purchaseOrdersError && programs.length > 0 ? (
+                <p className="mt-1 text-xs text-zinc-500">
+                  Across {programs.length} program
+                  {programs.length === 1 ? "" : "s"}
+                </p>
+              ) : (
+                <p className="mt-1 text-xs text-zinc-500">Sum of PO amounts</p>
+              )}
+            </SummaryCell>
+            <SummaryCell label="Outstanding">
+              <p className="text-2xl font-semibold tracking-tight text-zinc-900">
+                {outstandingPlaceholder}
+              </p>
+              <p className="mt-1 text-xs text-zinc-400">
+                Placeholder · unpaid invoices
+              </p>
+            </SummaryCell>
+            <SummaryCell label="Trip reports">
+              <p className="text-2xl font-semibold tracking-tight text-zinc-900">
+                {tripReportsPlaceholder.total}
+              </p>
+              <p className="mt-1 text-xs text-zinc-400">
+                Placeholder · {tripReportsPlaceholder.unattached} unattached
+              </p>
             </SummaryCell>
           </div>
         ) : null}
@@ -412,12 +444,21 @@ export default async function CustomerDetailPage({ params }) {
 
           <div className="grid gap-px bg-zinc-100 sm:grid-cols-2 lg:grid-cols-3">
             {[
+              { label: "Contact person", value: customer.contact_person },
+              {
+                label: "Contact mobile",
+                value: customer.contact_mobile_number,
+              },
+              { label: "Contact email", value: customer.contact_email },
               { label: "Email", value: customer.email },
               { label: "Phone number", value: customer.phone_number },
-              { label: "Contact email", value: customer.contact_email },
               { label: "Address", value: customer.address },
               { label: "Created at", value: formatDate(customer.created_at) },
               { label: "Updated at", value: formatDate(customer.updated_at) },
+              {
+                label: "Programs",
+                value: programsError ? "—" : String(programs.length),
+              },
             ].map((item) => (
               <div key={item.label} className="min-w-0 bg-white px-4 py-5 sm:px-6">
                 <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">

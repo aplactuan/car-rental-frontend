@@ -109,6 +109,11 @@ export default function Home() {
       } else {
         localStorage.removeItem("auth_role");
       }
+      if (data?.name) {
+        localStorage.setItem("auth_name", data.name);
+      } else {
+        localStorage.removeItem("auth_name");
+      }
 
       router.push("/dashboard");
       router.refresh();
