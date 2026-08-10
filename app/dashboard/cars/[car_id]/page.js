@@ -165,7 +165,7 @@ function CarDetailSection({ car, carName }) {
 
   return (
     <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-      <div className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-teal-700 px-6 pb-8 pt-6 text-white sm:px-8">
+      <div className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-teal-700 px-4 pb-6 pt-5 text-white sm:px-8 sm:pb-8 sm:pt-6">
         <div
           className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 blur-2xl"
           aria-hidden
@@ -197,12 +197,12 @@ function CarDetailSection({ car, carName }) {
         </Link>
 
         <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex items-start gap-4">
+          <div className="flex min-w-0 items-start gap-3 sm:gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/25 backdrop-blur-sm">
               <CarIcon />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            <div className="min-w-0">
+              <h1 className="break-words text-2xl font-bold tracking-tight sm:text-3xl">
                 {carName || "Unknown vehicle"}
               </h1>
               <p className="mt-1 text-sm text-blue-100">
@@ -218,7 +218,7 @@ function CarDetailSection({ car, carName }) {
         </div>
       </div>
 
-      <div className="px-6 py-6 sm:px-8">
+      <div className="px-4 py-5 sm:px-8 sm:py-6">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
           Specifications
         </h2>
@@ -432,7 +432,7 @@ export default async function CarDetailPage({ params }) {
   const carName = [car?.make, car?.model].filter(Boolean).join(" ").trim();
 
   return (
-    <div className="w-full pr-8">
+    <div className="w-full min-w-0 pr-0 sm:pr-8">
       {error ? (
         <div className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
           <Link
@@ -485,14 +485,14 @@ export default async function CarDetailPage({ params }) {
         </div>
       )}
 
-      <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+      <div className="mt-6 min-w-0 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
         <h2 className="text-base font-semibold text-zinc-900">Upcoming Bookings</h2>
         {bookingsError ? (
           <p className="mt-4 text-sm text-red-600">{bookingsError}</p>
         ) : upcomingBookings.length === 0 ? (
           <p className="mt-4 text-sm text-zinc-500">No upcoming bookings for this car.</p>
         ) : (
-          <div className="mt-4 overflow-x-auto">
+          <div className="mt-4 max-w-full overflow-x-auto overscroll-x-contain">
             <table className="w-full min-w-[640px] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">

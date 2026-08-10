@@ -14,8 +14,8 @@ export default function TransactionDetailPanels({ transactionId, bookings }) {
   }, []);
 
   return (
-    <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] lg:gap-5">
-      <aside className="min-h-0 overflow-y-auto overscroll-contain">
+    <div className="grid min-w-0 gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] lg:gap-5">
+      <aside className="min-w-0 lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
         <BillingSection
           transactionId={transactionId}
           bookings={bookings}
@@ -23,7 +23,7 @@ export default function TransactionDetailPanels({ transactionId, bookings }) {
         />
       </aside>
 
-      <section className="relative z-10 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
+      <section className="relative z-10 flex min-w-0 flex-col overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100 lg:min-h-0">
         <BookingListSection
           transactionId={transactionId}
           bookings={bookings}

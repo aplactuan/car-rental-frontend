@@ -204,7 +204,7 @@ export default function PurchaseOrdersSection({
 
   return (
     <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-6 py-5">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-4 py-5 sm:px-6">
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
             Purchase orders
@@ -214,9 +214,9 @@ export default function PurchaseOrdersSection({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
           {showFilter ? (
-            <label className="flex items-center gap-2 text-sm text-zinc-600">
+            <label className="flex flex-col gap-2 text-sm text-zinc-600 sm:flex-row sm:items-center">
               <span className="whitespace-nowrap font-medium text-zinc-700">
                 Program
               </span>
@@ -224,7 +224,7 @@ export default function PurchaseOrdersSection({
                 value={programFilter}
                 onChange={(event) => handleFilterChange(event.target.value)}
                 disabled={isLoading}
-                className="min-w-[12rem] rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+                className="w-full min-w-0 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100 sm:min-w-[12rem]"
               >
                 <option value={FILTER_ALL}>All</option>
                 <option value={FILTER_NONE}>Unprogrammed</option>
@@ -247,7 +247,7 @@ export default function PurchaseOrdersSection({
         </div>
       </div>
 
-      <div className="px-6 py-5">
+      <div className="px-4 py-5 sm:px-6">
         {error ? (
           <p className="text-sm text-red-600">{error}</p>
         ) : purchaseOrders.length === 0 ? (
@@ -265,9 +265,12 @@ export default function PurchaseOrdersSection({
           </div>
         ) : (
           <div
-            className={`overflow-x-auto ${isLoading ? "opacity-60" : ""}`}
+            className={`overflow-x-auto overscroll-x-contain ${isLoading ? "opacity-60" : ""}`}
+            role="region"
+            aria-label="Purchase orders table"
+            tabIndex={0}
           >
-            <table className="w-full text-sm">
+            <table className="min-w-[64rem] text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                   <th className="pb-3 pr-6">PO number</th>

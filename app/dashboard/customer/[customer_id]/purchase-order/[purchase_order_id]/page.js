@@ -241,7 +241,7 @@ function DocumentLink({ href, label }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1 text-xs font-medium text-teal-700 transition hover:text-teal-800"
+      className="inline-flex max-w-full min-w-0 items-center gap-1 break-all text-xs font-medium text-teal-700 transition hover:text-teal-800"
     >
       {label}
       <svg
@@ -393,9 +393,9 @@ export default async function PurchaseOrderDetailPage({ params }) {
     poAmount != null && tripTotal > poAmount;
 
   return (
-    <div className="w-full space-y-6 pr-8">
+    <div className="min-w-0 w-full space-y-6 lg:pr-8">
       <header className="overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-        <div className="relative bg-gradient-to-br from-teal-800 via-emerald-700 to-zinc-900 px-6 py-6 text-white sm:px-8">
+        <div className="relative bg-gradient-to-br from-teal-800 via-emerald-700 to-zinc-900 px-4 py-6 text-white sm:px-8">
           <div
             className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"
             aria-hidden
@@ -454,7 +454,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
                   <p className="text-xs font-medium uppercase tracking-[0.18em] text-emerald-100/80">
                     Purchase order
                   </p>
-                  <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+                  <h1 className="mt-1 break-words text-2xl font-bold tracking-tight sm:text-3xl">
                     {displayPoNumber}
                   </h1>
                   {purchaseOrder?.customerName ? (
@@ -471,7 +471,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
             </div>
 
             {purchaseOrderId ? (
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
                 {purchaseOrder ? (
                   <PurchaseOrderActions
                     purchaseOrder={purchaseOrder}
@@ -496,7 +496,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
 
         {!error && purchaseOrder ? (
           <div className="grid gap-px bg-zinc-200 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="bg-white px-6 py-5">
+            <div className="bg-white px-4 py-5 sm:px-6">
               <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                 Amount
               </p>
@@ -504,15 +504,15 @@ export default async function PurchaseOrderDetailPage({ params }) {
                 {formatPhp(purchaseOrder.amount)}
               </p>
             </div>
-            <div className="bg-white px-6 py-5">
+            <div className="bg-white px-4 py-5 sm:px-6">
               <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                 Date
               </p>
-              <p className="mt-2 text-lg font-semibold text-zinc-900">
+              <p className="mt-2 break-words text-lg font-semibold text-zinc-900">
                 {formatDate(purchaseOrder.date)}
               </p>
             </div>
-            <div className="bg-white px-6 py-5">
+            <div className="bg-white px-4 py-5 sm:px-6">
               <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                 Request person
               </p>
@@ -520,7 +520,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
                 {purchaseOrder.requestPerson || "—"}
               </p>
             </div>
-            <div className="bg-white px-6 py-5">
+            <div className="bg-white px-4 py-5 sm:px-6">
               <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                 Status
               </p>
@@ -562,7 +562,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
       </header>
 
       <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-6 py-5">
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-4 py-5 sm:px-6">
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
               Invoices
@@ -578,7 +578,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
           ) : null}
         </div>
 
-        <div className="px-6 py-5">
+        <div className="px-4 py-5 sm:px-6">
           {invoicesError ? (
             <p className="text-sm text-red-600">{invoicesError}</p>
           ) : invoices.length === 0 ? (
@@ -591,8 +591,13 @@ export default async function PurchaseOrderDetailPage({ params }) {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div
+              className="overflow-x-auto overscroll-x-contain"
+              role="region"
+              aria-label="Purchase order invoices table"
+              tabIndex={0}
+            >
+              <table className="min-w-[68rem] text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                     <th className="pb-3 pr-6">Invoice number</th>
@@ -669,7 +674,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
       </section>
 
       <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-6 py-5">
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-4 py-5 sm:px-6">
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
               Trip reports
@@ -692,7 +697,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
           ) : null}
         </div>
 
-        <div className="px-6 py-5">
+        <div className="px-4 py-5 sm:px-6">
           {tripReportsError ? (
             <p className="text-sm text-red-600">{tripReportsError}</p>
           ) : tripReports.length === 0 ? (
@@ -705,8 +710,13 @@ export default async function PurchaseOrderDetailPage({ params }) {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div
+              className="overflow-x-auto overscroll-x-contain"
+              role="region"
+              aria-label="Purchase order trip reports table"
+              tabIndex={0}
+            >
+              <table className="min-w-[72rem] text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                     <th className="pb-3 pr-6">Trip report no</th>

@@ -149,7 +149,7 @@ function formatDate(value) {
 
 function SummaryCell({ label, children }) {
   return (
-    <div className="bg-white px-6 py-5">
+    <div className="bg-white px-4 py-5 sm:px-6">
       <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
         {label}
       </p>
@@ -160,7 +160,7 @@ function SummaryCell({ label, children }) {
 
 function SectionEmptyState({ title, description }) {
   return (
-    <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-6 py-10 text-center">
+    <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-10 text-center sm:px-6">
       <p className="text-sm font-medium text-zinc-700">{title}</p>
       <p className="mt-1 text-sm text-zinc-500">{description}</p>
     </div>
@@ -266,9 +266,9 @@ export default async function CustomerDetailPage({ params }) {
   ).length;
 
   return (
-    <div className="w-full space-y-6 pr-8">
+    <div className="min-w-0 w-full space-y-6 lg:pr-8">
       <header className="overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-        <div className="relative bg-gradient-to-br from-teal-800 via-emerald-700 to-zinc-900 px-6 py-6 text-white sm:px-8">
+        <div className="relative bg-gradient-to-br from-teal-800 via-emerald-700 to-zinc-900 px-4 py-6 text-white sm:px-8">
           <div
             className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl"
             aria-hidden
@@ -351,7 +351,7 @@ export default async function CustomerDetailPage({ params }) {
             </div>
 
             {customerId ? (
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
                 <AddProgramButton customerId={customerId} />
                 <AddPurchaseOrderButton customerId={customerId} />
               </div>
@@ -401,7 +401,7 @@ export default async function CustomerDetailPage({ params }) {
 
       {!error && customer ? (
         <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-          <div className="border-b border-zinc-100 px-6 py-5">
+          <div className="border-b border-zinc-100 px-4 py-5 sm:px-6">
             <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
               Profile details
             </h2>
@@ -419,11 +419,11 @@ export default async function CustomerDetailPage({ params }) {
               { label: "Created at", value: formatDate(customer.created_at) },
               { label: "Updated at", value: formatDate(customer.updated_at) },
             ].map((item) => (
-              <div key={item.label} className="bg-white px-6 py-5">
+              <div key={item.label} className="min-w-0 bg-white px-4 py-5 sm:px-6">
                 <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
                   {item.label}
                 </p>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-900">
+                <p className="mt-2 break-words text-sm leading-relaxed text-zinc-900">
                   {item.value || "—"}
                 </p>
               </div>
@@ -439,7 +439,7 @@ export default async function CustomerDetailPage({ params }) {
       ) : null}
 
       <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-6 py-5">
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-4 py-5 sm:px-6">
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
               Programs
@@ -455,7 +455,7 @@ export default async function CustomerDetailPage({ params }) {
           ) : null}
         </div>
 
-        <div className="px-6 py-5">
+        <div className="px-4 py-5 sm:px-6">
           {programsError ? (
             <p className="text-sm text-red-600">{programsError}</p>
           ) : programs.length === 0 ? (
@@ -464,8 +464,13 @@ export default async function CustomerDetailPage({ params }) {
               description="Add the first program for this customer."
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div
+              className="overflow-x-auto overscroll-x-contain"
+              role="region"
+              aria-label="Customer programs table"
+              tabIndex={0}
+            >
+              <table className="min-w-[36rem] text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                     <th className="pb-3 pr-6">Name</th>

@@ -55,11 +55,11 @@ export default function TransactionsPage() {
   };
 
   return (
-    <div className="w-full pr-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
-          <p className="mt-2 text-sm text-zinc-500">
+    <div className="min-w-0 w-full">
+      <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Transactions</h1>
+          <p className="mt-2 break-words text-sm text-zinc-500">
             View and manage rental transactions and billing
           </p>
         </div>
@@ -68,7 +68,7 @@ export default function TransactionsPage() {
           <button
             type="button"
             onClick={() => setShowTransactionForm((prev) => !prev)}
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+            className="min-h-11 w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 sm:w-auto"
           >
             Add Transaction
           </button>
@@ -78,7 +78,7 @@ export default function TransactionsPage() {
       {showTransactionForm && (
         <form
           onSubmit={handleTransactionSubmit}
-          className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm"
+          className="mt-6 min-w-0 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6"
         >
           <h2 className="text-sm font-semibold text-zinc-900">New Transaction</h2>
           <div className="mt-4">
@@ -99,12 +99,12 @@ export default function TransactionsPage() {
               placeholder="Enter customer name"
             />
           </div>
-          {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-3 break-words text-sm text-red-600">{error}</p>}
           <div className="mt-4">
             <button
               type="submit"
               disabled={isLoading}
-              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+              className="min-h-11 w-full rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 sm:w-auto"
             >
               {isLoading ? "Saving..." : "Save Transaction"}
             </button>
@@ -112,15 +112,15 @@ export default function TransactionsPage() {
         </form>
       )}
 
-      <div className="mt-6 rounded-xl border border-zinc-200 bg-white shadow-sm">
-        <div className="px-6 py-5">
+      <div className="mt-6 min-w-0 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+        <div className="px-4 py-5 sm:px-6">
           <div className="text-sm font-semibold text-zinc-900">
             Transaction List
           </div>
           <div className="mt-1 text-xs text-zinc-500">0 transactions</div>
         </div>
-        <div className="flex items-center justify-center px-6 pb-10">
-          <p className="text-sm text-zinc-500">
+        <div className="flex items-center justify-center px-4 pb-10 sm:px-6">
+          <p className="break-words text-center text-sm text-zinc-500">
             Transaction history and management will go here.
           </p>
         </div>

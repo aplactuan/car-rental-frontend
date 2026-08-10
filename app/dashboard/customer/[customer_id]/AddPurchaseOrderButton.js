@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import FileUploadWithCamera from "@/app/dashboard/components/FileUploadWithCamera";
+import ModalShell from "@/app/dashboard/components/ModalShell";
 
 const EMPTY_FORM = {
   po_number: "",
@@ -248,36 +249,20 @@ export default function AddPurchaseOrderButton({ customerId }) {
         type="button"
         onClick={openDialog}
         disabled={!customerId}
-        className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
       >
         Add purchase order
       </button>
 
       {isDialogOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 px-4">
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold text-zinc-900">
-                  Add purchase order
-                </h2>
-                <p className="mt-1 text-sm text-zinc-500">
-                  Create a purchase order for this customer.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={closeDialog}
-                disabled={isLoading}
-                aria-label="Close add purchase order dialog"
-                className="rounded-md p-2 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                x
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+        <ModalShell
+          title="Add purchase order"
+          description="Create a purchase order for this customer."
+          onClose={closeDialog}
+          closeDisabled={isLoading}
+          closeLabel="Close add purchase order dialog"
+        >
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label
                   htmlFor="poNumber"
@@ -458,7 +443,7 @@ export default function AddPurchaseOrderButton({ customerId }) {
 
               {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-              <div className="mt-5 flex justify-end gap-3">
+              <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={closeDialog}
@@ -476,8 +461,7 @@ export default function AddPurchaseOrderButton({ customerId }) {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+        </ModalShell>
       ) : null}
     </div>
   );

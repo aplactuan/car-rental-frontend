@@ -222,9 +222,9 @@ function DetailRow({ label, value, href }) {
   const content = value || "-";
 
   return (
-    <div className="flex items-start justify-between gap-4 rounded-xl border border-zinc-200/80 bg-zinc-50/80 px-4 py-3">
+    <div className="flex flex-col items-start gap-1 rounded-xl border border-zinc-200/80 bg-zinc-50/80 px-4 py-3 sm:flex-row sm:justify-between sm:gap-4">
       <dt className="text-sm font-medium text-zinc-500">{label}</dt>
-      <dd className="text-right text-sm font-semibold text-zinc-900">
+      <dd className="min-w-0 break-words text-left text-sm font-semibold text-zinc-900 sm:text-right">
         {href && value ? (
           <Link href={href} className="text-teal-700 transition hover:text-teal-800">
             {content}
@@ -324,9 +324,9 @@ export default async function BookingDetailPage({ params, searchParams }) {
   const statusLabel = status === "unscheduled" ? "Unscheduled" : status;
 
   return (
-      <div className="w-full pr-8">
+      <div className="w-full min-w-0 pr-0 sm:pr-8">
         <header className="overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-          <div className="relative bg-gradient-to-br from-teal-700 via-cyan-700 to-blue-900 px-6 py-6 text-white sm:px-8">
+          <div className="relative bg-gradient-to-br from-teal-700 via-cyan-700 to-blue-900 px-4 py-5 text-white sm:px-8 sm:py-6">
             <div
               className="pointer-events-none absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/15 blur-2xl"
               aria-hidden
@@ -374,14 +374,14 @@ export default async function BookingDetailPage({ params, searchParams }) {
         </header>
 
         <section className="mt-6 rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-          <div className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-white px-6 py-4 sm:px-8">
+          <div className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-white px-4 py-4 sm:px-8">
             <h2 className="text-lg font-semibold text-zinc-900">Booking overview</h2>
             <p className="mt-1 text-sm text-zinc-500">
               Data loaded from your accessible booking records for this booking.
             </p>
           </div>
 
-          <div className="p-6 sm:p-8">
+          <div className="p-4 sm:p-8">
             {error ? (
               <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {error}
@@ -389,7 +389,7 @@ export default async function BookingDetailPage({ params, searchParams }) {
             ) : booking ? (
               <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
                 <div className="space-y-6">
-                  <div className="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-5">
+                  <div className="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4 sm:p-5">
                     <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       Rental period
                     </p>
@@ -409,7 +409,7 @@ export default async function BookingDetailPage({ params, searchParams }) {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-zinc-200 bg-white p-5">
+                  <div className="rounded-2xl border border-zinc-200 bg-white p-4 sm:p-5">
                     <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       Notes
                     </p>
@@ -461,13 +461,13 @@ export default async function BookingDetailPage({ params, searchParams }) {
 
         {booking && !error ? (
           <section className="mt-6 rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-            <div className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-white px-6 py-4 sm:px-8">
+            <div className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-white px-4 py-4 sm:px-8">
               <h2 className="text-lg font-semibold text-zinc-900">Trip reports</h2>
               <p className="mt-1 text-sm text-zinc-500">
                 Create and manage daily trip logs for this booking.
               </p>
             </div>
-            <div className="p-6 sm:p-8">
+            <div className="p-4 sm:p-8">
               <BookingTripReportsSection
                 transactionId={transactionId || booking.transactionId}
                 bookingId={bookingId}

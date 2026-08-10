@@ -149,8 +149,8 @@ export default function CustomerSubAccountsSection({ customerId }) {
   }
 
   return (
-    <section className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <section className="mt-6 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
             Customer sub-accounts
@@ -165,7 +165,7 @@ export default function CustomerSubAccountsSection({ customerId }) {
             resetForm();
             setShowForm((current) => !current);
           }}
-          className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800"
+          className="w-full rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 sm:w-auto"
         >
           {showForm ? "Cancel" : "Add sub-account"}
         </button>
@@ -249,7 +249,7 @@ export default function CustomerSubAccountsSection({ customerId }) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="rounded-lg bg-blue-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:opacity-50"
+              className="w-full rounded-lg bg-blue-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:opacity-50 sm:w-auto"
             >
               {isSubmitting ? "Saving…" : "Save sub-account"}
             </button>

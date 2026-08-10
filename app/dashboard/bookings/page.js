@@ -218,13 +218,13 @@ function BookingCard({ booking, hideTransactionLink = false }) {
   const statusLabel = status === "unscheduled" ? "Unscheduled" : status;
 
   return (
-    <article className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md">
-      <div className="flex items-start justify-between gap-3">
+    <article className="min-w-0 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md sm:p-5">
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-sm font-semibold text-zinc-900">
+          <h3 className="break-words text-sm font-semibold text-zinc-900">
             {booking.transactionName || "Booking"}
           </h3>
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 break-all text-xs text-zinc-500">
             ID: {booking.id ? booking.id.slice(0, 8) : "N/A"}
           </p>
         </div>
@@ -237,25 +237,25 @@ function BookingCard({ booking, hideTransactionLink = false }) {
 
       <div className="mt-4 rounded-lg border border-zinc-100 bg-zinc-50/80 p-3">
         <p className="text-xs uppercase tracking-wide text-zinc-500">Rental period</p>
-        <p className="mt-1 text-sm font-medium text-zinc-800">
+        <p className="mt-1 break-words text-sm font-medium text-zinc-800">
           {formatDateLabel(booking.startDate)} - {formatDateLabel(booking.endDate)}
         </p>
       </div>
 
       <div className="mt-4 grid gap-3 text-sm text-zinc-700">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-start justify-between gap-3">
           <span className="text-zinc-500">Price</span>
-          <span className="font-semibold text-zinc-900">{formatCurrency(booking.price)}</span>
+          <span className="break-words text-right font-semibold text-zinc-900">{formatCurrency(booking.price)}</span>
         </div>
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-start justify-between gap-3">
           <span className="text-zinc-500">Car</span>
-          <span className="truncate text-right">
+          <span className="min-w-0 break-words text-right">
             {booking.carLabel || booking.carPlate || "Not specified"}
           </span>
         </div>
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-start justify-between gap-3">
           <span className="text-zinc-500">Driver</span>
-          <span className="truncate text-right">{booking.driverName || "Not specified"}</span>
+          <span className="min-w-0 break-words text-right">{booking.driverName || "Not specified"}</span>
         </div>
       </div>
 
@@ -265,7 +265,7 @@ function BookingCard({ booking, hideTransactionLink = false }) {
         </p>
       ) : null}
 
-      <div className="mt-4 flex flex-wrap items-center gap-4">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         {booking.id ? (
           <Link
             href={
@@ -273,7 +273,7 @@ function BookingCard({ booking, hideTransactionLink = false }) {
                 ? `/dashboard/bookings/${encodeURIComponent(booking.id)}?transaction_id=${encodeURIComponent(booking.transactionId)}`
                 : `/dashboard/bookings/${encodeURIComponent(booking.id)}`
             }
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-700 transition hover:text-teal-800"
+            className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg border border-teal-100 px-3 text-center text-xs font-semibold text-teal-700 transition hover:bg-teal-50 hover:text-teal-800"
           >
             View booking details
             <svg
@@ -292,7 +292,7 @@ function BookingCard({ booking, hideTransactionLink = false }) {
         {booking.transactionId && !hideTransactionLink ? (
           <Link
             href={`/dashboard/transactions/${encodeURIComponent(booking.transactionId)}`}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 transition hover:text-zinc-800"
+            className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg border border-zinc-200 px-3 text-center text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-800"
           >
             View transaction
             <svg
@@ -407,9 +407,9 @@ export default function BookingsPage() {
   );
 
   return (
-    <div className="w-full pr-8">
+    <div className="min-w-0 w-full">
       <header className="overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-        <div className="relative bg-gradient-to-br from-indigo-800 via-blue-700 to-cyan-700 px-6 py-6 text-white sm:px-8">
+        <div className="relative bg-gradient-to-br from-indigo-800 via-blue-700 to-cyan-700 px-4 py-5 text-white sm:px-8 sm:py-6">
           <div
             className="pointer-events-none absolute -right-8 -top-10 h-36 w-36 rounded-full bg-white/15 blur-2xl"
             aria-hidden
@@ -419,10 +419,10 @@ export default function BookingsPage() {
             aria-hidden
           />
 
-          <div className="relative flex flex-wrap items-start justify-between gap-4">
+          <div className="relative flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:justify-between sm:gap-4">
             <div className="min-w-0">
               <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Bookings</h1>
-              <p className="mt-1 text-sm text-blue-50/90">
+              <p className="mt-1 break-words text-sm text-blue-50/90">
                 View and track all rental bookings by status
               </p>
             </div>
@@ -431,7 +431,7 @@ export default function BookingsPage() {
             </span>
           </div>
 
-          <div className="relative mt-5 flex flex-wrap gap-2">
+          <div className="relative mt-5 grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 min-[420px]:flex min-[420px]:flex-wrap">
             {FILTERS.map((filter) => {
               const isActive = activeFilter === filter.key;
               return (
@@ -442,7 +442,7 @@ export default function BookingsPage() {
                     setActiveFilter(filter.key);
                     setPage(1);
                   }}
-                  className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition ${
+                  className={`min-h-11 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-wide transition min-[420px]:px-4 ${
                     isActive
                       ? "bg-white text-indigo-700 shadow-sm"
                       : "bg-white/15 text-white hover:bg-white/25"
@@ -457,7 +457,7 @@ export default function BookingsPage() {
       </header>
 
       <section className="mt-6 rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-        <div className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-white px-6 py-4 sm:px-8">
+        <div className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-white px-4 py-4 sm:px-8">
           <h2 className="text-sm font-semibold text-zinc-900">{titleFilter} bookings</h2>
           <p className="mt-0.5 text-xs text-zinc-500">
             {isLoading
@@ -468,7 +468,7 @@ export default function BookingsPage() {
           </p>
         </div>
 
-        <div className="p-6 sm:p-8">
+        <div className="p-4 sm:p-8">
           {isLoading ? (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {[0, 1, 2].map((key) => (
@@ -483,7 +483,7 @@ export default function BookingsPage() {
               {error}
             </div>
           ) : bookings.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 px-6 py-14 text-center">
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 px-4 py-10 text-center sm:px-6 sm:py-14">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-400">
                 <svg
                   viewBox="0 0 24 24"
@@ -516,16 +516,16 @@ export default function BookingsPage() {
         </div>
 
         {!isLoading && !error ? (
-          <div className="flex flex-col items-stretch justify-between gap-3 border-t border-zinc-100 px-6 py-4 sm:flex-row sm:items-center">
+          <div className="flex flex-col items-stretch justify-between gap-3 border-t border-zinc-100 px-4 py-4 sm:flex-row sm:items-center sm:px-6">
             <p className="text-xs text-zinc-500">
               Page {page} of {pagination.lastPage}
             </p>
-            <div className="flex items-center justify-end gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end">
               <button
                 type="button"
                 disabled={page <= 1}
                 onClick={() => setPage((current) => Math.max(1, current - 1))}
-                className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-11 rounded-md border border-zinc-300 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Previous
               </button>
@@ -533,7 +533,7 @@ export default function BookingsPage() {
                 type="button"
                 disabled={page >= pagination.lastPage}
                 onClick={() => setPage((current) => current + 1)}
-                className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-11 rounded-md border border-zinc-300 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Next
               </button>

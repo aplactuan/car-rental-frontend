@@ -99,10 +99,10 @@ export default async function TransactionDetailPage({ params }) {
   const bookingCount = bookings.length;
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] min-h-[32rem] flex-col gap-4 pr-6">
+    <div className="flex min-w-0 flex-col gap-4 pr-3 sm:pr-6 lg:h-[calc(100vh-4rem)] lg:min-h-[32rem]">
       <header className="shrink-0 overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-        <div className="bg-gradient-to-r from-teal-600 via-teal-700 to-zinc-900 px-6 py-5 text-white">
-          <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="bg-gradient-to-r from-teal-600 via-teal-700 to-zinc-900 px-4 py-5 text-white sm:px-6">
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
             <div className="min-w-0">
               <Link
                 href="/dashboard/transactions"
@@ -110,19 +110,19 @@ export default async function TransactionDetailPage({ params }) {
               >
                 ← Back to transactions
               </Link>
-              <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+              <h1 className="mt-2 break-words text-2xl font-bold tracking-tight sm:text-3xl">
                 Transaction
               </h1>
               {customerName ? (
                 <p className="mt-1 text-sm text-teal-50/95">{customerName}</p>
               ) : null}
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex max-w-full flex-wrap gap-2">
               <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
                 {bookingCount} booking{bookingCount !== 1 ? "s" : ""}
               </span>
               <span
-                className="max-w-[220px] truncate rounded-full bg-white/10 px-3 py-1 font-mono text-xs text-teal-50/90"
+                className="max-w-full truncate rounded-full bg-white/10 px-3 py-1 font-mono text-xs text-teal-50/90 sm:max-w-[220px]"
                 title={transactionId}
               >
                 {transactionId}

@@ -353,15 +353,15 @@ export default function DriversPage() {
   }
 
   return (
-    <div className="w-full pr-8">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Drivers</h1>
+    <div className="min-w-0 w-full">
+      <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Drivers</h1>
           <p className="mt-2 text-sm text-zinc-500">
             Manage your driver database
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end sm:gap-3">
           <button
             type="button"
             onClick={() => {
@@ -369,7 +369,7 @@ export default function DriversPage() {
               setImportError("");
               setImportStatus("");
             }}
-            className="inline-flex items-center gap-2 rounded-md border border-blue-900 bg-white px-4 py-2 text-sm font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50"
+            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-md border border-blue-900 bg-white px-4 py-2 text-sm font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50 sm:flex-none"
           >
             <svg
               className="h-4 w-4"
@@ -390,7 +390,7 @@ export default function DriversPage() {
           <button
             type="button"
             onClick={openAddForm}
-            className="inline-flex items-center gap-2 rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
+            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 sm:flex-none"
           >
             <svg
               className="h-4 w-4"
@@ -408,9 +408,9 @@ export default function DriversPage() {
       </div>
 
       {showImportForm && (
-        <div className="mt-4 rounded-xl border border-dashed border-blue-200 bg-blue-50 p-4 text-sm text-zinc-800">
+        <div className="mt-4 min-w-0 rounded-xl border border-dashed border-blue-200 bg-blue-50 p-4 text-sm text-zinc-800">
           <form onSubmit={handleImportSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <label className={labelClass}>Import Drivers CSV</label>
               <input
                 ref={importInputRef}
@@ -428,11 +428,11 @@ export default function DriversPage() {
                 Upload a CSV file to queue a driver import.
               </p>
             </div>
-            <div className="flex gap-2 pt-2 sm:pt-6">
+            <div className="flex flex-wrap gap-2 pt-2 sm:pt-6">
               <button
                 type="submit"
                 disabled={isImporting}
-                className="rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:opacity-50"
+                className="min-h-11 flex-1 rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:opacity-50 sm:flex-none"
               >
                 {isImporting ? "Importing..." : "Import CSV"}
               </button>
@@ -448,7 +448,7 @@ export default function DriversPage() {
                     importInputRef.current.value = "";
                   }
                 }}
-                className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50"
+                className="min-h-11 flex-1 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50 sm:flex-none"
               >
                 Cancel
               </button>
@@ -464,7 +464,7 @@ export default function DriversPage() {
       )}
 
       {formMode && (
-        <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="mt-6 min-w-0 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
           <h2 className="text-base font-semibold text-zinc-900">
             {formMode === "edit" ? "Edit Driver" : "Add Driver"}
           </h2>
@@ -557,11 +557,11 @@ export default function DriversPage() {
             {formError && (
               <p className="text-sm text-red-600">{formError}</p>
             )}
-            <div className="flex gap-2 pt-2">
+            <div className="flex flex-wrap gap-2 pt-2">
               <button
                 type="submit"
                 disabled={isLoading}
-                className="rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:opacity-50"
+                className="min-h-11 flex-1 rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:opacity-50 sm:flex-none"
               >
                 {isLoading
                   ? formMode === "edit"
@@ -575,7 +575,7 @@ export default function DriversPage() {
                 type="button"
                 onClick={closeForm}
                 disabled={isLoading}
-                className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50"
+                className="min-h-11 flex-1 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50 sm:flex-none"
               >
                 Cancel
               </button>
@@ -584,8 +584,8 @@ export default function DriversPage() {
         </div>
       )}
 
-      <div className="mt-6 rounded-xl border border-zinc-200 bg-white shadow-sm">
-        <div className="px-6 py-5">
+      <div className="mt-6 min-w-0 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+        <div className="px-4 py-4 sm:px-6 sm:py-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="text-sm font-semibold text-zinc-900">Driver List</div>
@@ -621,7 +621,7 @@ export default function DriversPage() {
                 <div className="flex shrink-0 gap-2">
                   <button
                     type="submit"
-                    className="rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
+                    className="min-h-11 flex-1 rounded-md bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800"
                   >
                     Search
                   </button>
@@ -629,7 +629,7 @@ export default function DriversPage() {
                     type="button"
                     disabled={!nameSearch && !nameSearchInput.trim()}
                     onClick={clearNameSearch}
-                    className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="min-h-11 flex-1 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Clear
                   </button>
@@ -639,11 +639,11 @@ export default function DriversPage() {
           </div>
         </div>
         {driversLoading ? (
-          <div className="px-6 pb-6 text-sm text-zinc-500">Loading drivers…</div>
+          <div className="break-words px-4 pb-6 text-sm text-zinc-500 sm:px-6">Loading drivers…</div>
         ) : driversError ? (
-          <div className="px-6 pb-6 text-sm text-red-600">{driversError}</div>
+          <div className="break-words px-4 pb-6 text-sm text-red-600 sm:px-6">{driversError}</div>
         ) : drivers.length === 0 ? (
-          <div className="flex items-center justify-center px-6 pb-10">
+          <div className="flex items-center justify-center px-4 pb-10 sm:px-6">
             <p className="text-sm text-zinc-500">
               {nameSearch
                 ? `No drivers match "${nameSearch}". Try another search.`
@@ -651,7 +651,63 @@ export default function DriversPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto px-6 pb-4">
+          <div className="px-4 pb-4 sm:px-6">
+            <div className="grid gap-3 md:hidden">
+              {drivers.map((driver) => {
+                const rowName = [driver.first_name, driver.last_name]
+                  .filter(Boolean)
+                  .join(" ")
+                  .trim();
+                return (
+                  <article
+                    key={driver.id ?? driver.license_number}
+                    className="min-w-0 rounded-lg border border-zinc-200 bg-zinc-50/50 p-4"
+                  >
+                    <h3 className="break-words font-semibold text-zinc-900">
+                      {rowName || "Unnamed driver"}
+                    </h3>
+                    <dl className="mt-4 grid gap-3 text-sm">
+                      {[
+                        ["License", driver.license_number || "—"],
+                        ["Phone", driver.phone_number || "—"],
+                        ["Address", driver.address || "—"],
+                        ["License expiry", formatDateForInput(driver.license_expiry_date) || "—"],
+                      ].map(([label, value]) => (
+                        <div key={label} className="grid min-w-0 grid-cols-[6.5rem_minmax(0,1fr)] gap-2">
+                          <dt className="text-xs text-zinc-500">{label}</dt>
+                          <dd className="break-words text-right font-medium text-zinc-800">{value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                    <div className="mt-4 flex items-center gap-2 border-t border-zinc-200 pt-3">
+                      {driver.id ? (
+                        <Link
+                          href={`/dashboard/drivers/${encodeURIComponent(driver.id)}`}
+                          className="inline-flex min-h-11 flex-1 items-center justify-center rounded-md border border-teal-200 bg-white px-3 text-sm font-semibold text-teal-700"
+                        >
+                          View
+                        </Link>
+                      ) : (
+                        <button type="button" disabled className="min-h-11 flex-1 cursor-not-allowed rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-400">
+                          View
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => openEditForm(driver)}
+                        className="min-h-11 flex-1 rounded-md border border-blue-200 bg-white px-3 text-sm font-semibold text-blue-700"
+                      >
+                        Edit
+                      </button>
+                      <button type="button" disabled className="min-h-11 flex-1 cursor-not-allowed rounded-md border border-red-100 bg-white px-3 text-sm text-red-400">
+                        Delete
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[760px] border-collapse">
               <thead>
                 <tr className="border-b border-zinc-200 text-left text-sm font-semibold text-zinc-800">
@@ -784,28 +840,29 @@ export default function DriversPage() {
                 })}
               </tbody>
             </table>
+            </div>
             {!driversLoading && pagination.lastPage > 1 && (
               <div className="mt-4 flex flex-col items-stretch justify-between gap-3 border-t border-zinc-100 pt-4 sm:flex-row sm:items-center">
-                <p className="text-xs text-zinc-500">
+                <p className="break-words text-xs text-zinc-500">
                   {formatDriverRangeLabel(page, drivers.length, pagination.total)}
                 </p>
-                <div className="flex items-center justify-end gap-2">
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:flex sm:justify-end">
                   <button
                     type="button"
                     disabled={page <= 1 || driversLoading}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="min-h-11 rounded-md border border-zinc-300 bg-white px-2 py-2 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3"
                   >
                     Previous
                   </button>
-                  <span className="text-xs text-zinc-600">
+                  <span className="whitespace-nowrap text-center text-xs text-zinc-600">
                     Page {page} of {pagination.lastPage}
                   </span>
                   <button
                     type="button"
                     disabled={page >= pagination.lastPage || driversLoading}
                     onClick={() => setPage((p) => p + 1)}
-                    className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="min-h-11 rounded-md border border-zinc-300 bg-white px-2 py-2 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3"
                   >
                     Next
                   </button>

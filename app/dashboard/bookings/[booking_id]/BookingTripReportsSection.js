@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import ModalShell from "@/app/dashboard/components/ModalShell";
 
 const MAX_DESTINATIONS = 6;
 
@@ -190,36 +191,6 @@ function formatTimeRange(timeIn, timeOut) {
   if (!timeIn && !timeOut) return "—";
   if (timeIn && timeOut) return `${timeIn} – ${timeOut}`;
   return timeIn || timeOut;
-}
-
-function ModalShell({ title, description, onClose, children, wide = false }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 px-4 py-6">
-      <div
-        className={`flex max-h-[90vh] w-full flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl ${
-          wide ? "max-w-3xl" : "max-w-lg"
-        }`}
-      >
-        <div className="flex items-start justify-between gap-4 border-b border-zinc-100 px-6 py-4">
-          <div>
-            <h3 className="text-lg font-semibold text-zinc-900">{title}</h3>
-            {description ? (
-              <p className="mt-1 text-sm text-zinc-500">{description}</p>
-            ) : null}
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close dialog"
-            className="rounded-md p-2 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-700"
-          >
-            ×
-          </button>
-        </div>
-        <div className="overflow-y-auto px-6 py-5">{children}</div>
-      </div>
-    </div>
-  );
 }
 
 function FieldLabel({ htmlFor, children, required = false }) {
@@ -852,7 +823,7 @@ export default function BookingTripReportsSection({ transactionId, bookingId }) 
             {createError ? (
               <p className="mt-4 text-sm text-red-600">{createError}</p>
             ) : null}
-            <div className="mt-5 flex justify-end gap-3">
+            <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={closeCreateModal}

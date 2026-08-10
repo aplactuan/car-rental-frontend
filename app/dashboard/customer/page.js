@@ -113,14 +113,14 @@ function CustomerCard({ customer, onEdit }) {
     contactPerson || contactEmail || contactPhone || customer.address;
 
   return (
-    <article className="group flex flex-col rounded-xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-teal-200 hover:shadow-md">
-      <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-700 to-teal-600 text-sm font-bold text-white shadow-sm ring-2 ring-white">
+    <article className="group flex min-w-0 flex-col rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:border-teal-200 hover:shadow-md sm:p-5">
+      <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-700 to-teal-600 text-sm font-bold text-white shadow-sm ring-2 ring-white sm:h-12 sm:w-12">
           {initials}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate font-semibold text-zinc-900">{displayName}</h3>
+            <h3 className="min-w-0 break-words font-semibold text-zinc-900">{displayName}</h3>
             <span
               className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ring-1 ${typeMeta.className}`}
             >
@@ -129,7 +129,7 @@ function CustomerCard({ customer, onEdit }) {
           </div>
           <ul className="mt-3 space-y-1.5 text-sm text-zinc-600">
             {contactPerson ? (
-              <li className="flex items-center gap-2 truncate">
+              <li className="flex min-w-0 items-start gap-2">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -145,11 +145,11 @@ function CustomerCard({ customer, onEdit }) {
                     strokeLinejoin="round"
                   />
                 </svg>
-                <span className="truncate">{contactPerson}</span>
+                <span className="min-w-0 break-words">{contactPerson}</span>
               </li>
             ) : null}
             {contactEmail ? (
-              <li className="flex items-center gap-2 truncate">
+              <li className="flex min-w-0 items-start gap-2">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -165,11 +165,11 @@ function CustomerCard({ customer, onEdit }) {
                   />
                   <path d="m4 7 8 6 8-6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span className="truncate">{contactEmail}</span>
+                <span className="min-w-0 break-all">{contactEmail}</span>
               </li>
             ) : null}
             {contactPhone ? (
-              <li className="flex items-center gap-2 truncate">
+              <li className="flex min-w-0 items-start gap-2">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -184,7 +184,7 @@ function CustomerCard({ customer, onEdit }) {
                     strokeLinejoin="round"
                   />
                 </svg>
-                <span className="truncate">{contactPhone}</span>
+                <span className="min-w-0 break-all">{contactPhone}</span>
               </li>
             ) : null}
             {customer.address ? (
@@ -204,7 +204,7 @@ function CustomerCard({ customer, onEdit }) {
                   />
                   <circle cx="12" cy="11" r="2" />
                 </svg>
-                <span className="line-clamp-2">{customer.address}</span>
+                <span className="break-words">{customer.address}</span>
               </li>
             ) : null}
             {!hasContactDetails ? (
@@ -214,11 +214,11 @@ function CustomerCard({ customer, onEdit }) {
         </div>
       </div>
 
-      <div className="mt-4 flex gap-2 border-t border-zinc-100 pt-4">
+      <div className="mt-4 flex flex-wrap gap-2 border-t border-zinc-100 pt-4">
         {customer.id ? (
           <Link
             href={`/dashboard/customer/${customer.id}`}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white transition group-hover:bg-teal-800"
+            className="inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-zinc-900 px-3 py-2 text-center text-sm font-medium text-white transition group-hover:bg-teal-800"
           >
             View customer
             <svg
@@ -245,7 +245,7 @@ function CustomerCard({ customer, onEdit }) {
           <button
             type="button"
             onClick={() => onEdit(customer)}
-            className="inline-flex items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
             title="Edit customer"
             aria-label={`Edit ${displayName}`}
           >
@@ -407,9 +407,9 @@ export default function CustomerDashboardPage() {
   ).length;
 
   return (
-    <div className="w-full pr-8">
+    <div className="min-w-0 w-full">
       <header className="overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-        <div className="relative bg-gradient-to-br from-blue-800 via-teal-700 to-zinc-900 px-6 py-6 text-white sm:px-8">
+        <div className="relative bg-gradient-to-br from-blue-800 via-teal-700 to-zinc-900 px-4 py-5 text-white sm:px-8 sm:py-6">
           <div
             className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10 blur-2xl"
             aria-hidden
@@ -419,9 +419,9 @@ export default function CustomerDashboardPage() {
             aria-hidden
           />
 
-          <div className="relative flex flex-wrap items-start justify-between gap-4">
+          <div className="relative flex flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25 backdrop-blur-sm">
                   <svg
                     viewBox="0 0 24 24"
@@ -439,11 +439,11 @@ export default function CustomerDashboardPage() {
                     />
                   </svg>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
                     Customers
                   </h1>
-                  <p className="mt-1 text-sm text-blue-50/90">
+                  <p className="mt-1 break-words text-sm text-blue-50/90">
                     Manage personal and business accounts
                   </p>
                 </div>
@@ -453,7 +453,7 @@ export default function CustomerDashboardPage() {
             <button
               type="button"
               onClick={openAddForm}
-              className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50"
+              className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50 sm:w-auto"
             >
               <svg
                 className="h-4 w-4"
@@ -488,7 +488,7 @@ export default function CustomerDashboardPage() {
       </header>
 
       {formMode && (
-        <div className="mt-6 overflow-hidden rounded-2xl border border-teal-200/80 bg-gradient-to-br from-teal-50/80 to-white p-6 shadow-sm ring-1 ring-teal-100">
+        <div className="mt-6 min-w-0 overflow-hidden rounded-2xl border border-teal-200/80 bg-gradient-to-br from-teal-50/80 to-white p-4 shadow-sm ring-1 ring-teal-100 sm:p-6">
           <h2 className="text-base font-semibold text-zinc-900">
             {formMode === "edit" ? "Edit customer" : "Add new customer"}
           </h2>
@@ -573,7 +573,7 @@ export default function CustomerDashboardPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="rounded-lg bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:opacity-50"
+                className="min-h-11 flex-1 rounded-lg bg-blue-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:opacity-50 sm:flex-none"
               >
                 {isSubmitting
                   ? "Saving…"
@@ -585,7 +585,7 @@ export default function CustomerDashboardPage() {
                 type="button"
                 onClick={closeForm}
                 disabled={isSubmitting}
-                className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50"
+                className="min-h-11 flex-1 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50 sm:flex-none"
               >
                 Cancel
               </button>
@@ -595,7 +595,7 @@ export default function CustomerDashboardPage() {
       )}
 
       <section className="mt-6 overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
-        <div className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-white px-6 py-4 sm:px-8">
+        <div className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-white px-4 py-4 sm:px-8">
           <h2 className="text-sm font-semibold text-zinc-900">All customers</h2>
           <p className="mt-0.5 text-xs text-zinc-500">
             {isLoading
@@ -608,7 +608,7 @@ export default function CustomerDashboardPage() {
           </p>
         </div>
 
-        <div className="p-6 sm:p-8">
+        <div className="p-4 sm:p-8">
           {isLoading ? (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {[0, 1, 2].map((key) => (
@@ -623,7 +623,7 @@ export default function CustomerDashboardPage() {
               {error}
             </div>
           ) : customers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 px-6 py-14 text-center">
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 px-4 py-10 text-center sm:px-6 sm:py-14">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-400">
                 <svg
                   viewBox="0 0 24 24"
@@ -648,7 +648,7 @@ export default function CustomerDashboardPage() {
               <button
                 type="button"
                 onClick={openAddForm}
-                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
+                className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-blue-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
               >
                 <svg
                   className="h-4 w-4"

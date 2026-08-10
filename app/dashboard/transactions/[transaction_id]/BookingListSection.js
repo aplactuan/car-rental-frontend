@@ -594,13 +594,13 @@ export default function BookingListSection({
   };
 
   const shellClass = isPanel
-    ? "flex h-full min-h-0 flex-col"
+    ? "flex min-w-0 flex-col lg:h-full lg:min-h-0"
     : "mt-6 overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100";
 
   return (
     <div className={shellClass}>
-      <div className="shrink-0 border-b border-zinc-100 bg-gradient-to-r from-teal-50/80 via-white to-zinc-50 px-5 py-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="shrink-0 border-b border-zinc-100 bg-gradient-to-r from-teal-50/80 via-white to-zinc-50 px-4 py-4 sm:px-5">
+        <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
           <div>
             <h2 className="text-base font-semibold tracking-tight text-zinc-900">
               Bookings
@@ -613,7 +613,7 @@ export default function BookingListSection({
             <button
               type="button"
               onClick={() => (showForm ? handleCancel() : beginAdd())}
-              className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800 active:scale-[0.98]"
+              className="w-full rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800 active:scale-[0.98] sm:w-auto"
             >
               {showForm ? "Close" : "Add booking"}
             </button>
@@ -629,7 +629,7 @@ export default function BookingListSection({
       ) : null}
 
       {showForm && !bookingsLocked && (
-        <div className="shrink-0 max-h-[min(50vh,28rem)] overflow-y-auto border-b border-zinc-100">
+        <div className="shrink-0 border-b border-zinc-100 lg:max-h-[min(50vh,28rem)] lg:overflow-y-auto">
           <BookingFormShell
             formKey="add"
             title="New booking"
@@ -650,8 +650,8 @@ export default function BookingListSection({
       <div
         className={
           isPanel
-            ? "min-h-0 flex-1 overflow-y-auto overscroll-contain"
-            : "px-6 py-8"
+            ? "min-w-0 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain"
+            : "px-4 py-8 sm:px-6"
         }
       >
         {bookings.length === 0 ? (
@@ -662,7 +662,7 @@ export default function BookingListSection({
             </p>
           </div>
         ) : (
-          <div className={isPanel ? "" : "overflow-x-auto"}>
+          <div className="w-full overflow-x-auto overscroll-x-contain">
             <table className="w-full min-w-[720px] border-collapse text-left text-sm">
               <thead className="sticky top-0 z-10 bg-zinc-50/95 text-xs font-semibold uppercase tracking-wide text-zinc-500 backdrop-blur-sm">
                 <tr className="border-b border-zinc-200">
@@ -783,7 +783,7 @@ function BookingScheduleFields({
     "w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-teal-500/30 focus:ring-2";
 
   return (
-    <div className="w-full min-w-[280px] basis-full">
+    <div className="w-full min-w-0 basis-full">
       <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
         Schedule
       </p>
@@ -922,7 +922,7 @@ function BookingFormShell({
   return (
     <form
       onSubmit={onSubmit}
-      className={`bg-zinc-50/80 px-6 py-5 ${className}`}
+      className={`min-w-0 bg-zinc-50/80 px-4 py-5 sm:px-6 ${className}`}
     >
       <div className="mb-4">
         <h3 className="text-sm font-semibold text-zinc-900">{title}</h3>
@@ -954,7 +954,7 @@ function BookingFormShell({
             }
           }}
         />
-        <div>
+        <div className="w-full min-w-0 sm:w-auto">
           <label
             htmlFor={`driver-${formKey}`}
             className="mb-1 block text-xs font-medium text-zinc-600"
@@ -967,7 +967,7 @@ function BookingFormShell({
             onChange={(e) => setDriverId(e.target.value)}
             required
             disabled={!isTimeValid || isLoadingAvailability}
-            className="min-w-[160px] rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-teal-500/30 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+            className="w-full min-w-0 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-teal-500/30 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100 sm:min-w-[160px]"
           >
             <option value="">
               {!isTimeValid
@@ -983,7 +983,7 @@ function BookingFormShell({
             ))}
           </select>
         </div>
-        <div>
+        <div className="w-full min-w-0 sm:w-auto">
           <label
             htmlFor={`car-${formKey}`}
             className="mb-1 block text-xs font-medium text-zinc-600"
@@ -996,7 +996,7 @@ function BookingFormShell({
             onChange={(e) => setCarId(e.target.value)}
             required
             disabled={!isTimeValid || isLoadingAvailability}
-            className="min-w-[160px] rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-teal-500/30 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
+            className="w-full min-w-0 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-teal-500/30 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100 sm:min-w-[160px]"
           >
             <option value="">
               {!isTimeValid
@@ -1012,7 +1012,7 @@ function BookingFormShell({
             ))}
           </select>
         </div>
-        <div className="min-w-[200px] flex-1 basis-full sm:basis-auto">
+        <div className="min-w-0 flex-1 basis-full sm:min-w-[200px] sm:basis-auto">
           <label
             htmlFor={`price-${formKey}`}
             className="mb-1 block text-xs font-medium text-zinc-600"
@@ -1031,7 +1031,7 @@ function BookingFormShell({
             className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-teal-500/30 focus:ring-2"
           />
         </div>
-        <div className="min-w-[200px] flex-1 basis-full sm:basis-auto">
+        <div className="min-w-0 flex-1 basis-full sm:min-w-[200px] sm:basis-auto">
           <label
             htmlFor={`note-${formKey}`}
             className="mb-1 block text-xs font-medium text-zinc-600"
@@ -1047,12 +1047,12 @@ function BookingFormShell({
             className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none ring-teal-500/30 focus:ring-2"
           />
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
           <button
             type="button"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50"
+            className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:opacity-50 sm:w-auto"
           >
             Cancel
           </button>
@@ -1066,7 +1066,7 @@ function BookingFormShell({
               !carId ||
               price.trim() === ""
             }
-            className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:opacity-50"
+            className="w-full rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:opacity-50 sm:w-auto"
           >
             {submitLabel}
           </button>
