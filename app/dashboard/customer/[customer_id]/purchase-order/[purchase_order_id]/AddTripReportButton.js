@@ -193,8 +193,23 @@ export default function AddTripReportButton({ purchaseOrderId }) {
         type="button"
         onClick={openDialog}
         disabled={!purchaseOrderId}
-        className="w-full rounded-lg bg-white px-4 py-2 text-sm font-medium text-zinc-900 shadow-sm transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition hover:border-white/40 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
       >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          className="h-4 w-4"
+          aria-hidden
+        >
+          <path
+            d="M4 19l4.5-9 4 4L20 5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <circle cx="20" cy="5" r="1.4" />
+        </svg>
         Add trip report
       </button>
 

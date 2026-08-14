@@ -287,8 +287,22 @@ export default function PurchaseOrderActions({ purchaseOrder, customerId }) {
         type="button"
         onClick={openEdit}
         disabled={!purchaseOrder?.id}
-        className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-white/25 bg-transparent px-4 py-2 text-sm font-medium text-white/95 backdrop-blur-sm transition hover:border-white/45 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
       >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          className="h-4 w-4"
+          aria-hidden
+        >
+          <path
+            d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
         Edit purchase order
       </button>
 

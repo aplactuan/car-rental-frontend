@@ -290,11 +290,21 @@ export default function PurchaseOrdersSection({
                     programs.find((program) => program.id === po.programId)
                       ?.name ||
                     "";
+                  const purchaseOrderHref = `/dashboard/customer/${encodeURIComponent(customerId)}/purchase-order/${encodeURIComponent(po.id)}`;
 
                   return (
                     <tr key={po.id} className="transition hover:bg-zinc-50/80">
                       <td className="py-3.5 pr-6 font-medium text-zinc-900">
-                        {po.poNumber || "—"}
+                        {customerId && po.id ? (
+                          <Link
+                            href={purchaseOrderHref}
+                            className="underline-offset-2 transition hover:text-red-700 hover:underline"
+                          >
+                            {po.poNumber || "View purchase order"}
+                          </Link>
+                        ) : (
+                          po.poNumber || "—"
+                        )}
                       </td>
                       <td className="py-3.5 pr-6 text-zinc-700">
                         {programName || "—"}
@@ -316,7 +326,7 @@ export default function PurchaseOrdersSection({
                       </td>
                       <td className="py-3.5 text-right">
                         <Link
-                          href={`/dashboard/customer/${encodeURIComponent(customerId)}/purchase-order/${encodeURIComponent(po.id)}`}
+                          href={purchaseOrderHref}
                           className="text-xs font-medium text-red-700 transition hover:text-red-800"
                         >
                           View

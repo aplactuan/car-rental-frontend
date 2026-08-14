@@ -4,7 +4,7 @@ import AddInvoiceButton from "./AddInvoiceButton";
 import AddTripReportButton from "./AddTripReportButton";
 import InvoiceActions from "./InvoiceActions";
 import PurchaseOrderActions from "./PurchaseOrderActions";
-import TripReportActions from "./TripReportActions";
+import { TripReportRow } from "./TripReportActions";
 
 function readField(source, keys) {
   if (!source || typeof source !== "object") return "";
@@ -740,58 +740,12 @@ export default async function PurchaseOrderDetailPage({ params }) {
                       : null;
 
                     return (
-                      <tr
+                      <TripReportRow
                         key={report.id}
-                        className="transition hover:bg-zinc-50/80"
-                      >
-                        <td className="py-3.5 pr-6 font-medium text-zinc-900">
-                          {report.tripReportNo || "—"}
-                        </td>
-                        <td className="py-3.5 pr-6 text-zinc-700">
-                          {formatDate(report.reportDate)}
-                        </td>
-                        <td className="py-3.5 pr-6 text-zinc-700">
-                          {formatDate(report.tripStart)}
-                        </td>
-                        <td className="py-3.5 pr-6 text-zinc-700">
-                          {formatDate(report.tripEnd)}
-                        </td>
-                        <td className="py-3.5 pr-6 text-zinc-700">
-                          {report.driver || "—"}
-                        </td>
-                        <td className="max-w-xs py-3.5 pr-6 text-zinc-700">
-                          {report.destinations || "—"}
-                        </td>
-                        <td className="py-3.5 pr-6 font-medium text-zinc-900">
-                          {formatPhp(report.amount)}
-                        </td>
-                        <td className="py-3.5 pr-6">
-                          {report.invoiceId ? (
-                            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
-                              {linkedInvoice?.invoiceNumber || "Invoiced"}
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
-                              Unassigned
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3.5 pr-6">
-                          <DocumentLink
-                            href={report.tripReportImageUrl}
-                            label="View"
-                          />
-                        </td>
-                        <td className="py-3.5 text-right">
-                          <TripReportActions
-                            purchaseOrderId={purchaseOrderId}
-                            tripReport={report}
-                            invoiceNumber={
-                              linkedInvoice?.invoiceNumber || ""
-                            }
-                          />
-                        </td>
-                      </tr>
+                        purchaseOrderId={purchaseOrderId}
+                        tripReport={report}
+                        linkedInvoice={linkedInvoice}
+                      />
                     );
                   })}
                 </tbody>
