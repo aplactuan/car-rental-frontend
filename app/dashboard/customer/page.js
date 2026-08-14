@@ -218,7 +218,7 @@ function CustomerCard({ customer, onEdit }) {
         {customer.id ? (
           <Link
             href={`/dashboard/customer/${customer.id}`}
-            className="inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-red-400 px-3 py-2 text-center text-sm font-medium text-white transition group-hover:bg-red-500"
+            className="inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-[#cecece] px-3 py-2 text-center text-sm font-medium text-[#000] transition hover:bg-[#bfbfbf] group-hover:bg-[#bfbfbf]"
           >
             View customer
             <svg
@@ -436,7 +436,7 @@ export default function CustomerDashboardPage() {
         <button
           type="button"
           onClick={openAddForm}
-          className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-red-400 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 sm:w-auto"
+          className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-[#cecece] px-4 py-2.5 text-sm font-semibold text-[#000] shadow-sm transition hover:bg-[#bfbfbf] sm:w-auto"
         >
           <svg
             className="h-4 w-4"
@@ -613,7 +613,7 @@ export default function CustomerDashboardPage() {
               <button
                 type="button"
                 onClick={openAddForm}
-                className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-red-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500"
+                className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#cecece] px-4 py-2 text-sm font-semibold text-[#000] transition hover:bg-[#bfbfbf]"
               >
                 <svg
                   className="h-4 w-4"

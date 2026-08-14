@@ -101,8 +101,22 @@ export default function AddProgramButton({ customerId }) {
         type="button"
         onClick={openDialog}
         disabled={!customerId}
-        className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition hover:border-white/40 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
       >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          className="h-4 w-4"
+          aria-hidden
+        >
+          <path
+            d="M4 7.5A1.5 1.5 0 0 1 5.5 6H10l2 2h6.5A1.5 1.5 0 0 1 20 9.5v7A1.5 1.5 0 0 1 18.5 18h-13A1.5 1.5 0 0 1 4 16.5v-9Z"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
         Add program
       </button>
 

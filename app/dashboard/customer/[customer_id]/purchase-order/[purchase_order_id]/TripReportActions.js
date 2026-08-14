@@ -68,14 +68,49 @@ function DetailRow({ label, children }) {
   );
 }
 
+function DocumentLink({ href, label }) {
+  if (!href) {
+    return <span className="text-zinc-400">—</span>;
+  }
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex max-w-full min-w-0 items-center gap-1 break-all text-xs font-medium text-red-700 transition hover:text-red-800"
+    >
+      {label}
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        className="h-3.5 w-3.5"
+        aria-hidden
+      >
+        <path
+          d="M7 17L17 7M7 7h10v10"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </a>
+  );
+}
+
 export default function TripReportActions({
   purchaseOrderId,
   tripReport,
   invoiceNumber = "",
+  isViewOpen: isViewOpenProp,
+  onViewOpenChange,
 }) {
   const router = useRouter();
   const hasInvoice = Boolean(tripReport?.invoiceId);
-  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [internalViewOpen, setInternalViewOpen] = useState(false);
+  const isViewControlled = typeof onViewOpenChange === "function";
+  const isViewOpen = isViewControlled ? Boolean(isViewOpenProp) : internalViewOpen;
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [form, setForm] = useState({
     trip_report_no: "",
@@ -97,11 +132,19 @@ export default function TripReportActions({
       : "";
 
   const openView = () => {
-    setIsViewOpen(true);
+    if (isViewControlled) {
+      onViewOpenChange(true);
+      return;
+    }
+    setInternalViewOpen(true);
   };
 
   const closeView = () => {
-    setIsViewOpen(false);
+    if (isViewControlled) {
+      onViewOpenChange(false);
+      return;
+    }
+    setInternalViewOpen(false);
   };
 
   const openEdit = () => {
@@ -608,5 +651,65 @@ export default function TripReportActions({
         </ModalShell>
       ) : null}
     </div>
+  );
+}
+
+export function TripReportRow({ purchaseOrderId, tripReport, linkedInvoice }) {
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const invoiceNumber = linkedInvoice?.invoiceNumber || "";
+
+  return (
+    <tr className="transition hover:bg-zinc-50/80">
+      <td className="py-3.5 pr-6 font-medium text-zinc-900">
+        <button
+          type="button"
+          onClick={() => setIsViewOpen(true)}
+          className="text-left underline-offset-2 transition hover:text-red-700 hover:underline"
+        >
+          {tripReport.tripReportNo || "View trip report"}
+        </button>
+      </td>
+      <td className="py-3.5 pr-6 text-zinc-700">
+        {formatDate(tripReport.reportDate)}
+      </td>
+      <td className="py-3.5 pr-6 text-zinc-700">
+        {formatDate(tripReport.tripStart)}
+      </td>
+      <td className="py-3.5 pr-6 text-zinc-700">
+        {formatDate(tripReport.tripEnd)}
+      </td>
+      <td className="py-3.5 pr-6 text-zinc-700">
+        {tripReport.driver || "—"}
+      </td>
+      <td className="max-w-xs py-3.5 pr-6 text-zinc-700">
+        {tripReport.destinations || "—"}
+      </td>
+      <td className="py-3.5 pr-6 font-medium text-zinc-900">
+        {formatPhp(tripReport.amount)}
+      </td>
+      <td className="py-3.5 pr-6">
+        {tripReport.invoiceId ? (
+          <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
+            {linkedInvoice?.invoiceNumber || "Invoiced"}
+          </span>
+        ) : (
+          <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+            Unassigned
+          </span>
+        )}
+      </td>
+      <td className="py-3.5 pr-6">
+        <DocumentLink href={tripReport.tripReportImageUrl} label="View" />
+      </td>
+      <td className="py-3.5 text-right">
+        <TripReportActions
+          purchaseOrderId={purchaseOrderId}
+          tripReport={tripReport}
+          invoiceNumber={invoiceNumber}
+          isViewOpen={isViewOpen}
+          onViewOpenChange={setIsViewOpen}
+        />
+      </td>
+    </tr>
   );
 }
