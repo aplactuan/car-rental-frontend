@@ -1153,10 +1153,13 @@ export default function BillingSection({
                     className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                   />
                 </label>
-                <label className="min-w-0">
-                  <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                <div className="min-w-0">
+                  <label
+                    htmlFor="payment-proof-image"
+                    className="text-xs font-medium uppercase tracking-wide text-zinc-500"
+                  >
                     Proof image
-                  </span>
+                  </label>
                   <FileUploadWithCamera
                     id="payment-proof-image"
                     accept=".jpg,.jpeg,.png,.webp,.heic,.heif,image/jpeg,image/png,image/webp,image/heic,image/heif"
@@ -1167,7 +1170,7 @@ export default function BillingSection({
                     className="mt-1"
                     inputClassName="block w-full min-w-0 rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none ring-zinc-300 focus:ring-2 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-900 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-100"
                   />
-                </label>
+                </div>
               </div>
               <label className="mt-4 block">
                 <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">

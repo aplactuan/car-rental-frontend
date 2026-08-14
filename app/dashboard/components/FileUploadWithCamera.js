@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useId, useState } from "react";
 import { convertFilesHeicToJpeg } from "@/app/dashboard/lib/convertHeicToJpeg";
 
 const DEFAULT_INPUT_CLASS =
@@ -34,7 +34,8 @@ export default function FileUploadWithCamera({
   cameraButtonClassName = DEFAULT_CAMERA_BUTTON_CLASS,
   className = "",
 }) {
-  const cameraInputRef = useRef(null);
+  const generatedCameraInputId = useId();
+  const cameraInputId = `${id || generatedCameraInputId}-camera`;
   const [selectedNames, setSelectedNames] = useState([]);
   const [isConverting, setIsConverting] = useState(false);
   const [convertError, setConvertError] = useState("");
@@ -48,18 +49,26 @@ export default function FileUploadWithCamera({
     onFilesChange?.(list);
   }
 
-  async function processAndEmit(incomingFiles, { append = false } = {}) {
+  async function processAndEmit(
+    incomingFiles,
+    { append = false, convertHeic = true } = {},
+  ) {
     const incoming = Array.isArray(incomingFiles) ? incomingFiles : [];
     if (incoming.length === 0) return;
 
     setConvertError("");
     setIsConverting(true);
     try {
-      const converted = await convertFilesHeicToJpeg(incoming);
+      // Mobile Safari can terminate the page while heic2any decodes a
+      // full-resolution camera capture. Camera inputs already provide an
+      // upload-ready image, so only convert HEIC files chosen via the picker.
+      const processed = convertHeic
+        ? await convertFilesHeicToJpeg(incoming)
+        : incoming;
       if (append && Array.isArray(existingFiles)) {
-        emitFiles([...existingFiles, ...converted]);
+        emitFiles([...existingFiles, ...processed]);
       } else {
-        emitFiles(converted);
+        emitFiles(processed);
       }
     } catch (error) {
       console.error(error);
@@ -83,6 +92,7 @@ export default function FileUploadWithCamera({
 
     void processAndEmit([file], {
       append: multiple && Array.isArray(existingFiles),
+      convertHeic: false,
     });
   }
 
@@ -106,9 +116,9 @@ export default function FileUploadWithCamera({
           className={`min-w-0 flex-1 ${inputClassName}`.trim()}
         />
         <input
-          ref={cameraInputRef}
+          id={cameraInputId}
           type="file"
-          accept={`image/*,${HEIC_ACCEPT_EXTRA}`}
+          accept="image/*"
           capture="environment"
           className="sr-only"
           tabIndex={-1}
@@ -116,11 +126,19 @@ export default function FileUploadWithCamera({
           onChange={handleCameraChange}
           disabled={isDisabled}
         />
-        <button
-          type="button"
-          onClick={() => cameraInputRef.current?.click()}
-          disabled={isDisabled}
-          className={cameraButtonClassName}
+        <label
+          htmlFor={isDisabled ? undefined : cameraInputId}
+          aria-disabled={isDisabled}
+          role="button"
+          tabIndex={isDisabled ? -1 : 0}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            event.preventDefault();
+            document.getElementById(cameraInputId)?.click();
+          }}
+          className={`${cameraButtonClassName} ${
+            isDisabled ? "pointer-events-none cursor-not-allowed opacity-50" : "cursor-pointer"
+          }`.trim()}
         >
           <svg
             className="h-4 w-4 shrink-0"
@@ -143,7 +161,7 @@ export default function FileUploadWithCamera({
             />
           </svg>
           {isConverting ? "Converting…" : "Take photo"}
-        </button>
+        </label>
       </div>
       {isConverting ? (
         <p className="mt-2 text-xs text-zinc-500">Converting HEIC to JPEG…</p>
