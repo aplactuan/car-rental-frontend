@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { convertFilesHeicToJpeg } from "@/app/dashboard/lib/convertHeicToJpeg";
+import { prepareFilesForUpload } from "@/app/dashboard/lib/prepareImageForUpload";
 
 const DEFAULT_INPUT_CLASS =
   "w-full text-sm text-zinc-700 file:mr-3 file:rounded-lg file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-800 hover:file:bg-zinc-200 disabled:cursor-not-allowed";
@@ -21,7 +21,7 @@ function withHeicAccept(accept) {
 
 /**
  * File picker plus optional “Take photo” (rear camera on supporting mobile browsers).
- * HEIC/HEIF selections are converted to JPEG before onFilesChange / API upload.
+ * HEIC/HEIF and large camera images are converted/compressed to JPEG before upload.
  */
 export default function FileUploadWithCamera({
   id,
@@ -51,7 +51,7 @@ export default function FileUploadWithCamera({
 
   async function processAndEmit(
     incomingFiles,
-    { append = false, convertHeic = true } = {},
+    { append = false, forceCompress = false } = {},
   ) {
     const incoming = Array.isArray(incomingFiles) ? incomingFiles : [];
     if (incoming.length === 0) return;
@@ -59,12 +59,9 @@ export default function FileUploadWithCamera({
     setConvertError("");
     setIsConverting(true);
     try {
-      // Mobile Safari can terminate the page while heic2any decodes a
-      // full-resolution camera capture. Camera inputs already provide an
-      // upload-ready image, so only convert HEIC files chosen via the picker.
-      const processed = convertHeic
-        ? await convertFilesHeicToJpeg(incoming)
-        : incoming;
+      const processed = await prepareFilesForUpload(incoming, {
+        forceCompress,
+      });
       if (append && Array.isArray(existingFiles)) {
         emitFiles([...existingFiles, ...processed]);
       } else {
@@ -73,7 +70,7 @@ export default function FileUploadWithCamera({
     } catch (error) {
       console.error(error);
       setConvertError(
-        "Could not convert HEIC image to JPEG. Try another photo or format.",
+        "Could not convert image for upload. Try another photo or format.",
       );
     } finally {
       setIsConverting(false);
@@ -90,9 +87,11 @@ export default function FileUploadWithCamera({
     event.target.value = "";
     if (!file) return;
 
+    // Always convert/compress camera shots — iOS often returns HEIC or
+    // multi-MB JPEGs that exceed the Next.js proxy body limit (413).
     void processAndEmit([file], {
       append: multiple && Array.isArray(existingFiles),
-      convertHeic: false,
+      forceCompress: true,
     });
   }
 
@@ -164,7 +163,7 @@ export default function FileUploadWithCamera({
         </label>
       </div>
       {isConverting ? (
-        <p className="mt-2 text-xs text-zinc-500">Converting HEIC to JPEG…</p>
+        <p className="mt-2 text-xs text-zinc-500">Preparing image for upload…</p>
       ) : null}
       {convertError ? (
         <p className="mt-2 text-xs text-red-600">{convertError}</p>
