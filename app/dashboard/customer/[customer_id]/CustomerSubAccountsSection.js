@@ -153,7 +153,7 @@ export default function CustomerSubAccountsSection({ customerId }) {
       <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
-            Customer sub-accounts
+            Customer Sub-Accounts
           </h2>
           <p className="mt-1 text-sm text-zinc-500">
             Accounts linked directly to this customer.
@@ -167,7 +167,7 @@ export default function CustomerSubAccountsSection({ customerId }) {
           }}
           className="w-full rounded-lg bg-red-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 sm:w-auto"
         >
-          {showForm ? "Cancel" : "Add sub-account"}
+          {showForm ? "Cancel" : "Add Sub-Account"}
         </button>
       </div>
 
@@ -251,7 +251,7 @@ export default function CustomerSubAccountsSection({ customerId }) {
               disabled={isSubmitting}
               className="w-full rounded-lg bg-red-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:opacity-50 sm:w-auto"
             >
-              {isSubmitting ? "Saving…" : "Save sub-account"}
+              {isSubmitting ? "Saving…" : "Save Sub-Account"}
             </button>
           </div>
         </form>

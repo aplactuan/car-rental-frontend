@@ -615,7 +615,7 @@ export default function BookingListSection({
               onClick={() => (showForm ? handleCancel() : beginAdd())}
               className="w-full rounded-lg bg-red-400 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 active:scale-[0.98] sm:w-auto"
             >
-              {showForm ? "Close" : "Add booking"}
+              {showForm ? "Close" : "Add Booking"}
             </button>
           ) : null}
         </div>
@@ -632,10 +632,10 @@ export default function BookingListSection({
         <div className="shrink-0 border-b border-zinc-100 lg:max-h-[min(50vh,28rem)] lg:overflow-y-auto">
           <BookingFormShell
             formKey="add"
-            title="New booking"
+            title="New Booking"
             subtitle="Choose start and end date/time, then pick an available car and driver."
             onSubmit={handleSubmit}
-            submitLabel={isSubmitting ? "Saving…" : "Save booking"}
+            submitLabel={isSubmitting ? "Saving…" : "Save Booking"}
             {...sharedFormProps}
           />
         </div>
@@ -656,7 +656,7 @@ export default function BookingListSection({
       >
         {bookings.length === 0 ? (
           <div className="flex h-full min-h-[12rem] flex-col items-center justify-center px-6 py-12 text-center">
-            <p className="text-sm font-medium text-zinc-700">No bookings yet</p>
+            <p className="text-sm font-medium text-zinc-700">No Bookings Yet</p>
             <p className="mt-1 max-w-xs text-sm text-zinc-500">
               Add a booking to assign a car and driver to this transaction.
             </p>
@@ -747,10 +747,10 @@ export default function BookingListSection({
                         <td colSpan={6} className="p-0">
                           <BookingFormShell
                             formKey={`edit-${b.id}`}
-                            title="Edit booking"
+                            title="Edit Booking"
                             subtitle="Update times, vehicle, driver, or note."
                             onSubmit={handleSaveEdit}
-                            submitLabel={isSubmitting ? "Saving…" : "Update booking"}
+                            submitLabel={isSubmitting ? "Saving…" : "Update Booking"}
                             className="border-0"
                             {...sharedFormProps}
                           />

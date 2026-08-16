@@ -150,7 +150,7 @@ function licenseExpiryMeta(expiryValue) {
     return { label: "Expired", tone: "danger" };
   }
   if (diffDays <= 30) {
-    return { label: "Expiring soon", tone: "warning" };
+    return { label: "Expiring Soon", tone: "warning" };
   }
   return { label: "Valid", tone: "success" };
 }
@@ -229,7 +229,7 @@ function DriverDetailSection({ driver, fullName }) {
           aria-hidden
         />
 
-        <BackLink href="/dashboard/drivers" label="Back to driver list" />
+        <BackLink href="/dashboard/drivers" label="Back to Driver List" />
 
         <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex min-w-0 items-start gap-3 sm:gap-4">
@@ -390,7 +390,7 @@ function UpcomingBookingsSection({ bookings, error }) {
       <div className="flex flex-col items-start gap-3 border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-white px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
-            Upcoming bookings
+            Upcoming Bookings
           </h2>
           <p className="mt-0.5 text-sm text-zinc-500">
             Scheduled trips assigned to this driver
@@ -558,14 +558,14 @@ export default async function DriverDetailPage({ params }) {
     <div className="w-full min-w-0 pr-0 sm:pr-8">
       {driverError ? (
         <div className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
-          <BackLink href="/dashboard/drivers" label="Back to driver list" />
+          <BackLink href="/dashboard/drivers" label="Back to Driver List" />
           <p className="mt-4 text-sm text-red-600">{driverError}</p>
         </div>
       ) : driver ? (
         <DriverDetailSection driver={driver} fullName={fullName} />
       ) : (
         <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <BackLink href="/dashboard/drivers" label="Back to driver list" />
+          <BackLink href="/dashboard/drivers" label="Back to Driver List" />
           <p className="mt-4 text-sm text-zinc-500">No driver data returned.</p>
         </div>
       )}

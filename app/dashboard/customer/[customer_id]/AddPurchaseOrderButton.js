@@ -266,16 +266,16 @@ export default function AddPurchaseOrderButton({ customerId }) {
           />
           <path d="M14 4v4h4M9.5 13h5M9.5 16.5h5" strokeLinecap="round" />
         </svg>
-        Add purchase order
+        Add Purchase Order
       </button>
 
       {isDialogOpen ? (
         <ModalShell
-          title="Add purchase order"
+          title="Add Purchase Order"
           description="Create a purchase order for this customer."
           onClose={closeDialog}
           closeDisabled={isLoading}
-          closeLabel="Close add purchase order dialog"
+          closeLabel="Close Add Purchase Order Dialog"
         >
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -472,7 +472,7 @@ export default function AddPurchaseOrderButton({ customerId }) {
                   disabled={isLoading}
                   className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isLoading ? "Adding..." : "Create purchase order"}
+                  {isLoading ? "Adding..." : "Create Purchase Order"}
                 </button>
               </div>
             </form>

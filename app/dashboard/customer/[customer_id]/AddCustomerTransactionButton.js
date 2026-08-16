@@ -110,16 +110,16 @@ export default function AddCustomerTransactionButton({ customerId }) {
         disabled={!customerId}
         className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        Add transaction
+        Add Transaction
       </button>
 
       {isDialogOpen ? (
         <ModalShell
-          title="Add transaction"
+          title="Add Transaction"
           description="Enter a name and optional PO number for this customer transaction."
           onClose={closeDialog}
           closeDisabled={isLoading}
-          closeLabel="Close add transaction dialog"
+          closeLabel="Close Add Transaction Dialog"
         >
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -179,7 +179,7 @@ export default function AddCustomerTransactionButton({ customerId }) {
                   disabled={isLoading}
                   className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isLoading ? "Adding..." : "Create transaction"}
+                  {isLoading ? "Adding..." : "Create Transaction"}
                 </button>
               </div>
             </form>

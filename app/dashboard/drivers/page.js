@@ -745,7 +745,7 @@ export default function DriversPage() {
                             <Link
                               href={`/dashboard/drivers/${encodeURIComponent(driver.id)}`}
                               className="text-red-600 transition hover:text-red-700"
-                              title="View driver"
+                              title="View Driver"
                               aria-label={`View ${rowName || "driver"}`}
                             >
                               <svg
@@ -770,7 +770,7 @@ export default function DriversPage() {
                               disabled
                               className="cursor-not-allowed text-zinc-300"
                               title="Driver ID is unavailable"
-                              aria-label="View not available"
+                              aria-label="View Not Available"
                             >
                               <svg
                                 viewBox="0 0 24 24"
@@ -793,7 +793,7 @@ export default function DriversPage() {
                             type="button"
                             onClick={() => openEditForm(driver)}
                             className="text-blue-600 transition hover:text-blue-700"
-                            title="Edit driver"
+                            title="Edit Driver"
                             aria-label={`Edit ${rowName || "driver"}`}
                           >
                             <svg
@@ -815,8 +815,8 @@ export default function DriversPage() {
                             type="button"
                             disabled
                             className="cursor-not-allowed text-red-400"
-                            title="Delete is not available yet"
-                            aria-label="Delete not available"
+                            title="Delete Is Not Available Yet"
+                            aria-label="Delete Not Available"
                           >
                             <svg
                               viewBox="0 0 24 24"

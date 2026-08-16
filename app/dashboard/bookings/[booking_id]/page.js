@@ -352,7 +352,7 @@ export default async function BookingDetailPage({ params, searchParams }) {
                   >
                     <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  Back to bookings
+                  Back to Bookings
                 </Link>
                 <h1 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">
                   Booking details
@@ -375,7 +375,7 @@ export default async function BookingDetailPage({ params, searchParams }) {
 
         <section className="mt-6 rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
           <div className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-white px-4 py-4 sm:px-8">
-            <h2 className="text-lg font-semibold text-zinc-900">Booking overview</h2>
+            <h2 className="text-lg font-semibold text-zinc-900">Booking Overview</h2>
             <p className="mt-1 text-sm text-zinc-500">
               Data loaded from your accessible booking records for this booking.
             </p>
@@ -462,7 +462,7 @@ export default async function BookingDetailPage({ params, searchParams }) {
         {booking && !error ? (
           <section className="mt-6 rounded-2xl border border-zinc-200/90 bg-white shadow-sm ring-1 ring-zinc-100">
             <div className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-white px-4 py-4 sm:px-8">
-              <h2 className="text-lg font-semibold text-zinc-900">Trip reports</h2>
+              <h2 className="text-lg font-semibold text-zinc-900">Trip Reports</h2>
               <p className="mt-1 text-sm text-zinc-500">
                 Create and manage daily trip logs for this booking.
               </p>

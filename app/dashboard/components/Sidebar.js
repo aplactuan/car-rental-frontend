@@ -11,12 +11,12 @@ const navItems = [
   { href: "/dashboard/cars", label: "Cars", icon: "M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" },
   { href: "/dashboard/bookings", label: "Bookings", icon: "M8 7V5a2 2 0 114 0v2m0 0h4a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2h4m0 0V5m0 7h4m-8 4h8" },
   { href: "/dashboard/transactions", label: "Transactions", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" },
-  { href: "/dashboard/billing", label: "Billing report", icon: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" },
+  { href: "/dashboard/billing", label: "Billing Report", icon: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" },
 ];
 
 const accountNavItem = {
   href: "/dashboard/account",
-  label: "Change password",
+  label: "Change Password",
   icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
 };
 
@@ -286,7 +286,7 @@ export default function Sidebar() {
           type="button"
           onClick={() => setIsMobileOpen(true)}
           className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 text-zinc-200 transition hover:bg-white/10"
-          aria-label="Open navigation"
+          aria-label="Open Navigation"
           aria-controls="mobile-dashboard-navigation"
           aria-expanded={isMobileOpen}
         >
@@ -312,20 +312,20 @@ export default function Sidebar() {
             type="button"
             className="absolute inset-0 bg-black/55"
             onClick={() => setIsMobileOpen(false)}
-            aria-label="Close navigation"
+            aria-label="Close Navigation"
           />
           <aside
             ref={drawerRef}
             id="mobile-dashboard-navigation"
             className="relative flex h-full w-[min(18rem,88vw)] flex-col bg-[#0B0F14] shadow-2xl"
-            aria-label="Dashboard navigation"
+            aria-label="Dashboard Navigation"
           >
             <button
               ref={closeButtonRef}
               type="button"
               onClick={() => setIsMobileOpen(false)}
               className="absolute right-3 top-3 z-10 inline-flex h-11 w-11 items-center justify-center rounded-lg text-zinc-300 hover:bg-white/10 hover:text-white"
-              aria-label="Close navigation"
+              aria-label="Close Navigation"
             >
               <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
                 <path d="M6 6l12 12M18 6 6 18" strokeWidth="2" strokeLinecap="round" />

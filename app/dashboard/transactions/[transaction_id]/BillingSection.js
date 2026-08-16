@@ -101,7 +101,7 @@ const getStatusMeta = (rawStatus) => {
 
   if (status === "partially_paid") {
     return {
-      label: "Partially paid",
+      label: "Partially Paid",
       className: "bg-indigo-100 text-indigo-700 border-indigo-200",
     };
   }
@@ -120,7 +120,7 @@ const getStatusMeta = (rawStatus) => {
 };
 
 const PAYMENT_METHOD_OPTIONS = [
-  { value: "bank_transfer", label: "Bank transfer" },
+  { value: "bank_transfer", label: "Bank Transfer" },
   { value: "cash", label: "Cash" },
   { value: "gcash", label: "GCash" },
 ];
@@ -908,7 +908,7 @@ export default function BillingSection({
               onClick={handleCreateToggle}
               className="mt-4 rounded-xl bg-red-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500"
             >
-              {showCreateForm ? "Close form" : "Create bill"}
+              {showCreateForm ? "Close Form" : "Create Bill"}
             </button>
           </div>
 
@@ -917,7 +917,7 @@ export default function BillingSection({
               onSubmit={handleCreateSubmit}
               className="mt-4 min-w-0 rounded-2xl border border-zinc-200 bg-white p-4 sm:p-5"
             >
-              <h3 className="text-sm font-semibold text-zinc-900">Create bill</h3>
+              <h3 className="text-sm font-semibold text-zinc-900">Create Bill</h3>
               <div className="mt-4 grid min-w-0 gap-4">
                 <label className="min-w-0">
                   <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
@@ -974,7 +974,7 @@ export default function BillingSection({
                   disabled={isSubmitting}
                   className="w-full rounded-xl bg-red-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
-                  {isSubmitting ? "Saving..." : "Save bill"}
+                  {isSubmitting ? "Saving..." : "Save Bill"}
                 </button>
               </div>
             </form>
@@ -1026,7 +1026,7 @@ export default function BillingSection({
                   disabled={isSubmitting}
                   className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
-                  {isEditing ? "Cancel edit" : "Edit bill"}
+                  {isEditing ? "Cancel Edit" : "Edit Bill"}
                 </button>
               ) : null}
 
@@ -1099,7 +1099,7 @@ export default function BillingSection({
               onSubmit={handlePaymentSubmit}
               className="mb-4 min-w-0 rounded-2xl border border-zinc-200 bg-zinc-50/40 p-4 sm:p-5"
             >
-              <h3 className="text-sm font-semibold text-zinc-900">Record payment</h3>
+              <h3 className="text-sm font-semibold text-zinc-900">Record Payment</h3>
               <p className="mt-1 text-xs text-zinc-500">
                 Add an installment payment. Bill status updates automatically based on
                 total payments.
@@ -1193,7 +1193,7 @@ export default function BillingSection({
                   disabled={isSubmittingPayment || isSubmitting || remainingBalance <= 0}
                   className="w-full rounded-xl bg-red-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
-                  {isSubmittingPayment ? "Saving payment..." : "Save payment"}
+                  {isSubmittingPayment ? "Saving Payment..." : "Save Payment"}
                 </button>
               </div>
             </form>
@@ -1202,7 +1202,7 @@ export default function BillingSection({
           {bill ? (
             <div className="mb-4 rounded-xl border border-zinc-200 bg-white">
               <div className="border-b border-zinc-100 px-4 py-3">
-                <h3 className="text-sm font-semibold text-zinc-900">Payment history</h3>
+                <h3 className="text-sm font-semibold text-zinc-900">Payment History</h3>
               </div>
               {isLoadingPayments ? (
                 <p className="px-4 py-4 text-sm text-zinc-500">Loading payments...</p>
@@ -1236,7 +1236,7 @@ export default function BillingSection({
                             rel="noopener noreferrer"
                             className="inline-flex text-xs font-semibold text-blue-700 hover:underline"
                           >
-                            View proof image
+                            View Proof Image
                           </a>
                         ) : null}
                       </div>
@@ -1260,7 +1260,7 @@ export default function BillingSection({
               onSubmit={handleUpdateSubmit}
               className="min-w-0 rounded-2xl border border-zinc-200 bg-white p-4 sm:p-5"
             >
-              <h3 className="text-sm font-semibold text-zinc-900">Update draft bill</h3>
+              <h3 className="text-sm font-semibold text-zinc-900">Update Draft Bill</h3>
               <div className="mt-4 grid min-w-0 gap-4">
                 <label className="min-w-0">
                   <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
@@ -1312,7 +1312,7 @@ export default function BillingSection({
                   disabled={isSubmitting}
                   className="w-full rounded-xl bg-red-400 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 >
-                  {isSubmitting ? "Saving..." : "Save changes"}
+                  {isSubmitting ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </form>

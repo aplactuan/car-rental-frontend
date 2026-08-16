@@ -5,28 +5,28 @@ import { redirect } from "next/navigation";
 const placeholder = {
   kpis: [
     {
-      label: "Open purchase orders",
+      label: "Open Purchase Orders",
       value: "18",
       hint: "Pending review",
       href: "/dashboard/customer",
       icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
     },
     {
-      label: "Unpaid invoices",
+      label: "Unpaid Invoices",
       value: "12",
       hint: "Issued & partial",
       href: "/dashboard/billing",
       icon: "M9 12h6m-6 4h6M8 6h8a2 2 0 012 2v12a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2z",
     },
     {
-      label: "Outstanding balance",
+      label: "Outstanding Balance",
       value: "PHP 486,200",
       hint: "Across all customers",
       href: "/dashboard/billing",
       icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 10v2m0-12a9 9 0 100 18 9 9 0 000-18z",
     },
     {
-      label: "Missing trip reports",
+      label: "Missing Trip Reports",
       value: "7",
       hint: "Invoices awaiting reports",
       href: "/dashboard/customer",
@@ -35,7 +35,7 @@ const placeholder = {
   ],
   attention: [
     {
-      type: "Purchase order",
+      type: "Purchase Order",
       title: "PO-1042 · Acme Logistics",
       meta: "Pending · PHP 85,000",
       age: "2 days",
@@ -49,7 +49,7 @@ const placeholder = {
       tone: "rose",
     },
     {
-      type: "Trip report",
+      type: "Trip Report",
       title: "INV-26050098 · Baroch School",
       meta: "Issued · no trip report yet",
       age: "1 day",
@@ -63,7 +63,7 @@ const placeholder = {
       tone: "blue",
     },
     {
-      type: "Purchase order",
+      type: "Purchase Order",
       title: "PO-1038 · Horizon Events",
       meta: "Pending · PHP 120,000",
       age: "Today",
@@ -86,27 +86,27 @@ const placeholder = {
   },
   activity: [
     {
-      title: "Trip report added on PO-1036",
+      title: "Trip Report Added on PO-1036",
       detail: "Baroch School · 3 attachments",
       time: "2h ago",
     },
     {
-      title: "Invoice INV-26050140 issued",
+      title: "Invoice INV-26050140 Issued",
       detail: "Metro Medical · PHP 55,000",
       time: "5h ago",
     },
     {
-      title: "Payment recorded",
+      title: "Payment Recorded",
       detail: "Vista Tours · PHP 20,000 on INV-26050077",
       time: "Yesterday",
     },
     {
-      title: "Purchase order PO-1042 created",
+      title: "Purchase Order PO-1042 Created",
       detail: "Acme Logistics · pending",
       time: "Yesterday",
     },
     {
-      title: "New customer registered",
+      title: "New Customer Registered",
       detail: "Sunrise Catering · business",
       time: "2 days ago",
     },
@@ -146,7 +146,7 @@ export default async function DashboardPage() {
       {/* KPI row */}
       <section className="mt-8" aria-labelledby="kpi-heading">
         <h2 id="kpi-heading" className="sr-only">
-          Key metrics
+          Key Metrics
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {placeholder.kpis.map((kpi) => (
@@ -186,7 +186,7 @@ export default async function DashboardPage() {
         <div className="rounded-xl border border-zinc-200 bg-white shadow-sm lg:col-span-3">
           <div className="flex items-start justify-between gap-3 border-b border-zinc-100 px-4 py-4 sm:px-6">
             <div>
-              <h2 className="text-sm font-semibold text-zinc-900">Needs attention</h2>
+              <h2 className="text-sm font-semibold text-zinc-900">Needs Attention</h2>
               <p className="mt-0.5 text-xs text-zinc-500">
                 Open POs, overdue invoices, and missing trip reports
               </p>
@@ -195,7 +195,7 @@ export default async function DashboardPage() {
               href="/dashboard/billing"
               className="shrink-0 text-xs font-semibold text-red-700 hover:text-red-800"
             >
-              View billing
+              View Billing
             </Link>
           </div>
           <ul className="divide-y divide-zinc-100">
@@ -228,7 +228,7 @@ export default async function DashboardPage() {
 
         <div className="rounded-xl border border-zinc-200 bg-white shadow-sm lg:col-span-2">
           <div className="border-b border-zinc-100 px-4 py-4 sm:px-6">
-            <h2 className="text-sm font-semibold text-zinc-900">Money snapshot</h2>
+            <h2 className="text-sm font-semibold text-zinc-900">Money Snapshot</h2>
             <p className="mt-0.5 text-xs text-zinc-500">Collections and aging overview</p>
           </div>
           <div className="space-y-5 px-4 py-4 sm:px-6">
@@ -243,7 +243,7 @@ export default async function DashboardPage() {
               </div>
               <div className="rounded-lg border border-zinc-100 bg-zinc-50/80 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
-                  Paid this month
+                  Paid This Month
                 </p>
                 <p className="mt-1 text-sm font-semibold tabular-nums text-zinc-900">
                   {placeholder.money.paidMonth}
@@ -275,7 +275,7 @@ export default async function DashboardPage() {
 
             <div>
               <p className="text-xs font-semibold text-zinc-700">
-                Top outstanding customers
+                Top Outstanding Customers
               </p>
               <ul className="mt-2 divide-y divide-zinc-100">
                 {placeholder.money.topCustomers.map((customer, index) => (
@@ -302,7 +302,7 @@ export default async function DashboardPage() {
       <section className="mt-4 grid gap-4 lg:grid-cols-5">
         <div className="rounded-xl border border-zinc-200 bg-white shadow-sm lg:col-span-3">
           <div className="border-b border-zinc-100 px-4 py-4 sm:px-6">
-            <h2 className="text-sm font-semibold text-zinc-900">Recent activity</h2>
+            <h2 className="text-sm font-semibold text-zinc-900">Recent Activity</h2>
             <p className="mt-0.5 text-xs text-zinc-500">
               Sample events across POs, invoices, and trip reports
             </p>
@@ -325,26 +325,26 @@ export default async function DashboardPage() {
         </div>
 
         <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6 lg:col-span-2">
-          <h2 className="text-sm font-semibold text-zinc-900">Quick actions</h2>
+          <h2 className="text-sm font-semibold text-zinc-900">Quick Actions</h2>
           <p className="mt-0.5 text-xs text-zinc-500">Jump into the main workflows</p>
           <div className="mt-4 flex flex-col gap-2">
             <Link
               href="/dashboard/customer"
               className="inline-flex min-h-11 items-center justify-center rounded-lg bg-red-400 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500"
             >
-              Manage customers
+              Manage Customers
             </Link>
             <Link
               href="/dashboard/billing"
               className="inline-flex min-h-11 items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
             >
-              Open billing report
+              Open Billing Report
             </Link>
             <Link
               href="/dashboard/bookings"
               className="inline-flex min-h-11 items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
             >
-              View bookings
+              View Bookings
             </Link>
           </div>
           <p className="mt-5 text-xs leading-relaxed text-zinc-400">

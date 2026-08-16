@@ -210,16 +210,16 @@ export default function AddTripReportButton({ purchaseOrderId }) {
           />
           <circle cx="20" cy="5" r="1.4" />
         </svg>
-        Add trip report
+        Add Trip Report
       </button>
 
       {isDialogOpen ? (
         <ModalShell
-          title="Add trip report"
+          title="Add Trip Report"
           description="Log a trip against this purchase order."
           onClose={closeDialog}
           closeDisabled={isLoading}
-          closeLabel="Close add trip report dialog"
+          closeLabel="Close Add Trip Report Dialog"
         >
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -394,7 +394,7 @@ export default function AddTripReportButton({ purchaseOrderId }) {
                   disabled={isLoading}
                   className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isLoading ? "Adding..." : "Create trip report"}
+                  {isLoading ? "Adding..." : "Create Trip Report"}
                 </button>
               </div>
             </form>

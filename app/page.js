@@ -198,7 +198,7 @@ export default function Home() {
           </div>
 
           <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-[28px]">
-            Welcome back
+            Welcome Back
           </h2>
           <p className="mt-2 text-sm text-zinc-500">
             Sign in to access your dashboard.
@@ -317,7 +317,7 @@ export default function Home() {
                   Signing in…
                 </>
               ) : (
-                "Sign in"
+                "Sign In"
               )}
             </button>
           </form>

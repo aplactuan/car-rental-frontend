@@ -381,7 +381,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
   const backHref = customerId
     ? `/dashboard/customer/${encodeURIComponent(customerId)}`
     : "/dashboard/customer";
-  const displayPoNumber = purchaseOrder?.poNumber || "Purchase order";
+  const displayPoNumber = purchaseOrder?.poNumber || "Purchase Order";
   const tripTotal = tripReports.reduce(
     (sum, report) => sum + (typeof report.amount === "number" ? report.amount : 0),
     0,
@@ -425,7 +425,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
                     strokeLinejoin="round"
                   />
                 </svg>
-                Back to customer
+                Back to Customer
               </Link>
 
               <div className="mt-4 flex items-start gap-4">
@@ -552,7 +552,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
                 <li key={attachment.id}>
                   <DocumentLink
                     href={attachment.url}
-                    label={attachment.fileName || "View file"}
+                    label={attachment.fileName || "View File"}
                   />
                 </li>
               ))}
@@ -584,7 +584,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
           ) : invoices.length === 0 ? (
             <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-6 py-10 text-center">
               <p className="text-sm font-medium text-zinc-700">
-                No invoices yet
+                No Invoices Yet
               </p>
               <p className="mt-1 text-sm text-zinc-500">
                 Add the first invoice for this purchase order.
@@ -594,13 +594,13 @@ export default async function PurchaseOrderDetailPage({ params }) {
             <div
               className="overflow-x-auto overscroll-x-contain"
               role="region"
-              aria-label="Purchase order invoices table"
+              aria-label="Purchase Order Invoices Table"
               tabIndex={0}
             >
               <table className="min-w-[68rem] text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                    <th className="pb-3 pr-6">Invoice number</th>
+                    <th className="pb-3 pr-6">Invoice Number</th>
                     <th className="pb-3 pr-6">Status</th>
                     <th className="pb-3 pr-6">LDDAP/ADAP</th>
                     <th className="pb-3 pr-6">Note</th>
@@ -677,7 +677,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-4 py-5 sm:px-6">
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
-              Trip reports
+              Trip Reports
             </h2>
             <p className="mt-1 text-sm text-zinc-500">
               Trips logged against this purchase order.
@@ -703,7 +703,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
           ) : tripReports.length === 0 ? (
             <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-6 py-10 text-center">
               <p className="text-sm font-medium text-zinc-700">
-                No trip reports yet
+                No Trip Reports Yet
               </p>
               <p className="mt-1 text-sm text-zinc-500">
                 Add the first trip report for this purchase order.
@@ -713,16 +713,16 @@ export default async function PurchaseOrderDetailPage({ params }) {
             <div
               className="overflow-x-auto overscroll-x-contain"
               role="region"
-              aria-label="Purchase order trip reports table"
+              aria-label="Purchase Order Trip Reports Table"
               tabIndex={0}
             >
               <table className="min-w-[72rem] text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                    <th className="pb-3 pr-6">Trip report no</th>
-                    <th className="pb-3 pr-6">Report date</th>
-                    <th className="pb-3 pr-6">Trip start</th>
-                    <th className="pb-3 pr-6">Trip end</th>
+                    <th className="pb-3 pr-6">Trip Report No</th>
+                    <th className="pb-3 pr-6">Report Date</th>
+                    <th className="pb-3 pr-6">Trip Start</th>
+                    <th className="pb-3 pr-6">Trip End</th>
                     <th className="pb-3 pr-6">Driver</th>
                     <th className="pb-3 pr-6">Destinations</th>
                     <th className="pb-3 pr-6">Amount</th>

@@ -310,7 +310,7 @@ export default async function CustomerDetailPage({ params }) {
                     strokeLinejoin="round"
                   />
                 </svg>
-                Back to customer list
+                Back to Customer List
               </Link>
 
               <div className="mt-4 flex items-start gap-4">
@@ -379,7 +379,7 @@ export default async function CustomerDetailPage({ params }) {
 
         {!error && customer ? (
           <div className="grid gap-px bg-zinc-200 sm:grid-cols-2 lg:grid-cols-4">
-            <SummaryCell label="Purchase orders">
+            <SummaryCell label="Purchase Orders">
               <p className="text-2xl font-semibold tracking-tight text-zinc-900">
                 {purchaseOrdersError ? "—" : purchaseOrders.length}
               </p>
@@ -394,7 +394,7 @@ export default async function CustomerDetailPage({ params }) {
                 </p>
               ) : null}
             </SummaryCell>
-            <SummaryCell label="PO value">
+            <SummaryCell label="PO Value">
               <p className="text-2xl font-semibold tracking-tight text-zinc-900">
                 {purchaseOrdersError
                   ? "—"
@@ -419,7 +419,7 @@ export default async function CustomerDetailPage({ params }) {
                 Placeholder · unpaid invoices
               </p>
             </SummaryCell>
-            <SummaryCell label="Trip reports">
+            <SummaryCell label="Trip Reports">
               <p className="text-2xl font-semibold tracking-tight text-zinc-900">
                 {tripReportsPlaceholder.total}
               </p>
@@ -436,7 +436,7 @@ export default async function CustomerDetailPage({ params }) {
           <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-4 py-5 marker:content-none sm:px-6 [&::-webkit-details-marker]:hidden">
             <div className="min-w-0">
               <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
-                Profile details
+                Profile Details
               </h2>
               <p className="mt-1 text-sm text-zinc-500">
                 Contact information and record metadata for this customer.
@@ -521,14 +521,14 @@ export default async function CustomerDetailPage({ params }) {
             <p className="text-sm text-red-600">{programsError}</p>
           ) : programs.length === 0 ? (
             <SectionEmptyState
-              title="No programs yet"
+              title="No Programs Yet"
               description="Add the first program for this customer."
             />
           ) : (
             <div
               className="overflow-x-auto overscroll-x-contain"
               role="region"
-              aria-label="Customer programs table"
+              aria-label="Customer Programs Table"
               tabIndex={0}
             >
               <table className="min-w-[36rem] text-sm">
@@ -536,7 +536,7 @@ export default async function CustomerDetailPage({ params }) {
                   <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                     <th className="pb-3 pr-6">Name</th>
                     <th className="pb-3 pr-6">Description</th>
-                    <th className="pb-3">Created at</th>
+                    <th className="pb-3">Created At</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">

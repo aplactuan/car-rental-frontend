@@ -108,7 +108,7 @@ export default async function TransactionDetailPage({ params }) {
                 href="/dashboard/transactions"
                 className="text-xs font-medium text-red-100/90 transition hover:text-white"
               >
-                ← Back to transactions
+                ← Back to Transactions
               </Link>
               <h1 className="mt-2 break-words text-2xl font-bold tracking-tight sm:text-3xl">
                 Transaction

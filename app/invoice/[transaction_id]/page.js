@@ -302,7 +302,7 @@ export default function InvoicePrintPage() {
           {/* Bookings table */}
           <div className="px-4 py-6 sm:px-10 print:px-8">
             <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-zinc-400">
-              Rental details
+              Rental Details
             </p>
             {bookings.length === 0 ? (
               <p className="text-sm text-zinc-500">No bookings attached.</p>
@@ -314,7 +314,7 @@ export default function InvoicePrintPage() {
                 <div
                   className="max-w-full overflow-x-auto overscroll-x-contain print:overflow-visible"
                   role="region"
-                  aria-label="Rental details table"
+                  aria-label="Rental Details table"
                   tabIndex={0}
                 >
                 <table className="w-full min-w-[700px] text-sm print:table-fixed print:min-w-0 print:text-[10px]">
@@ -398,7 +398,7 @@ export default function InvoicePrintPage() {
                 </span>
               </div>
               <div className="flex w-full items-center justify-between gap-3 text-zinc-700 sm:w-auto sm:gap-8 print:w-auto print:gap-8">
-                <span>Paid so far</span>
+                <span>Paid So Far</span>
                 <span className="min-w-0 text-right font-mono sm:w-36 print:w-36">
                   {formatCurrency(totalPaid)}
                 </span>
@@ -442,7 +442,7 @@ export default function InvoicePrintPage() {
                         rel="noopener noreferrer"
                         className="text-xs font-semibold text-blue-700 hover:underline"
                       >
-                        View proof image
+                        View Proof Image
                       </a>
                     ) : null}
                   </div>

@@ -9,7 +9,7 @@ export default function ModalShell({
   children,
   wide = false,
   closeDisabled = false,
-  closeLabel = "Close dialog",
+  closeLabel = "Close Dialog",
 }) {
   const titleId = useId();
   const descriptionId = useId();

@@ -207,7 +207,7 @@ function statusClassName(status) {
 }
 
 function rangeLabel(page, rowsOnPage, total) {
-  if (total <= 0 || rowsOnPage <= 0) return "No bookings";
+  if (total <= 0 || rowsOnPage <= 0) return "No Bookings";
   const from = (page - 1) * BOOKING_PAGE_SIZE + 1;
   const to = from + rowsOnPage - 1;
   return `Showing ${from.toLocaleString()}-${to.toLocaleString()} of ${total.toLocaleString()} bookings`;
@@ -275,7 +275,7 @@ function BookingCard({ booking, hideTransactionLink = false }) {
             }
             className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg border border-red-100 px-3 text-center text-xs font-semibold text-red-700 transition hover:bg-red-50 hover:text-red-800"
           >
-            View booking details
+            View Booking Details
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -294,7 +294,7 @@ function BookingCard({ booking, hideTransactionLink = false }) {
             href={`/dashboard/transactions/${encodeURIComponent(booking.transactionId)}`}
             className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg border border-zinc-200 px-3 text-center text-xs font-semibold text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-800"
           >
-            View transaction
+            View Transaction
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -445,7 +445,7 @@ export default function BookingsPage() {
 
       <section className="mt-4 rounded-xl border border-zinc-200 bg-white shadow-sm">
         <div className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-white px-4 py-4 sm:px-8">
-          <h2 className="text-sm font-semibold text-zinc-900">{titleFilter} bookings</h2>
+          <h2 className="text-sm font-semibold text-zinc-900">{titleFilter} Bookings</h2>
           <p className="mt-0.5 text-xs text-zinc-500">
             {isLoading
               ? "Loading booking records..."
@@ -484,7 +484,7 @@ export default function BookingsPage() {
                   <path d="M8 3v4M16 3v4M4 10h16" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
-              <p className="mt-3 text-sm font-medium text-zinc-700">No bookings found</p>
+              <p className="mt-3 text-sm font-medium text-zinc-700">No Bookings Found</p>
               <p className="mt-1 max-w-sm text-sm text-zinc-500">
                 Try changing the filter to view bookings in other statuses.
               </p>

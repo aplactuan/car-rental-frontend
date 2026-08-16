@@ -369,9 +369,9 @@ export default function TripReportActions({
 
       {isViewOpen ? (
         <ModalShell
-          title="Trip report details"
+          title="Trip Report Details"
           onClose={closeView}
-          closeLabel="Close trip report details dialog"
+          closeLabel="Close Trip Report Details Dialog"
         >
             <dl className="divide-y divide-zinc-100">
               <DetailRow label="Trip report no">
@@ -414,7 +414,7 @@ export default function TripReportActions({
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 font-medium text-red-700 transition hover:text-red-800"
                   >
-                    View file
+                    View File
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
@@ -450,11 +450,11 @@ export default function TripReportActions({
 
       {isEditOpen ? (
         <ModalShell
-          title="Edit trip report"
+          title="Edit Trip Report"
           description="Update trip details for this purchase order."
           onClose={closeEdit}
           closeDisabled={isSaving}
-          closeLabel="Close edit trip report dialog"
+          closeLabel="Close Edit Trip Report Dialog"
         >
             <form onSubmit={handleSave} className="space-y-4">
               <div>
@@ -616,7 +616,7 @@ export default function TripReportActions({
                       rel="noopener noreferrer"
                       className="font-medium text-red-700 hover:text-red-800"
                     >
-                      View file
+                      View File
                     </a>
                   </p>
                 ) : null}
@@ -644,7 +644,7 @@ export default function TripReportActions({
                   disabled={isSaving}
                   className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSaving ? "Saving..." : "Save changes"}
+                  {isSaving ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </form>
@@ -666,7 +666,7 @@ export function TripReportRow({ purchaseOrderId, tripReport, linkedInvoice }) {
           onClick={() => setIsViewOpen(true)}
           className="text-left underline-offset-2 transition hover:text-red-700 hover:underline"
         >
-          {tripReport.tripReportNo || "View trip report"}
+          {tripReport.tripReportNo || "View Trip Report"}
         </button>
       </td>
       <td className="py-3.5 pr-6 text-zinc-700">

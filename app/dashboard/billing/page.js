@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 const BILLS_PER_PAGE = 10;
 /**
  * JSON:API compound include: loads each bill's transaction and that transaction's customer
- * into `included`, so customer names resolve for “All customers” without guessing shapes.
+ * into `included`, so customer names resolve for “All Customers” without guessing shapes.
  * Falls back safely if the server only honors `transaction` (see normalizeBills).
  */
 const BILLS_INCLUDE = "transaction.customer";
@@ -102,7 +102,7 @@ function nameFromNestedCustomer(value) {
 
 /**
  * Resolve display name from JSON:API `relationships.customer.data` using `included`
- * first, then optional id → name map from the customers list (covers “All customers”).
+ * first, then optional id → name map from the customers list (covers “All Customers”).
  */
 function resolveCustomerRelation(includedMap, relData, customerLookup) {
   if (!relData || typeof relData !== "object" || Array.isArray(relData)) return "";
@@ -469,7 +469,7 @@ export default function BillingReportPage() {
     <div className="min-w-0 w-full">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">Billing report</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">Billing Report</h1>
           <p className="mt-2 break-words text-sm text-zinc-500">
             Paginated bills (all statuses). Summary cards show unpaid vs paid totals only.
           </p>
@@ -515,7 +515,7 @@ export default function BillingReportPage() {
                 setCustomerId(e.target.value);
               }}
             >
-              <option value="">All customers</option>
+              <option value="">All Customers</option>
               {customers.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name || c.id}
@@ -570,7 +570,7 @@ export default function BillingReportPage() {
 
       <div className="mt-6 min-w-0 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
         <div className="border-b border-zinc-100 px-4 py-4 sm:px-6">
-          <div className="text-sm font-semibold text-zinc-900">All bills</div>
+          <div className="text-sm font-semibold text-zinc-900">All Bills</div>
           <div className="mt-1 break-words text-xs text-zinc-500">
             All statuses (draft, issued, partially paid, paid, cancelled). Sorted by issue date (newest first).{" "}
             {billsLoading
@@ -595,17 +595,17 @@ export default function BillingReportPage() {
         <div
           className="max-w-full overflow-x-auto overscroll-x-contain px-2 pb-2"
           role="region"
-          aria-label="Billing report table"
+          aria-label="Billing Report Table"
           tabIndex={0}
         >
           <table className="w-full min-w-[1180px] text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-200 bg-zinc-50/60 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                <th className="px-4 py-3 font-medium">Invoice number</th>
+                <th className="px-4 py-3 font-medium">Invoice Number</th>
                 <th className="px-4 py-3 font-medium">Customer</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Amount</th>
-                <th className="px-4 py-3 font-medium">Paid so far</th>
+                <th className="px-4 py-3 font-medium">Paid So Far</th>
                 <th className="px-4 py-3 font-medium">Remaining</th>
                 <th className="px-4 py-3 font-medium">Issued</th>
                 <th className="px-4 py-3 font-medium">Paid</th>
@@ -626,7 +626,7 @@ export default function BillingReportPage() {
                   <td colSpan={10} className="px-4 py-10 text-center text-sm text-zinc-500">
                     {invoiceSearch
                       ? `No bills match "${invoiceSearch}". Try another invoice number.`
-                      : "No bills found."}
+                      : "No Bills Found."}
                   </td>
                 </tr>
               )}
