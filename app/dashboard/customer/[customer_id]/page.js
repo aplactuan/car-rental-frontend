@@ -432,17 +432,37 @@ export default async function CustomerDetailPage({ params }) {
       </header>
 
       {!error && customer ? (
-        <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-          <div className="border-b border-zinc-100 px-4 py-5 sm:px-6">
-            <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
-              Profile details
-            </h2>
-            <p className="mt-1 text-sm text-zinc-500">
-              Contact information and record metadata for this customer.
-            </p>
-          </div>
+        <details className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+          <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-4 py-5 marker:content-none sm:px-6 [&::-webkit-details-marker]:hidden">
+            <div className="min-w-0">
+              <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
+                Profile details
+              </h2>
+              <p className="mt-1 text-sm text-zinc-500">
+                Contact information and record metadata for this customer.
+              </p>
+            </div>
+            <span
+              className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-600 transition group-open:rotate-180"
+              aria-hidden
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="h-4 w-4"
+              >
+                <path
+                  d="M6 9l6 6 6-6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+          </summary>
 
-          <div className="grid gap-px bg-zinc-100 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-px border-t border-zinc-100 bg-zinc-100 sm:grid-cols-2 lg:grid-cols-3">
             {[
               { label: "Contact person", value: customer.contact_person },
               {
@@ -470,7 +490,7 @@ export default async function CustomerDetailPage({ params }) {
               </div>
             ))}
           </div>
-        </section>
+        </details>
       ) : null}
 
       {!error && !customer ? (
