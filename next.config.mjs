@@ -24,6 +24,15 @@ const nextConfig = {
   images: {
     remotePatterns,
   },
+  // Allow PO/invoice attachments up to the UI's 10 MB-per-file guidance.
+  // Without this, the App Router proxy can reject or truncate large camera
+  // uploads (often HEIC/JPEG) with HTTP 413.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "12mb",
+    },
+    proxyClientMaxBodySize: "12mb",
+  },
 };
 
 export default nextConfig;
