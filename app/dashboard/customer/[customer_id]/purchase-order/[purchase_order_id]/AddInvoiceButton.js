@@ -248,16 +248,16 @@ export default function AddInvoiceButton({
           />
           <path d="M14 4v4h4M9 12h6M9 15.5h4" strokeLinecap="round" />
         </svg>
-        Add invoice
+        Add Invoice
       </button>
 
       {isDialogOpen ? (
         <ModalShell
-          title="Add invoice"
+          title="Add Invoice"
           description="Create a purchase order invoice."
           onClose={closeDialog}
           closeDisabled={isLoading}
-          closeLabel="Close add invoice dialog"
+          closeLabel="Close Add Invoice Dialog"
         >
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -348,7 +348,7 @@ export default function AddInvoiceButton({
 
               <fieldset>
                 <legend className="mb-2 block text-sm font-medium text-zinc-700">
-                  Trip reports{" "}
+                  Trip Reports{" "}
                   <span className="font-normal text-zinc-400">(optional)</span>
                 </legend>
                 {availableTripReports.length === 0 ? (
@@ -473,7 +473,7 @@ export default function AddInvoiceButton({
                   disabled={isLoading || invoiceCreated}
                   className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isLoading ? "Adding..." : "Create invoice"}
+                  {isLoading ? "Adding..." : "Create Invoice"}
                 </button>
               </div>
             </form>

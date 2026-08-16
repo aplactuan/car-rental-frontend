@@ -207,10 +207,10 @@ export default function PurchaseOrdersSection({
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-4 py-5 sm:px-6">
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
-            Purchase orders
+            Purchase Orders
           </h2>
           <p className="mt-1 text-sm text-zinc-500">
-            Purchase orders linked to this customer.
+            Purchase Orders linked to this customer.
           </p>
         </div>
 
@@ -254,8 +254,8 @@ export default function PurchaseOrdersSection({
           <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-6 py-10 text-center">
             <p className="text-sm font-medium text-zinc-700">
               {programFilter === FILTER_ALL
-                ? "No purchase orders yet"
-                : "No matching purchase orders"}
+                ? "No Purchase Orders Yet"
+                : "No Matching Purchase Orders"}
             </p>
             <p className="mt-1 text-sm text-zinc-500">
               {programFilter === FILTER_ALL
@@ -267,18 +267,18 @@ export default function PurchaseOrdersSection({
           <div
             className={`overflow-x-auto overscroll-x-contain ${isLoading ? "opacity-60" : ""}`}
             role="region"
-            aria-label="Purchase orders table"
+            aria-label="Purchase Orders Table"
             tabIndex={0}
           >
             <table className="min-w-[64rem] text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 bg-zinc-50/60 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                  <th className="pb-3 pr-6">PO number</th>
+                  <th className="pb-3 pr-6">PO Number</th>
                   <th className="pb-3 pr-6">Program</th>
                   <th className="pb-3 pr-6">Date</th>
                   <th className="pb-3 pr-6">Amount</th>
                   <th className="pb-3 pr-6">Status</th>
-                  <th className="pb-3 pr-6">Request person</th>
+                  <th className="pb-3 pr-6">Request Person</th>
                   <th className="pb-3 pr-6">Description</th>
                   <th className="pb-3 text-right">Actions</th>
                 </tr>
@@ -300,7 +300,7 @@ export default function PurchaseOrdersSection({
                             href={purchaseOrderHref}
                             className="underline-offset-2 transition hover:text-red-700 hover:underline"
                           >
-                            {po.poNumber || "View purchase order"}
+                            {po.poNumber || "View Purchase Order"}
                           </Link>
                         ) : (
                           po.poNumber || "—"

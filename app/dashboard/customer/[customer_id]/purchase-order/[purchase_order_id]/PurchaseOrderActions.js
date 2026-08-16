@@ -303,7 +303,7 @@ export default function PurchaseOrderActions({ purchaseOrder, customerId }) {
             strokeLinejoin="round"
           />
         </svg>
-        Edit purchase order
+        Edit Purchase Order
       </button>
 
       {error && !isEditOpen ? (
@@ -314,11 +314,11 @@ export default function PurchaseOrderActions({ purchaseOrder, customerId }) {
 
       {isEditOpen ? (
         <ModalShell
-          title="Edit purchase order"
+          title="Edit Purchase Order"
           description="Update details, status, and attachments."
           onClose={closeEdit}
           closeDisabled={isSaving}
-          closeLabel="Close edit purchase order dialog"
+          closeLabel="Close Edit Purchase Order Dialog"
         >
             <form onSubmit={handleSave} className="space-y-4">
               <div>
@@ -558,7 +558,7 @@ export default function PurchaseOrderActions({ purchaseOrder, customerId }) {
                   disabled={isSaving}
                   className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSaving ? "Saving..." : "Save changes"}
+                  {isSaving ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </form>

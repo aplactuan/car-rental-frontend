@@ -421,7 +421,7 @@ function TripReportForm({
               onClick={addDestination}
               className="text-sm font-medium text-red-700 transition hover:text-red-800"
             >
-              Add destination
+              Add Destination
             </button>
           ) : null}
         </div>
@@ -732,7 +732,7 @@ export default function BookingTripReportsSection({ transactionId, bookingId }) 
           onClick={openCreateModal}
           className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500"
         >
-          Add trip report
+          Add Trip Report
         </button>
       </div>
 
@@ -809,7 +809,7 @@ export default function BookingTripReportsSection({ transactionId, bookingId }) 
 
       {isCreateOpen ? (
         <ModalShell
-          title="Add trip report"
+          title="Add Trip Report"
           description="Report date is required. All other fields are optional."
           onClose={closeCreateModal}
           wide
@@ -837,7 +837,7 @@ export default function BookingTripReportsSection({ transactionId, bookingId }) 
                 disabled={isCreating}
                 className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isCreating ? "Creating…" : "Create report"}
+                {isCreating ? "Creating…" : "Create Report"}
               </button>
             </div>
           </form>
@@ -846,7 +846,7 @@ export default function BookingTripReportsSection({ transactionId, bookingId }) 
 
       {selectedReport ? (
         <ModalShell
-          title={detailMode === "edit" ? "Edit trip report" : "Trip report details"}
+          title={detailMode === "edit" ? "Edit Trip Report" : "Trip Report Details"}
           description={
             detailMode === "view" && selectedReport.reportDate
               ? formatDate(selectedReport.reportDate)
@@ -890,7 +890,7 @@ export default function BookingTripReportsSection({ transactionId, bookingId }) 
                     disabled={isSaving || isDeleting}
                     className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {isSaving ? "Saving…" : "Save changes"}
+                    {isSaving ? "Saving…" : "Save Changes"}
                   </button>
                 </div>
               </div>
@@ -1016,7 +1016,7 @@ export default function BookingTripReportsSection({ transactionId, bookingId }) 
                   disabled={isDetailLoading || !selectedReport.reportDate}
                   className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Edit report
+                  Edit Report
                 </button>
               </div>
             </div>

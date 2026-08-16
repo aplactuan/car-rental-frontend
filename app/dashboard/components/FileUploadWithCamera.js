@@ -159,7 +159,7 @@ export default function FileUploadWithCamera({
               d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
             />
           </svg>
-          {isConverting ? "Converting…" : "Take photo"}
+          {isConverting ? "Converting…" : "Take Photo"}
         </label>
       </div>
       {isConverting ? (

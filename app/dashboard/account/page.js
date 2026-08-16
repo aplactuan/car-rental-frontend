@@ -98,7 +98,7 @@ export default function AccountPage() {
       <section className="mt-8 max-w-lg">
         <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
           <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
-            Change password
+            Change Password
           </h2>
           <p className="mt-1 text-sm text-zinc-500">
             Enter your current password and choose a new one.
@@ -218,7 +218,7 @@ export default function AccountPage() {
               disabled={isLoading}
               className="inline-flex w-full items-center justify-center rounded-md bg-red-400 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
-              {isLoading ? "Updating..." : "Update password"}
+              {isLoading ? "Updating..." : "Update Password"}
             </button>
           </form>
         </div>

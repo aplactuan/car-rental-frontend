@@ -117,16 +117,16 @@ export default function AddProgramButton({ customerId }) {
             strokeLinejoin="round"
           />
         </svg>
-        Add program
+        Add Program
       </button>
 
       {isDialogOpen ? (
         <ModalShell
-          title="Add program"
+          title="Add Program"
           description="Create a program for this customer."
           onClose={closeDialog}
           closeDisabled={isLoading}
-          closeLabel="Close add program dialog"
+          closeLabel="Close Add Program Dialog"
         >
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -187,7 +187,7 @@ export default function AddProgramButton({ customerId }) {
                   disabled={isLoading}
                   className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isLoading ? "Adding..." : "Create program"}
+                  {isLoading ? "Adding..." : "Create Program"}
                 </button>
               </div>
             </form>

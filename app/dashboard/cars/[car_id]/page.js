@@ -193,7 +193,7 @@ function CarDetailSection({ car, carName }) {
               strokeLinejoin="round"
             />
           </svg>
-          Back to car list
+          Back to Car List
         </Link>
 
         <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
@@ -453,7 +453,7 @@ export default async function CarDetailPage({ params }) {
                 strokeLinejoin="round"
               />
             </svg>
-            Back to car list
+            Back to Car List
           </Link>
           <p className="mt-4 text-sm text-red-600">{error}</p>
         </div>
@@ -479,7 +479,7 @@ export default async function CarDetailPage({ params }) {
                 strokeLinejoin="round"
               />
             </svg>
-            Back to car list
+            Back to Car List
           </Link>
           <p className="mt-4 text-sm text-zinc-500">No car data returned.</p>
         </div>

@@ -220,7 +220,7 @@ function CustomerCard({ customer, onEdit }) {
             href={`/dashboard/customer/${customer.id}`}
             className="inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-[#cecece] px-3 py-2 text-center text-sm font-medium text-[#000] transition hover:bg-[#bfbfbf] group-hover:bg-[#bfbfbf]"
           >
-            View customer
+            View Customer
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -246,7 +246,7 @@ function CustomerCard({ customer, onEdit }) {
             type="button"
             onClick={() => onEdit(customer)}
             className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
-            title="Edit customer"
+            title="Edit Customer"
             aria-label={`Edit ${displayName}`}
           >
             <svg
@@ -448,14 +448,14 @@ export default function CustomerDashboardPage() {
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
           </svg>
-          Add customer
+          Add Customer
         </button>
       </div>
 
       {formMode && (
         <div className="mt-6 min-w-0 overflow-hidden rounded-xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
           <h2 className="text-base font-semibold text-zinc-900">
-            {formMode === "edit" ? "Edit customer" : "Add new customer"}
+            {formMode === "edit" ? "Edit Customer" : "Add New Customer"}
           </h2>
           <p className="mt-1 text-sm text-zinc-500">
             {formMode === "edit"
@@ -543,8 +543,8 @@ export default function CustomerDashboardPage() {
                 {isSubmitting
                   ? "Saving…"
                   : formMode === "edit"
-                    ? "Save changes"
-                    : "Save customer"}
+                    ? "Save Changes"
+                    : "Save Customer"}
               </button>
               <button
                 type="button"
@@ -561,14 +561,14 @@ export default function CustomerDashboardPage() {
 
       <section className="mt-6 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
         <div className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 to-white px-4 py-4 sm:px-8">
-          <h2 className="text-sm font-semibold text-zinc-900">All customers</h2>
+          <h2 className="text-sm font-semibold text-zinc-900">All Customers</h2>
           <p className="mt-0.5 text-xs text-zinc-500">
             {isLoading
               ? "Loading customer records…"
               : error
                 ? "Could not load customers"
                 : customers.length === 0
-                  ? "No customers yet"
+                  ? "No Customers Yet"
                   : `${customers.length} customer${customers.length === 1 ? "" : "s"} in your directory`}
           </p>
         </div>
@@ -606,7 +606,7 @@ export default function CustomerDashboardPage() {
                   />
                 </svg>
               </div>
-              <p className="mt-3 text-sm font-medium text-zinc-700">No customers yet</p>
+              <p className="mt-3 text-sm font-medium text-zinc-700">No Customers Yet</p>
               <p className="mt-1 max-w-sm text-sm text-zinc-500">
                 Add your first customer to start managing transactions and bookings.
               </p>
@@ -625,7 +625,7 @@ export default function CustomerDashboardPage() {
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
                 </svg>
-                Add customer
+                Add Customer
               </button>
             </div>
           ) : (

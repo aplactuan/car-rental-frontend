@@ -666,7 +666,7 @@ export default function CarsPage() {
                           <Link
                             href={`/dashboard/cars/${encodeURIComponent(car.id)}`}
                             className="text-red-600 transition hover:text-red-700"
-                            title="View car"
+                            title="View Car"
                             aria-label={`View ${car.make || ""} ${car.model || "car"}`.trim()}
                           >
                             <svg
@@ -691,7 +691,7 @@ export default function CarsPage() {
                             disabled
                             className="cursor-not-allowed text-zinc-300"
                             title="Car ID is unavailable"
-                            aria-label="View not available"
+                            aria-label="View Not Available"
                           >
                             <svg
                               viewBox="0 0 24 24"
@@ -714,7 +714,7 @@ export default function CarsPage() {
                           type="button"
                           onClick={() => openEditForm(car)}
                           className="text-blue-600 transition hover:text-blue-700"
-                          title="Edit car"
+                          title="Edit Car"
                           aria-label={`Edit ${car.make || ""} ${car.model || "car"}`.trim()}
                         >
                           <svg
@@ -736,8 +736,8 @@ export default function CarsPage() {
                           type="button"
                           disabled
                           className="cursor-not-allowed text-red-400"
-                          title="Delete is not available yet"
-                          aria-label="Delete not available"
+                          title="Delete Is Not Available Yet"
+                          aria-label="Delete Not Available"
                         >
                           <svg
                             viewBox="0 0 24 24"

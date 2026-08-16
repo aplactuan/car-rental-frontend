@@ -392,11 +392,11 @@ export default function InvoiceActions({
 
       {isEditOpen ? (
         <ModalShell
-          title="Edit invoice"
+          title="Edit Invoice"
           description="Update details, documents, and trip report assignment."
           onClose={closeEdit}
           closeDisabled={isSaving}
-          closeLabel="Close edit invoice dialog"
+          closeLabel="Close Edit Invoice Dialog"
         >
             <form onSubmit={handleSave} className="space-y-4">
               <div>
@@ -483,7 +483,7 @@ export default function InvoiceActions({
 
               <fieldset>
                 <legend className="mb-2 block text-sm font-medium text-zinc-700">
-                  Trip reports{" "}
+                  Trip Reports{" "}
                   <span className="font-normal text-zinc-400">(optional)</span>
                 </legend>
                 {selectableTripReports.length === 0 ? (
@@ -551,7 +551,7 @@ export default function InvoiceActions({
                       rel="noopener noreferrer"
                       className="font-medium text-red-700 hover:text-red-800"
                     >
-                      View file
+                      View File
                     </a>
                   </p>
                 ) : null}
@@ -601,7 +601,7 @@ export default function InvoiceActions({
                       rel="noopener noreferrer"
                       className="font-medium text-red-700 hover:text-red-800"
                     >
-                      View file
+                      View File
                     </a>
                   </p>
                 ) : null}
@@ -651,7 +651,7 @@ export default function InvoiceActions({
                       rel="noopener noreferrer"
                       className="font-medium text-red-700 hover:text-red-800"
                     >
-                      View file
+                      View File
                     </a>
                   </p>
                 ) : null}
@@ -698,7 +698,7 @@ export default function InvoiceActions({
                   disabled={isSaving}
                   className="rounded-lg bg-red-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isSaving ? "Saving..." : "Save changes"}
+                  {isSaving ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </form>

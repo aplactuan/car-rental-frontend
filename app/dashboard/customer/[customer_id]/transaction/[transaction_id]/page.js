@@ -116,7 +116,7 @@ function TransactionHero({
                   strokeLinejoin="round"
                 />
               </svg>
-              Back to customer
+              Back to Customer
             </Link>
 
             <div className="mt-4 flex items-start gap-3 sm:gap-4">
