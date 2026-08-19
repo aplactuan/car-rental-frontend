@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import AddProgramButton from "./AddProgramButton";
 import AddPurchaseOrderButton from "./AddPurchaseOrderButton";
+import ProgramActions from "./ProgramActions";
 import PurchaseOrdersSection from "./PurchaseOrdersSection";
 
 function readField(source, keys) {
@@ -536,7 +537,8 @@ export default async function CustomerDetailPage({ params }) {
                   <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                     <th className="pb-3 pr-6">Name</th>
                     <th className="pb-3 pr-6">Description</th>
-                    <th className="pb-3">Created At</th>
+                    <th className="pb-3 pr-6">Created At</th>
+                    <th className="pb-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
@@ -551,8 +553,14 @@ export default async function CustomerDetailPage({ params }) {
                       <td className="max-w-md py-3.5 pr-6 text-zinc-700">
                         {program.description || "—"}
                       </td>
-                      <td className="py-3.5 text-zinc-700">
+                      <td className="py-3.5 pr-6 text-zinc-700">
                         {formatDate(program.createdAt)}
+                      </td>
+                      <td className="py-3.5 text-right">
+                        <ProgramActions
+                          customerId={customerId}
+                          program={program}
+                        />
                       </td>
                     </tr>
                   ))}
