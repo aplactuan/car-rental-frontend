@@ -4,6 +4,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+const hiddenNavHrefs = new Set([
+  "/dashboard/cars",
+  "/dashboard/bookings",
+  "/dashboard/transactions",
+]);
+
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
   { href: "/dashboard/customer", label: "Customer", icon: "M17 20h5V4H2v16h5m10 0v-2a4 4 0 00-4-4H11a4 4 0 00-4 4v2m10 0H7m10-11a4 4 0 11-8 0 4 4 0 018 0z" },
@@ -111,7 +117,7 @@ export default function Sidebar() {
     if (role === "driver") {
       return navItems.filter((item) => item.href === "/dashboard/bookings");
     }
-    return navItems;
+    return navItems.filter((item) => !hiddenNavHrefs.has(item.href));
   }, [role]);
 
   async function handleLogout() {
