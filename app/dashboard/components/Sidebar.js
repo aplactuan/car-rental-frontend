@@ -8,6 +8,7 @@ const hiddenNavHrefs = new Set([
   "/dashboard/cars",
   "/dashboard/bookings",
   "/dashboard/transactions",
+  "/dashboard/billing",
 ]);
 
 const navItems = [
