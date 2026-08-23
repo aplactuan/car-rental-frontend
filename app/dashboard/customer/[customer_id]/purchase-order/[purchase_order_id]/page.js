@@ -191,6 +191,17 @@ function normalizeInvoices(payload) {
 
       const statusRaw = String(pick(["status"]) || "unpaid").toLowerCase();
       const status = statusRaw === "paid" ? "paid" : "unpaid";
+      const amount =
+        toAmount(attrs?.amount ?? record?.amount) ??
+        toAmount(attrs?.invoice_amount ?? record?.invoice_amount) ??
+        toAmount(attrs?.invoiceAmount ?? record?.invoiceAmount) ??
+        0;
+      const tripReportCountRaw =
+        attrs?.trip_report_count ??
+        record?.trip_report_count ??
+        attrs?.tripReportCount ??
+        record?.tripReportCount;
+      const tripReportCountParsed = Number(tripReportCountRaw);
 
       return {
         id: String(pick(["id", "invoice_id", "invoiceId"]) || ""),
@@ -200,6 +211,10 @@ function normalizeInvoices(payload) {
         lddapAdapNo: String(pick(["lddap_adap_no", "lddapAdapNo"]) || ""),
         note: String(pick(["note"]) || ""),
         status,
+        amount,
+        tripReportCount: Number.isFinite(tripReportCountParsed)
+          ? tripReportCountParsed
+          : 0,
         paymentReceiptUrl: String(
           pick(["payment_receipt_url", "paymentReceiptUrl"]) || "",
         ),
@@ -311,70 +326,76 @@ export default async function PurchaseOrderDetailPage({ params }) {
   if (!purchaseOrderId) {
     error = "Purchase order ID was not provided.";
   } else {
-    try {
-      const res = await fetch(
+    const [poResult, tripResult, invoiceResult] = await Promise.all([
+      fetch(
         `${baseUrl}/api/v1/purchase-orders/${encodeURIComponent(purchaseOrderId)}`,
         {
           headers: fetchHeaders,
           cache: "no-store",
         },
-      );
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        error =
-          data?.error ||
-          data?.message ||
-          "Failed to load purchase order details.";
-      } else {
-        purchaseOrder = normalizePurchaseOrder(data);
-      }
-    } catch {
-      error = "Could not reach the purchase order details endpoint.";
-    }
-
-    try {
-      const tripRes = await fetch(
+      )
+        .then(async (res) => {
+          const data = await res.json().catch(() => ({}));
+          return { res, data };
+        })
+        .catch(() => null),
+      fetch(
         `${baseUrl}/api/v1/purchase-orders/${encodeURIComponent(purchaseOrderId)}/trip-reports`,
         {
           headers: fetchHeaders,
           cache: "no-store",
         },
-      );
-      const tripData = await tripRes.json().catch(() => ({}));
-
-      if (!tripRes.ok) {
-        tripReportsError =
-          tripData?.error ||
-          tripData?.message ||
-          "Failed to load trip reports.";
-      } else {
-        tripReports = normalizeTripReports(tripData);
-      }
-    } catch {
-      tripReportsError = "Could not reach the trip reports endpoint.";
-    }
-
-    try {
-      const invoiceRes = await fetch(
+      )
+        .then(async (res) => {
+          const data = await res.json().catch(() => ({}));
+          return { res, data };
+        })
+        .catch(() => null),
+      fetch(
         `${baseUrl}/api/v1/purchase-orders/${encodeURIComponent(purchaseOrderId)}/invoices`,
         {
           headers: fetchHeaders,
           cache: "no-store",
         },
-      );
-      const invoiceData = await invoiceRes.json().catch(() => ({}));
+      )
+        .then(async (res) => {
+          const data = await res.json().catch(() => ({}));
+          return { res, data };
+        })
+        .catch(() => null),
+    ]);
 
-      if (!invoiceRes.ok) {
-        invoicesError =
-          invoiceData?.error ||
-          invoiceData?.message ||
-          "Failed to load invoices.";
-      } else {
-        invoices = normalizeInvoices(invoiceData);
-      }
-    } catch {
+    if (!poResult) {
+      error = "Could not reach the purchase order details endpoint.";
+    } else if (!poResult.res.ok) {
+      error =
+        poResult.data?.error ||
+        poResult.data?.message ||
+        "Failed to load purchase order details.";
+    } else {
+      purchaseOrder = normalizePurchaseOrder(poResult.data);
+    }
+
+    if (!tripResult) {
+      tripReportsError = "Could not reach the trip reports endpoint.";
+    } else if (!tripResult.res.ok) {
+      tripReportsError =
+        tripResult.data?.error ||
+        tripResult.data?.message ||
+        "Failed to load trip reports.";
+    } else {
+      tripReports = normalizeTripReports(tripResult.data);
+    }
+
+    if (!invoiceResult) {
       invoicesError = "Could not reach the invoices endpoint.";
+    } else if (!invoiceResult.res.ok) {
+      invoicesError =
+        invoiceResult.data?.error ||
+        invoiceResult.data?.message ||
+        "Failed to load invoices.";
+    } else {
+      invoices = normalizeInvoices(invoiceResult.data);
     }
   }
 
@@ -597,11 +618,13 @@ export default async function PurchaseOrderDetailPage({ params }) {
               aria-label="Purchase Order Invoices Table"
               tabIndex={0}
             >
-              <table className="min-w-[68rem] text-sm">
+              <table className="min-w-[76rem] text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                     <th className="pb-3 pr-6">Invoice Number</th>
                     <th className="pb-3 pr-6">Status</th>
+                    <th className="pb-3 pr-6 text-right">Trip Reports</th>
+                    <th className="pb-3 pr-6 text-right">Amount</th>
                     <th className="pb-3 pr-6">LDDAP/ADAP</th>
                     <th className="pb-3 pr-6">Note</th>
                     <th className="pb-3 pr-6">Created</th>
@@ -627,6 +650,12 @@ export default async function PurchaseOrderDetailPage({ params }) {
                         </td>
                         <td className="py-3.5 pr-6">
                           <InvoiceStatusBadge status={invoice.status} />
+                        </td>
+                        <td className="py-3.5 pr-6 text-right tabular-nums text-zinc-700">
+                          {invoice.tripReportCount.toLocaleString()}
+                        </td>
+                        <td className="py-3.5 pr-6 text-right tabular-nums text-zinc-700">
+                          {formatPhp(invoice.amount)}
                         </td>
                         <td className="py-3.5 pr-6 text-zinc-700">
                           {invoice.lddapAdapNo || "—"}
