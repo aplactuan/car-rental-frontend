@@ -583,7 +583,7 @@
 								"drivers"
 							]
 						},
-						"description": "**Bearer required.** Create a driver and automatically provision a linked user account. Required: `first_name`, `last_name`, `license_number` (unique), `license_expiry_date`, `address`, `phone_number`, `email` (unique user email), `password` (string, min 8). The new user is named `{first_name} {last_name}` with role `user`. Response includes `userId` for the auto-created account."
+						"description": "**Bearer required.** Create a driver and automatically provision a linked user account. Required: `first_name`, `license_number` (unique), `license_expiry_date`, `address`, `phone_number`, `email` (unique user email), `password` (string, min 8). Optional: `last_name` (nullable). The new user is named `{first_name} {last_name}` (or just `first_name` when last name is omitted) with role `user`. Response includes `userId` for the auto-created account."
 					},
 					"event": [
 						{
@@ -634,7 +634,7 @@
 								"import"
 							]
 						},
-						"description": "Queue a CSV import of drivers (multipart/form-data, `file` required). Each valid row creates a linked user account (same as `POST /api/v1/drivers`).\n\n**CSV header row (required):**\n`first_name,last_name,license_number,license_expiry_date,address,phone_number,email,password`\n\n**Example row:**\n`John,Doe,DL-12345678,2027-12-31,123 Main St,+1234567890,john.doe@example.com,password123`\n\n`license_number` must be unique across the database and within the file. `email` must be unique across users and within the file. `password` must be at least 8 characters."
+						"description": "Queue a CSV import of drivers (multipart/form-data, `file` required). Each valid row creates a linked user account (same as `POST /api/v1/drivers`).\n\n**CSV header row (required):**\n`first_name,last_name,license_number,license_expiry_date,address,phone_number,email,password`\n\n**Example row:**\n`John,Doe,DL-12345678,2027-12-31,123 Main St,+1234567890,john.doe@example.com,password123`\n\n`last_name` may be empty. `license_number` must be unique across the database and within the file. `email` must be unique across users and within the file. `password` must be at least 8 characters."
 					},
 					"event": [
 						{
@@ -805,7 +805,7 @@
 								"{{driver_id}}"
 							]
 						},
-						"description": "**Bearer required.** Partial update (`sometimes` rules). All fields optional: `first_name`, `last_name`, `license_number` (unique except current driver), `license_expiry_date`, `address`, `phone_number`. **Authorization:** admin users can update any driver; a non-admin user linked to this driver (via `user_id`) can update their own record. All others receive 403. **Admin-only field:** `user_id` (nullable integer) — links or unlinks the driver to a user account; silently ignored for non-admin callers."
+						"description": "**Bearer required.** Partial update (`sometimes` rules). All fields optional: `first_name`, `last_name` (nullable), `license_number` (unique except current driver), `license_expiry_date`, `address`, `phone_number`. **Authorization:** admin users can update any driver; a non-admin user linked to this driver (via `user_id`) can update their own record. All others receive 403. **Admin-only field:** `user_id` (nullable integer) — links or unlinks the driver to a user account; silently ignored for non-admin callers."
 					}
 				}
 			]
@@ -1028,7 +1028,7 @@
 								"{{customer_id}}"
 							]
 						},
-						"description": "**Bearer required.** Returns one customer. Customer attributes include `name`, `type`, `parentId`, `contactPerson`, `contactMobileNumber`, and `contactEmail`. Single-resource responses may include parent attributes such as the parent name under `relationships.parent.data.attributes`."
+						"description": "**Bearer required.** Returns one customer. Customer attributes include `name`, `type`, `parentId`, `contactPerson`, `contactMobileNumber`, `contactEmail`, `purchaseOrderCount`, `purchaseOrderTotal`, `unprogrammedPurchaseOrderCount`, and `unprogrammedPurchaseOrderTotal`. Rollup fields count/sum all purchase orders for this customer; unprogrammed fields count/sum only POs with no `program_id`. Single-resource responses may include parent attributes such as the parent name under `relationships.parent.data.attributes`."
 					}
 				},
 				{
@@ -1106,7 +1106,7 @@
 								"programs"
 							]
 						},
-						"description": "**Bearer required.** Returns all programs for `{{customer_id}}` as a program resource collection, newest first. Each item includes `name`, `description`, `customerId`, and a `customer` relationship (may include the customer name)."
+						"description": "**Bearer required.** Returns all programs for `{{customer_id}}` as a program resource collection, newest first. Each item includes `name`, `description`, `customerId`, `purchaseOrderCount`, `purchaseOrderTotal`, and a `customer` relationship (may include the customer name). `purchaseOrderCount` is the count of purchase orders for this customer linked to that program; `purchaseOrderTotal` is the sum of those PO amounts (0 when none). Unprogrammed POs (`program_id` null) are excluded from program rows and reported in top-level `meta` as `unprogrammedPurchaseOrderCount` and `unprogrammedPurchaseOrderTotal`."
 					}
 				},
 				{

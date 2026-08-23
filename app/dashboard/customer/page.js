@@ -81,29 +81,8 @@ function getInitials(name) {
   return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
 }
 
-function getTypeMeta(type) {
-  const normalized = String(type ?? "").toLowerCase();
-  if (normalized === "business") {
-    return {
-      label: "Business",
-      className: "bg-blue-100 text-blue-800 ring-blue-200/80",
-    };
-  }
-  if (normalized === "personal") {
-    return {
-      label: "Personal",
-      className: "bg-red-100 text-red-800 ring-red-200/80",
-    };
-  }
-  return {
-    label: type || "Unknown",
-    className: "bg-zinc-100 text-zinc-700 ring-zinc-200/80",
-  };
-}
-
 function CustomerCard({ customer, onEdit }) {
   const displayName = customer.name || "Unnamed customer";
-  const typeMeta = getTypeMeta(customer.type);
   const initials = getInitials(displayName);
   const contactPerson = customer.contact_person;
   const contactEmail = customer.contact_email || customer.email;
@@ -121,11 +100,6 @@ function CustomerCard({ customer, onEdit }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="min-w-0 break-words font-semibold text-zinc-900">{displayName}</h3>
-            <span
-              className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ring-1 ${typeMeta.className}`}
-            >
-              {typeMeta.label}
-            </span>
           </div>
           <ul className="mt-3 space-y-1.5 text-sm text-zinc-600">
             {contactPerson ? (
@@ -274,7 +248,6 @@ export default function CustomerDashboardPage() {
   const [formMode, setFormMode] = useState(null);
   const [editingCustomerId, setEditingCustomerId] = useState("");
   const [name, setName] = useState("");
-  const [type, setType] = useState("personal");
   const [contactPerson, setContactPerson] = useState("");
   const [contactMobileNumber, setContactMobileNumber] = useState("");
   const [contactEmail, setContactEmail] = useState("");
@@ -286,7 +259,6 @@ export default function CustomerDashboardPage() {
 
   function resetForm() {
     setName("");
-    setType("personal");
     setContactPerson("");
     setContactMobileNumber("");
     setContactEmail("");
@@ -303,7 +275,6 @@ export default function CustomerDashboardPage() {
     setFormMode("edit");
     setEditingCustomerId(customer.id || "");
     setName(customer.name || "");
-    setType(String(customer.type || "personal").toLowerCase() || "personal");
     setContactPerson(customer.contact_person || "");
     setContactMobileNumber(customer.contact_mobile_number || "");
     setContactEmail(customer.contact_email || "");
@@ -362,7 +333,7 @@ export default function CustomerDashboardPage() {
 
       const payload = {
         name: name.trim(),
-        type,
+        type: "business",
         contact_person: contactPerson.trim() || null,
         contact_mobile_number: contactMobileNumber.trim() || null,
         contact_email: contactEmail.trim() || null,
@@ -399,13 +370,6 @@ export default function CustomerDashboardPage() {
     }
   }
 
-  const personalCount = customers.filter(
-    (c) => String(c.type ?? "").toLowerCase() === "personal",
-  ).length;
-  const businessCount = customers.filter(
-    (c) => String(c.type ?? "").toLowerCase() === "business",
-  ).length;
-
   return (
     <div className="min-w-0 w-full">
       <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -414,22 +378,12 @@ export default function CustomerDashboardPage() {
             Customers
           </h1>
           <p className="mt-2 text-sm text-zinc-500">
-            Manage personal and business accounts
+            Manage business customer accounts
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <span className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600">
               {isLoading ? "Loading…" : `${customers.length} total`}
             </span>
-            {!isLoading && customers.length > 0 ? (
-              <>
-                <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
-                  {personalCount} personal
-                </span>
-                <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
-                  {businessCount} business
-                </span>
-              </>
-            ) : null}
           </div>
         </div>
 
@@ -460,7 +414,7 @@ export default function CustomerDashboardPage() {
           <p className="mt-1 text-sm text-zinc-500">
             {formMode === "edit"
               ? "Update customer profile and contact person details."
-              : "Create a personal or business customer profile."}
+              : "Create a business customer profile."}
           </p>
           <form onSubmit={handleSubmit} className="mt-5 grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
@@ -476,21 +430,6 @@ export default function CustomerDashboardPage() {
                 placeholder="Customer or company name"
                 required
               />
-            </div>
-            <div>
-              <label htmlFor="customer-type" className={labelClass}>
-                Type
-              </label>
-              <select
-                id="customer-type"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className={inputClass}
-                required
-              >
-                <option value="personal">Personal</option>
-                <option value="business">Business</option>
-              </select>
             </div>
             <div>
               <label htmlFor="contact-person" className={labelClass}>

@@ -29,6 +29,36 @@ function readField(source, keys) {
   return "";
 }
 
+function readNumber(source, keys) {
+  if (!source || typeof source !== "object") return null;
+
+  const tryValue = (value) => {
+    if (value === undefined || value === null || value === "") return null;
+    const number = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(number) ? number : null;
+  };
+
+  for (const key of keys) {
+    const number = tryValue(source[key]);
+    if (number !== null) return number;
+  }
+
+  const normalizedMap = Object.fromEntries(
+    Object.entries(source).map(([k, v]) => [
+      k.toLowerCase().replace(/[_\s]/g, ""),
+      v,
+    ]),
+  );
+
+  for (const key of keys) {
+    const normalizedKey = key.toLowerCase().replace(/[_\s]/g, "");
+    const number = tryValue(normalizedMap[normalizedKey]);
+    if (number !== null) return number;
+  }
+
+  return null;
+}
+
 function normalizeCustomer(payload) {
   const record = payload?.data ?? payload?.customer ?? payload;
   const attrs = record?.attributes ?? {};
@@ -36,6 +66,11 @@ function normalizeCustomer(payload) {
     const fromAttrs = readField(attrs, keys);
     if (fromAttrs !== "") return fromAttrs;
     return readField(record, keys);
+  };
+  const pickNumber = (keys) => {
+    const fromAttrs = readNumber(attrs, keys);
+    if (fromAttrs !== null) return fromAttrs;
+    return readNumber(record, keys);
   };
 
   return {
@@ -53,6 +88,22 @@ function normalizeCustomer(payload) {
     contact_email: pick(["contact_email", "contactEmail"]),
     created_at: pick(["created_at", "createdAt"]),
     updated_at: pick(["updated_at", "updatedAt"]),
+    purchaseOrderCount: pickNumber([
+      "purchase_order_count",
+      "purchaseOrderCount",
+    ]),
+    purchaseOrderTotal: pickNumber([
+      "purchase_order_total",
+      "purchaseOrderTotal",
+    ]),
+    unprogrammedPurchaseOrderCount: pickNumber([
+      "unprogrammed_purchase_order_count",
+      "unprogrammedPurchaseOrderCount",
+    ]),
+    unprogrammedPurchaseOrderTotal: pickNumber([
+      "unprogrammed_purchase_order_total",
+      "unprogrammedPurchaseOrderTotal",
+    ]),
   };
 }
 
@@ -110,20 +161,47 @@ function normalizePrograms(payload) {
   const raw = payload?.data ?? payload?.programs ?? payload?.items ?? payload;
   const list = Array.isArray(raw) ? raw : [];
 
-  return list
+  const programs = list
     .map((record) => {
       const attrs = record?.attributes ?? {};
       const pick = (keys) =>
         readField(attrs, keys) || readField(record, keys);
+      const pickNumber = (keys) => {
+        const fromAttrs = readNumber(attrs, keys);
+        if (fromAttrs !== null) return fromAttrs;
+        return readNumber(record, keys);
+      };
 
       return {
         id: String(pick(["id", "program_id", "programId"]) || ""),
         name: String(pick(["name"]) || ""),
         description: String(pick(["description"]) || ""),
         createdAt: String(pick(["created_at", "createdAt"]) || ""),
+        purchaseOrderCount:
+          pickNumber(["purchase_order_count", "purchaseOrderCount"]) ?? 0,
+        purchaseOrderTotal:
+          pickNumber(["purchase_order_total", "purchaseOrderTotal"]) ?? 0,
       };
     })
     .filter((item) => item.id);
+
+  const meta = payload?.meta ?? {};
+  const unprogrammedPurchaseOrderCount =
+    readNumber(meta, [
+      "unprogrammed_purchase_order_count",
+      "unprogrammedPurchaseOrderCount",
+    ]) ?? 0;
+  const unprogrammedPurchaseOrderTotal =
+    readNumber(meta, [
+      "unprogrammed_purchase_order_total",
+      "unprogrammedPurchaseOrderTotal",
+    ]) ?? 0;
+
+  return {
+    programs,
+    unprogrammedPurchaseOrderCount,
+    unprogrammedPurchaseOrderTotal,
+  };
 }
 
 function formatPhp(amount) {
@@ -190,86 +268,111 @@ export default async function CustomerDetailPage({ params }) {
   let purchaseOrdersError = "";
   let programs = [];
   let programsError = "";
+  let programsUnprogrammedCount = 0;
+  let programsUnprogrammedTotal = 0;
 
   if (customerId) {
-    try {
-      const res = await fetch(`${baseUrl}/api/v1/customers/${customerId}`, {
+    const [customerResult, poResult, programsResult] = await Promise.all([
+      fetch(`${baseUrl}/api/v1/customers/${customerId}`, {
         headers: fetchHeaders,
         cache: "no-store",
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        error =
-          data?.error || data?.message || "Failed to load customer details.";
-      } else {
-        customer = normalizeCustomer(data);
-      }
-    } catch {
-      error = "Could not reach the customer details endpoint.";
-    }
-
-    try {
-      const poRes = await fetch(
+      })
+        .then(async (res) => {
+          const data = await res.json().catch(() => ({}));
+          return { res, data };
+        })
+        .catch(() => null),
+      fetch(
         `${baseUrl}/api/v1/purchase-orders?customer_id=${encodeURIComponent(customerId)}&per_page=100`,
         {
           headers: fetchHeaders,
           cache: "no-store",
         },
-      );
-      const poData = await poRes.json().catch(() => ({}));
-
-      if (!poRes.ok) {
-        purchaseOrdersError =
-          poData?.error ||
-          poData?.message ||
-          "Failed to load purchase orders.";
-      } else {
-        purchaseOrders = normalizePurchaseOrders(poData);
-      }
-    } catch {
-      purchaseOrdersError = "Could not reach the purchase orders endpoint.";
-    }
-
-    try {
-      const programsRes = await fetch(
+      )
+        .then(async (res) => {
+          const data = await res.json().catch(() => ({}));
+          return { res, data };
+        })
+        .catch(() => null),
+      fetch(
         `${baseUrl}/api/v1/customers/${encodeURIComponent(customerId)}/programs`,
         {
           headers: fetchHeaders,
           cache: "no-store",
         },
-      );
-      const programsData = await programsRes.json().catch(() => ({}));
+      )
+        .then(async (res) => {
+          const data = await res.json().catch(() => ({}));
+          return { res, data };
+        })
+        .catch(() => null),
+    ]);
 
-      if (!programsRes.ok) {
-        programsError =
-          programsData?.error ||
-          programsData?.message ||
-          "Failed to load programs.";
-      } else {
-        programs = normalizePrograms(programsData);
-      }
-    } catch {
+    if (!customerResult) {
+      error = "Could not reach the customer details endpoint.";
+    } else if (!customerResult.res.ok) {
+      error =
+        customerResult.data?.error ||
+        customerResult.data?.message ||
+        "Failed to load customer details.";
+    } else {
+      customer = normalizeCustomer(customerResult.data);
+    }
+
+    if (!poResult) {
+      purchaseOrdersError = "Could not reach the purchase orders endpoint.";
+    } else if (!poResult.res.ok) {
+      purchaseOrdersError =
+        poResult.data?.error ||
+        poResult.data?.message ||
+        "Failed to load purchase orders.";
+    } else {
+      purchaseOrders = normalizePurchaseOrders(poResult.data);
+    }
+
+    if (!programsResult) {
       programsError = "Could not reach the programs endpoint.";
+    } else if (!programsResult.res.ok) {
+      programsError =
+        programsResult.data?.error ||
+        programsResult.data?.message ||
+        "Failed to load programs.";
+    } else {
+      const normalizedPrograms = normalizePrograms(programsResult.data);
+      programs = normalizedPrograms.programs;
+      programsUnprogrammedCount =
+        normalizedPrograms.unprogrammedPurchaseOrderCount;
+      programsUnprogrammedTotal =
+        normalizedPrograms.unprogrammedPurchaseOrderTotal;
     }
   } else {
     error = "Customer ID was not provided.";
   }
 
   const displayName = customer?.name || "Customer";
-  const purchaseOrderTotal = purchaseOrders.reduce(
-    (sum, po) => sum + (typeof po.amount === "number" ? po.amount : 0),
-    0,
-  );
-  const pendingPurchaseOrders = purchaseOrders.filter(
-    (po) => po.status !== "ok",
-  ).length;
-  const okPurchaseOrders = purchaseOrders.filter((po) => po.status === "ok").length;
-  const poOkRate =
-    !purchaseOrdersError && purchaseOrders.length > 0
-      ? Math.round((okPurchaseOrders / purchaseOrders.length) * 100)
-      : null;
+  const purchaseOrderCount =
+    customer?.purchaseOrderCount != null
+      ? customer.purchaseOrderCount
+      : purchaseOrdersError
+        ? null
+        : purchaseOrders.length;
+  const purchaseOrderTotal =
+    customer?.purchaseOrderTotal != null
+      ? customer.purchaseOrderTotal
+      : purchaseOrdersError
+        ? null
+        : purchaseOrders.reduce(
+            (sum, po) => sum + (typeof po.amount === "number" ? po.amount : 0),
+            0,
+          );
+  const unprogrammedPurchaseOrderCount =
+    customer?.unprogrammedPurchaseOrderCount != null
+      ? customer.unprogrammedPurchaseOrderCount
+      : programsUnprogrammedCount;
+  const unprogrammedPurchaseOrderTotal =
+    customer?.unprogrammedPurchaseOrderTotal != null
+      ? customer.unprogrammedPurchaseOrderTotal
+      : programsUnprogrammedTotal;
 
   // Placeholder until customer-level invoice / trip-report rollups are wired.
   const outstandingPlaceholder = "PHP 128,400";
@@ -382,34 +485,40 @@ export default async function CustomerDetailPage({ params }) {
           <div className="grid gap-px bg-zinc-200 sm:grid-cols-2 lg:grid-cols-4">
             <SummaryCell label="Purchase Orders">
               <p className="text-2xl font-semibold tracking-tight text-zinc-900">
-                {purchaseOrdersError ? "—" : purchaseOrders.length}
+                {purchaseOrderCount == null
+                  ? "—"
+                  : purchaseOrderCount.toLocaleString()}
               </p>
-              {!purchaseOrdersError ? (
-                <p className="mt-1 text-xs text-zinc-500">
-                  {pendingPurchaseOrders > 0
-                    ? `${pendingPurchaseOrders} pending`
-                    : purchaseOrders.length > 0
-                      ? "All OK"
-                      : "No POs yet"}
-                  {poOkRate != null ? ` · ${poOkRate}% OK` : ""}
-                </p>
-              ) : null}
+              <p className="mt-1 text-xs text-zinc-500">
+                {purchaseOrderCount == null
+                  ? "Unavailable"
+                  : purchaseOrderCount === 0
+                    ? "No POs yet"
+                    : unprogrammedPurchaseOrderCount > 0
+                      ? `${unprogrammedPurchaseOrderCount.toLocaleString()} unprogrammed`
+                      : "All linked to programs"}
+              </p>
             </SummaryCell>
             <SummaryCell label="PO Value">
               <p className="text-2xl font-semibold tracking-tight text-zinc-900">
-                {purchaseOrdersError
+                {purchaseOrderTotal == null
                   ? "—"
-                  : purchaseOrders.length > 0
-                    ? formatPhp(purchaseOrderTotal)
-                    : "PHP 0"}
+                  : formatPhp(purchaseOrderTotal)}
               </p>
-              {!purchaseOrdersError && programs.length > 0 ? (
+              {!programsError && programs.length > 0 ? (
                 <p className="mt-1 text-xs text-zinc-500">
                   Across {programs.length} program
                   {programs.length === 1 ? "" : "s"}
+                  {unprogrammedPurchaseOrderTotal > 0
+                    ? ` · ${formatPhp(unprogrammedPurchaseOrderTotal)} unprogrammed`
+                    : ""}
                 </p>
               ) : (
-                <p className="mt-1 text-xs text-zinc-500">Sum of PO amounts</p>
+                <p className="mt-1 text-xs text-zinc-500">
+                  {unprogrammedPurchaseOrderTotal > 0
+                    ? `${formatPhp(unprogrammedPurchaseOrderTotal)} unprogrammed`
+                    : "Sum of PO amounts"}
+                </p>
               )}
             </SummaryCell>
             <SummaryCell label="Outstanding">
@@ -511,8 +620,16 @@ export default async function CustomerDetailPage({ params }) {
             </p>
           </div>
           {!programsError && programs.length > 0 ? (
-            <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
-              {programs.length} program{programs.length === 1 ? "" : "s"}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
+                {programs.length} program{programs.length === 1 ? "" : "s"}
+              </div>
+              {unprogrammedPurchaseOrderCount > 0 ? (
+                <div className="rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">
+                  {unprogrammedPurchaseOrderCount.toLocaleString()} unprogrammed
+                  · {formatPhp(unprogrammedPurchaseOrderTotal)}
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -532,11 +649,13 @@ export default async function CustomerDetailPage({ params }) {
               aria-label="Customer Programs Table"
               tabIndex={0}
             >
-              <table className="min-w-[36rem] text-sm">
+              <table className="min-w-[44rem] text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
                     <th className="pb-3 pr-6">Name</th>
                     <th className="pb-3 pr-6">Description</th>
+                    <th className="pb-3 pr-6 text-right">Purchase Orders</th>
+                    <th className="pb-3 pr-6 text-right">PO Total</th>
                     <th className="pb-3 pr-6">Created At</th>
                     <th className="pb-3 text-right">Actions</th>
                   </tr>
@@ -552,6 +671,12 @@ export default async function CustomerDetailPage({ params }) {
                       </td>
                       <td className="max-w-md py-3.5 pr-6 text-zinc-700">
                         {program.description || "—"}
+                      </td>
+                      <td className="py-3.5 pr-6 text-right tabular-nums text-zinc-700">
+                        {program.purchaseOrderCount.toLocaleString()}
+                      </td>
+                      <td className="py-3.5 pr-6 text-right tabular-nums text-zinc-700">
+                        {formatPhp(program.purchaseOrderTotal)}
                       </td>
                       <td className="py-3.5 pr-6 text-zinc-700">
                         {formatDate(program.createdAt)}
