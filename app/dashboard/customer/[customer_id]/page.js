@@ -104,6 +104,16 @@ function normalizeCustomer(payload) {
       "unprogrammed_purchase_order_total",
       "unprogrammedPurchaseOrderTotal",
     ]),
+    programCount: pickNumber(["program_count", "programCount"]),
+    tripReportCount: pickNumber(["trip_report_count", "tripReportCount"]),
+    unattachedTripReportCount: pickNumber([
+      "unattached_trip_report_count",
+      "unattachedTripReportCount",
+    ]),
+    unpaidInvoiceTotal: pickNumber([
+      "unpaid_invoice_total",
+      "unpaidInvoiceTotal",
+    ]),
   };
 }
 
@@ -373,13 +383,15 @@ export default async function CustomerDetailPage({ params }) {
     customer?.unprogrammedPurchaseOrderTotal != null
       ? customer.unprogrammedPurchaseOrderTotal
       : programsUnprogrammedTotal;
-
-  // Placeholder until customer-level invoice / trip-report rollups are wired.
-  const outstandingPlaceholder = "PHP 128,400";
-  const tripReportsPlaceholder = {
-    total: 9,
-    unattached: 2,
-  };
+  const programCount =
+    customer?.programCount != null
+      ? customer.programCount
+      : programsError
+        ? null
+        : programs.length;
+  const unpaidInvoiceTotal = customer?.unpaidInvoiceTotal ?? null;
+  const tripReportCount = customer?.tripReportCount ?? null;
+  const unattachedTripReportCount = customer?.unattachedTripReportCount ?? null;
 
   return (
     <div className="min-w-0 w-full space-y-6 lg:pr-8">
@@ -505,36 +517,52 @@ export default async function CustomerDetailPage({ params }) {
                   ? "—"
                   : formatPhp(purchaseOrderTotal)}
               </p>
-              {!programsError && programs.length > 0 ? (
-                <p className="mt-1 text-xs text-zinc-500">
-                  Across {programs.length} program
-                  {programs.length === 1 ? "" : "s"}
-                  {unprogrammedPurchaseOrderTotal > 0
-                    ? ` · ${formatPhp(unprogrammedPurchaseOrderTotal)} unprogrammed`
-                    : ""}
-                </p>
-              ) : (
-                <p className="mt-1 text-xs text-zinc-500">
-                  {unprogrammedPurchaseOrderTotal > 0
+              <p className="mt-1 text-xs text-zinc-500">
+                {programCount == null
+                  ? unprogrammedPurchaseOrderTotal > 0
                     ? `${formatPhp(unprogrammedPurchaseOrderTotal)} unprogrammed`
-                    : "Sum of PO amounts"}
-                </p>
-              )}
+                    : "Sum of PO amounts"
+                  : programCount === 0
+                    ? unprogrammedPurchaseOrderTotal > 0
+                      ? `${formatPhp(unprogrammedPurchaseOrderTotal)} unprogrammed`
+                      : "No programs with POs"
+                    : `Across ${programCount.toLocaleString()} program${
+                        programCount === 1 ? "" : "s"
+                      }${
+                        unprogrammedPurchaseOrderTotal > 0
+                          ? ` · ${formatPhp(unprogrammedPurchaseOrderTotal)} unprogrammed`
+                          : ""
+                      }`}
+              </p>
             </SummaryCell>
             <SummaryCell label="Outstanding">
               <p className="text-2xl font-semibold tracking-tight text-zinc-900">
-                {outstandingPlaceholder}
+                {unpaidInvoiceTotal == null
+                  ? "—"
+                  : formatPhp(unpaidInvoiceTotal)}
               </p>
-              <p className="mt-1 text-xs text-zinc-400">
-                Placeholder · unpaid invoices
+              <p className="mt-1 text-xs text-zinc-500">
+                {unpaidInvoiceTotal == null
+                  ? "Unavailable"
+                  : unpaidInvoiceTotal === 0
+                    ? "No unpaid invoices"
+                    : "Unpaid invoice trip totals"}
               </p>
             </SummaryCell>
             <SummaryCell label="Trip Reports">
               <p className="text-2xl font-semibold tracking-tight text-zinc-900">
-                {tripReportsPlaceholder.total}
+                {tripReportCount == null
+                  ? "—"
+                  : tripReportCount.toLocaleString()}
               </p>
-              <p className="mt-1 text-xs text-zinc-400">
-                Placeholder · {tripReportsPlaceholder.unattached} unattached
+              <p className="mt-1 text-xs text-zinc-500">
+                {tripReportCount == null
+                  ? "Unavailable"
+                  : tripReportCount === 0
+                    ? "No trip reports yet"
+                    : unattachedTripReportCount > 0
+                      ? `${unattachedTripReportCount.toLocaleString()} unattached`
+                      : "All attached to invoices"}
               </p>
             </SummaryCell>
           </div>
