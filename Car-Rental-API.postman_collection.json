@@ -811,6 +811,37 @@
 			]
 		},
 		{
+			"name": "Dashboard",
+			"description": "Main-dashboard overview routes. All routes require **Bearer** auth.",
+			"item": [
+				{
+					"name": "Customer overview",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/dashboard/customer-overview",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"dashboard",
+								"customer-overview"
+							]
+						},
+						"description": "**Bearer required.** Returns the main-dashboard customer overview as `data.type = customerOverview` and `data.id = overview`. Response `data.attributes` includes `totalPrograms` (all programs, including those without purchase orders), `balanceToCollect` (integer pesos from trip-report amounts attached to unpaid PO invoices), and `topCustomers` (up to five customers ranked by their own purchase-order value). Each top customer includes `id`, `name`, `type`, `purchaseOrderCount`, and `purchaseOrderTotal`. Customers without purchase orders are excluded; parent and sub-account customers are ranked independently. `balanceToCollect` excludes paid PO invoices, unattached trip reports, and rental bills."
+					}
+				}
+			]
+		},
+		{
 			"name": "Billing & bills",
 			"description": "All routes here require **Bearer** auth. Query keys below are optional unless noted.",
 			"item": [
