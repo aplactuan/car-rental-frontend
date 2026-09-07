@@ -268,16 +268,16 @@ export default async function DashboardPage() {
                   Manage Customers
                 </Link>
                 <Link
-                  href="/dashboard/billing"
+                  href="/dashboard/add-trip-report"
                   className="inline-flex min-h-11 items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
                 >
-                  Open Billing Report
+                  Add Trip Report
                 </Link>
                 <Link
-                  href="/dashboard/bookings"
+                  href="/dashboard/add-invoice"
                   className="inline-flex min-h-11 items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
                 >
-                  View Bookings
+                  Add Invoice
                 </Link>
               </div>
             </div>
