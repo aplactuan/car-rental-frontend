@@ -26,7 +26,11 @@ function firstErrorMessage(data, keys = []) {
   return data?.error || data?.message || null;
 }
 
-export default function ProgramActions({ customerId, program }) {
+export default function ProgramActions({
+  customerId,
+  program,
+  redirectToAfterDelete = "",
+}) {
   const router = useRouter();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [form, setForm] = useState({ name: "", description: "" });
@@ -130,6 +134,11 @@ export default function ProgramActions({ customerId, program }) {
       }
 
       setIsEditOpen(false);
+      if (redirectToAfterDelete) {
+        router.push(redirectToAfterDelete);
+        router.refresh();
+        return;
+      }
       router.refresh();
     } catch {
       setError("Network error. Please try again.");
