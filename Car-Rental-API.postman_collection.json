@@ -836,7 +836,83 @@
 								"customer-overview"
 							]
 						},
-						"description": "**Bearer required.** Returns the main-dashboard customer overview as `data.type = customerOverview` and `data.id = overview`. Response `data.attributes` includes `totalPrograms` (all programs, including those without purchase orders), `balanceToCollect` (integer pesos from trip-report amounts attached to unpaid PO invoices), and `topCustomers` (up to five customers ranked by their own purchase-order value). Each top customer includes `id`, `name`, `type`, `purchaseOrderCount`, and `purchaseOrderTotal`. Customers without purchase orders are excluded; parent and sub-account customers are ranked independently. `balanceToCollect` excludes paid PO invoices, unattached trip reports, and rental bills."
+						"description": "**Bearer required.** Returns the main-dashboard customer overview as `data.type = customerOverview` and `data.id = overview`. Response `data.attributes` includes `totalPrograms`, `totalPurchaseOrderAmount`, `totalBilled`, `totalPaid`, `balanceToCollect`, and `topCustomers`. Amounts are integer pesos. PO total uses `purchase_orders.amount`; billed/paid/collectible use attached trip-report amounts from PO invoices. `topCustomers` contains up to five customers ranked by their own PO value, with `id`, `name`, `type`, `purchaseOrderCount`, and `purchaseOrderTotal`. Customers without POs are excluded; parents and sub-accounts rank independently. Rental bills and unattached trip reports are excluded from PO invoice totals."
+					}
+				},
+				{
+					"name": "Program rankings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/dashboard/program-rankings",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"dashboard",
+								"program-rankings"
+							]
+						},
+						"description": "**Bearer required.** Returns `topPrograms` (top 10 by PO amount), `topBilledPrograms` (top 5 by attached trip-report amount), and `topPaidPrograms` (top 5 by trip-report amount on paid PO invoices). Entries include program `id`, `name`, `customerId`, and the applicable integer-peso total. Unprogrammed POs and unattached trip reports are excluded from invoice rankings."
+					}
+				},
+				{
+					"name": "Recent trip reports",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/dashboard/trip-reports/recent",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"dashboard",
+								"trip-reports",
+								"recent"
+							]
+						},
+						"description": "**Bearer required.** Returns up to 10 global trip reports ordered by `reportDate` descending, then driver name. Slim attributes are `tripReportNo`, `driver`, `reportDate`, `tripStart`, and `tripEnd`, with purchase-order relationship linkage."
+					}
+				},
+				{
+					"name": "Month report",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/dashboard/month-report",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"dashboard",
+								"month-report"
+							]
+						},
+						"description": "**Bearer required.** Returns 12 calendar months ending with the current month, zero-filling months without activity. Each month contains `month` (`YYYY-MM`), `totalBilled` grouped by invoice `billedAt`, `totalCollectible` for currently unpaid invoices grouped by `billedAt`, and `totalPaid` grouped by `paidAt`. Historical paid invoices whose true payment date was unavailable have `paidAt = null`, so they remain in global paid totals but cannot be assigned to a monthly paid bucket."
 					}
 				}
 			]
@@ -3465,7 +3541,7 @@
 		},
 		{
 			"name": "Purchase Order Invoices",
-			"description": "Invoices nested under a purchase order (distinct from transaction bill printable invoices). `status` is `unpaid` (default) or `paid`. Optional `payment_receipt`, `disbursement_voucher`, and `invoice_picture` use `multipart/form-data` (jpg/jpeg/png/webp/heic/heif/pdf, max 10 MB). Invoice responses include `tripReportCount` and `amount` (DB aggregates of linked trip reports for this PO). Trip reports can be bulk attached or detached via `trip_report_ids`.",
+			"description": "Invoices nested under a purchase order (distinct from transaction bill printable invoices). `status` is `unpaid` (default) or `paid`. `billedAt` records when the invoice was billed; `paidAt` is managed by status transitions. Optional `payment_receipt`, `disbursement_voucher`, and `invoice_picture` use `multipart/form-data` (jpg/jpeg/png/webp/heic/heif/pdf, max 10 MB). Invoice responses include `tripReportCount` and `amount` (DB aggregates of linked trip reports for this PO). Trip reports can be bulk attached or detached via `trip_report_ids`.",
 			"item": [
 				{
 					"name": "Add Invoice",
@@ -3506,6 +3582,13 @@
 									"disabled": true
 								},
 								{
+									"key": "billed_at",
+									"value": "2026-09-01 09:00:00",
+									"description": "Optional valid date. Defaults to the current time when omitted.",
+									"type": "text",
+									"disabled": true
+								},
+								{
 									"key": "payment_receipt",
 									"description": "Optional. Image or PDF (jpg, jpeg, png, webp, heic, heif, pdf), max 10 MB.",
 									"type": "file",
@@ -3541,7 +3624,7 @@
 								"invoices"
 							]
 						},
-						"description": "**Bearer required.** Create a purchase order invoice. Prefer `multipart/form-data` when uploading files.\n\n**Required:** `invoice_number` (unique).\n\n**Optional:** `lddap_adap_no` (nullable), `note`, `status` (`unpaid` default, or `paid`), `payment_receipt`, `disbursement_voucher`, `invoice_picture`.\n\nResponse type `purchase-order-invoice` with attributes `invoiceNumber`, `lddapAdapNo`, `note`, `status`, `tripReportCount` (count of linked trip reports for this PO; 0 on create), `amount` (sum of those trip report amounts; 0 on create), `paymentReceiptUrl`, `disbursementVoucherUrl`, `invoicePictureUrl`, `createdAt`, `updatedAt`. Relationship: `purchaseOrder`."
+						"description": "**Bearer required.** Create a purchase order invoice. Prefer `multipart/form-data` when uploading files.\n\n**Required:** `invoice_number` (unique).\n\n**Optional:** `lddap_adap_no` (nullable), `note`, `status` (`unpaid` default, or `paid`), `billed_at` (valid date; defaults to now), `payment_receipt`, `disbursement_voucher`, `invoice_picture`.\n\nResponse type `purchase-order-invoice` with attributes `invoiceNumber`, `lddapAdapNo`, `note`, `status`, `tripReportCount`, `amount`, `billedAt`, `paidAt`, media URLs, `createdAt`, and `updatedAt`. `paidAt` is set by the API when created as paid. Relationship: `purchaseOrder`."
 					},
 					"event": [
 						{
@@ -3583,7 +3666,7 @@
 								"invoices"
 							]
 						},
-						"description": "**Bearer required.** Returns all invoices for the purchase order, ordered by latest created. Each invoice includes `tripReportCount` (count of trip reports linked to that invoice for this PO) and `amount` (sum of those trip report amounts; 0 when none)."
+						"description": "**Bearer required.** Returns all invoices for the purchase order, ordered by latest created. Each invoice includes `tripReportCount`, `amount` (sum of linked trip-report amounts), `billedAt`, and server-managed `paidAt`."
 					}
 				},
 				{
@@ -3610,7 +3693,7 @@
 								"{{invoice_id}}"
 							]
 						},
-						"description": "**Bearer required.** Returns one purchase order invoice, including `tripReportCount` and `amount` (sum of linked trip report amounts for this PO; 0 when none). Returns **404** if the invoice does not belong to the given purchase order."
+						"description": "**Bearer required.** Returns one purchase order invoice, including `tripReportCount`, `amount` (sum of linked trip-report amounts), `billedAt`, and `paidAt`. Returns **404** if the invoice does not belong to the given purchase order."
 					}
 				},
 				{
@@ -3649,6 +3732,13 @@
 									"value": "paid",
 									"description": "Optional. `unpaid` or `paid`.",
 									"type": "text"
+								},
+								{
+									"key": "billed_at",
+									"value": "2026-09-01 09:00:00",
+									"description": "Optional valid date. Updates when the invoice was billed.",
+									"type": "text",
+									"disabled": true
 								},
 								{
 									"key": "payment_receipt",
@@ -3708,7 +3798,7 @@
 								"{{invoice_id}}"
 							]
 						},
-						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when replacing or removing files.\n\n**Optional fields:** `invoice_number`, `lddap_adap_no` (nullable), `note`, `status` (`unpaid` or `paid`), `payment_receipt`, `disbursement_voucher`, `invoice_picture`, `remove_payment_receipt`, `remove_disbursement_voucher`, `remove_invoice_picture`.\n\nUploading a file replaces the previous single-file media. Setting a remove flag clears that collection. You cannot upload and remove the same file in one request. Omitting file fields leaves existing media unchanged.\n\nResponse includes `tripReportCount` and `amount` (sum of linked trip report amounts for this PO)."
+						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when replacing or removing files.\n\n**Optional fields:** `invoice_number`, `lddap_adap_no` (nullable), `note`, `status` (`unpaid` or `paid`), `billed_at`, media fields, and media-removal flags. `paid_at` is server-managed: changing status to paid sets it once; keeping paid retains it; reverting to unpaid clears it.\n\nUploading a file replaces the previous single-file media. Setting a remove flag clears that collection. You cannot upload and remove the same file in one request. Omitting file fields leaves existing media unchanged.\n\nResponse includes `tripReportCount`, `amount`, `billedAt`, and `paidAt`."
 					}
 				},
 				{
