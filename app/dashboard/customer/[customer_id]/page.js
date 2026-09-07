@@ -459,21 +459,6 @@ export default async function CustomerDetailPage({ params }) {
                   <h1 className="mt-1 truncate text-2xl font-bold tracking-tight sm:text-3xl">
                     {displayName}
                   </h1>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    {customer?.type ? (
-                      <span className="inline-flex items-center rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium text-red-50 ring-1 ring-white/20">
-                        {customer.type}
-                      </span>
-                    ) : null}
-                    {customerId ? (
-                      <p className="truncate text-xs text-red-100/80">
-                        ID{" "}
-                        <span className="font-medium text-red-50">
-                          {customerId}
-                        </span>
-                      </p>
-                    ) : null}
-                  </div>
                 </div>
               </div>
             </div>
@@ -695,7 +680,16 @@ export default async function CustomerDetailPage({ params }) {
                       className="transition hover:bg-zinc-50/80"
                     >
                       <td className="py-3.5 pr-6 font-medium text-zinc-900">
-                        {program.name || "—"}
+                        {customerId && program.id ? (
+                          <Link
+                            href={`/dashboard/customer/${encodeURIComponent(customerId)}/program/${encodeURIComponent(program.id)}`}
+                            className="underline-offset-2 transition hover:text-red-700 hover:underline"
+                          >
+                            {program.name || "View Program"}
+                          </Link>
+                        ) : (
+                          program.name || "—"
+                        )}
                       </td>
                       <td className="max-w-md py-3.5 pr-6 text-zinc-700">
                         {program.description || "—"}
