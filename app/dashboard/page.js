@@ -219,7 +219,7 @@ function normalizeMonthReport(payload) {
   return monthsRaw
     .map(normalizeMonthRow)
     .filter((row) => row.month)
-    .slice(0, 12);
+    .slice(-3);
 }
 
 async function fetchDashboardSection(url, headers) {
@@ -360,10 +360,10 @@ function MonthReportPanel({ months }) {
       <div className="flex flex-col gap-3 border-b border-zinc-100 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-6">
         <div>
           <h2 className="text-sm font-semibold text-zinc-900">
-            12-Month Report
+            3-Month Report
           </h2>
           <p className="mt-0.5 text-xs text-zinc-500">
-            Billed, collectible, and paid by month
+            Billed, collectible, and paid for the last 3 months
           </p>
         </div>
         <div className="flex flex-wrap gap-3 text-[11px] font-medium text-zinc-600">
