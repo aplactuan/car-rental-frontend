@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 function normalizeRole(value) {
   const role = String(value || "").trim().toLowerCase();
+  if (role === "owner") return "owner";
   if (role === "admin") return "admin";
   if (role === "driver" || role === "user") return "driver";
   return "";

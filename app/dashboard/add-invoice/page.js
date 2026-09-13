@@ -11,6 +11,11 @@ import {
   loadCustomerContext,
 } from "../add-trip-report/customerContext";
 import { fetchUnassignedTripReports } from "./tripReports";
+import {
+  canChangeInvoiceStatus as roleCanChangeInvoiceStatus,
+  invoiceStatusOptions,
+  resolveInvoiceCreateStatus,
+} from "@/app/lib/invoiceStatusAuth";
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-red-600 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-zinc-100";
@@ -173,6 +178,36 @@ export default function AddInvoicePage() {
   const [submittingInvoice, setSubmittingInvoice] = useState(false);
   const [invoiceError, setInvoiceError] = useState("");
   const [invoiceSuccess, setInvoiceSuccess] = useState(null);
+  const [canChangeInvoiceStatus, setCanChangeInvoiceStatus] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadRole() {
+      try {
+        const res = await fetch("/api/session", { cache: "no-store" });
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        if (res.ok) {
+          setCanChangeInvoiceStatus(roleCanChangeInvoiceStatus(data?.role));
+          return;
+        }
+      } catch {
+        // Fall back to local storage role.
+      }
+
+      if (!cancelled && typeof window !== "undefined") {
+        setCanChangeInvoiceStatus(
+          roleCanChangeInvoiceStatus(localStorage.getItem("auth_role")),
+        );
+      }
+    }
+
+    loadRole();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -585,7 +620,10 @@ export default function AddInvoicePage() {
     const invoiceNumber = invoiceForm.invoice_number.trim();
     const lddapAdapNo = invoiceForm.lddap_adap_no.trim();
     const note = invoiceForm.note.trim();
-    const status = invoiceForm.status === "paid" ? "paid" : "unpaid";
+    const status = resolveInvoiceCreateStatus(
+      canChangeInvoiceStatus,
+      invoiceForm.status,
+    );
 
     if (!invoiceNumber) {
       setInvoiceError("Invoice number is required.");
@@ -1175,11 +1213,16 @@ export default function AddInvoicePage() {
                     onChange={(event) =>
                       updateInvoiceField("status", event.target.value)
                     }
-                    disabled={submittingInvoice}
+                    disabled={submittingInvoice || !canChangeInvoiceStatus}
                     className={inputClass}
                   >
-                    <option value="unpaid">Unpaid</option>
-                    <option value="paid">Paid</option>
+                    {invoiceStatusOptions(canChangeInvoiceStatus).map(
+                      (option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ),
+                    )}
                   </select>
                 </div>
               </div>

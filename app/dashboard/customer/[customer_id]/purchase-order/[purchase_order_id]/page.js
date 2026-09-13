@@ -5,6 +5,7 @@ import AddTripReportButton from "./AddTripReportButton";
 import InvoiceActions from "./InvoiceActions";
 import PurchaseOrderActions from "./PurchaseOrderActions";
 import { TripReportRow } from "./TripReportActions";
+import { canChangeInvoiceStatus as roleCanChangeInvoiceStatus } from "@/app/lib/invoiceStatusAuth";
 
 function readField(source, keys) {
   if (!source || typeof source !== "object") return "";
@@ -305,6 +306,9 @@ export default async function PurchaseOrderDetailPage({ params }) {
   const purchaseOrderId = resolvedParams?.purchase_order_id;
 
   const cookieStore = await cookies();
+  const canChangeInvoiceStatus = roleCanChangeInvoiceStatus(
+    cookieStore.get("auth_role")?.value,
+  );
   const cookieHeader = cookieStore
     .getAll()
     .map((cookie) => `${cookie.name}=${cookie.value}`)
@@ -502,6 +506,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
                 <AddInvoiceButton
                   purchaseOrderId={purchaseOrderId}
                   availableTripReports={availableTripReports}
+                  canChangeInvoiceStatus={canChangeInvoiceStatus}
                 />
                 <AddTripReportButton purchaseOrderId={purchaseOrderId} />
               </div>
@@ -690,6 +695,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
                             invoice={invoice}
                             availableTripReports={availableTripReports}
                             attachedTripReports={attachedTripReports}
+                            canChangeInvoiceStatus={canChangeInvoiceStatus}
                           />
                         </td>
                       </tr>

@@ -4,13 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import FileUploadWithCamera from "@/app/dashboard/components/FileUploadWithCamera";
 import ModalShell from "@/app/dashboard/components/ModalShell";
+import { invoiceStatusOptions } from "@/app/lib/invoiceStatusAuth";
 
 const FILE_ACCEPT =
   "image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,.heic,.heif,application/pdf";
-const INVOICE_STATUS_OPTIONS = [
-  { value: "unpaid", label: "Unpaid" },
-  { value: "paid", label: "Paid" },
-];
 
 function formatPhp(amount) {
   if (typeof amount !== "number" || !Number.isFinite(amount)) return "—";
@@ -61,9 +58,11 @@ export default function InvoiceActions({
   invoice,
   availableTripReports = [],
   attachedTripReports = [],
+  canChangeInvoiceStatus = false,
 }) {
   const router = useRouter();
   const isPaid = invoice?.status === "paid";
+  const editLocked = isPaid && !canChangeInvoiceStatus;
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [form, setForm] = useState({
     invoice_number: "",
@@ -96,7 +95,7 @@ export default function InvoiceActions({
   ];
 
   const openEdit = () => {
-    if (isPaid) return;
+    if (editLocked) return;
     setError("");
     setPaymentReceipt(null);
     setDisbursementVoucher(null);
@@ -192,7 +191,7 @@ export default function InvoiceActions({
 
   const handleSave = async (event) => {
     event.preventDefault();
-    if (!purchaseOrderId || !invoice?.id || isPaid) return;
+    if (!purchaseOrderId || !invoice?.id || editLocked) return;
 
     const invoiceNumber = form.invoice_number.trim();
     const lddapAdapNo = form.lddap_adap_no.trim();
@@ -238,7 +237,9 @@ export default function InvoiceActions({
         body.append("invoice_number", invoiceNumber);
         body.append("lddap_adap_no", lddapAdapNo);
         body.append("note", note);
-        body.append("status", status);
+        if (canChangeInvoiceStatus) {
+          body.append("status", status);
+        }
         if (paymentReceipt) {
           body.append("payment_receipt", paymentReceipt);
         }
@@ -276,7 +277,7 @@ export default function InvoiceActions({
             invoice_number: invoiceNumber,
             lddap_adap_no: lddapAdapNo,
             note,
-            status,
+            ...(canChangeInvoiceStatus ? { status } : {}),
           }),
         });
       }
@@ -360,8 +361,11 @@ export default function InvoiceActions({
   };
 
   const busy = isSaving || isDeleting;
-  const lockedTitle = isPaid
+  const editLockedTitle = editLocked
     ? "Paid invoices cannot be edited or deleted"
+    : undefined;
+  const deleteLockedTitle = isPaid
+    ? "Paid invoices cannot be deleted"
     : undefined;
 
   return (
@@ -370,8 +374,8 @@ export default function InvoiceActions({
         <button
           type="button"
           onClick={openEdit}
-          disabled={busy || !purchaseOrderId || isPaid}
-          title={lockedTitle}
+          disabled={busy || !purchaseOrderId || editLocked}
+          title={editLockedTitle}
           className="text-xs font-medium text-red-700 transition hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Edit
@@ -380,7 +384,7 @@ export default function InvoiceActions({
           type="button"
           onClick={handleDelete}
           disabled={busy || !purchaseOrderId || isPaid}
-          title={lockedTitle}
+          title={deleteLockedTitle}
           className="text-xs font-medium text-red-600 transition hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isDeleting ? "Deleting…" : "Delete"}
@@ -459,6 +463,7 @@ export default function InvoiceActions({
                 />
               </div>
 
+              {canChangeInvoiceStatus ? (
               <div>
                 <label
                   htmlFor={`edit-status-${invoice.id}`}
@@ -473,13 +478,14 @@ export default function InvoiceActions({
                   disabled={isSaving}
                   className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                 >
-                  {INVOICE_STATUS_OPTIONS.map((option) => (
+                  {invoiceStatusOptions(true).map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
                   ))}
                 </select>
               </div>
+              ) : null}
 
               <fieldset>
                 <legend className="mb-2 block text-sm font-medium text-zinc-700">
