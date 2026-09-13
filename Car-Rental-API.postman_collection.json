@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "car-rental-api-collection",
 		"name": "Car Rental API",
-		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | Public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` | Public registration route; the server may still return **403** if registration is disabled. |\n| `GET /api/user`, `PUT /api/password`, `POST /api/logout` | Bearer token required. |\n| All other `/api/v1/...` routes | Bearer token required. |\n\nThis collection sets collection-level Bearer auth with `{{token}}`. Public requests override auth to `No Auth`.\n\n## Setup\n1. Set `base_url` (default: `http://localhost`; add a port if needed, for example `http://localhost:8000`).\n2. Run **Login**. The token is stored automatically. Seeded accounts after `php artisan migrate --seed`: `test@example.com` / `password` and `admin@example.com` / `password`.\n3. Reuse saved variables from earlier responses: `car_id`, `driver_id`, `customer_id`, `program_id`, `purchase_order_id`, `purchase_order_attachment_id`, `transaction_id`, `booking_id`, `trip_report_id`, `invoice_id`, `car_import_id`, `driver_import_id`, `bill_payment_id`.\n\n## Notes\n- User registration requires `name`, `email`, `password`, and `password_confirmation`. Optional `role` defaults to `user`; public registration rejects `admin` with **422**.\n- Change password requires `current_password`, `password`, and `password_confirmation`.\n- Car import CSV columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number`.\n- Driver import CSV columns: `first_name`, `last_name`, `license_number`, `license_expiry_date`, `address`, `phone_number`, `email`, `password`.\n- Customers support hierarchy and contact fields: `parent_id`, `contact_person`, `contact_mobile_number`, `contact_email`.\n- Programs belong to a customer (`customer_id`, `name`, optional `description`). List programs with optional `customer_id` filter, or use `GET /api/v1/customers/{customer}/programs`.\n- `GET /api/v1/bookings` uses global statuses `completed`, `today`, `ongoing`, `incoming`. `GET /api/v1/transactions/{id}/bookings` uses `upcoming` and `previous`, plus `period`, `car_id`, and `driver_id` filters.\n- Bill numbers are generated automatically. Bill payment uploads use `multipart/form-data`.\n- Purchase order and trip report `amount` values are unsigned money integers (smallest currency unit).\n- Purchase order `status` is `pending` (default) or `ok`. Optional `program_id` links a PO to a program. List POs can filter by `customer_id`, `program_id` (UUID), and/or `unprogrammed=1` (null program only; mutually exclusive with `program_id`). Optional multi-file `attachments[]` uploads use `multipart/form-data` (jpg/jpeg/png/webp/heic/heif/pdf/doc/docx/xls/xlsx, max 10 MB each). On update, remove files with `remove_attachment_ids[]` (media UUIDs).\n- Trip reports nest under purchase orders. Optional `trip_report_image` uploads use `multipart/form-data` (jpg/jpeg/png/webp/heic/heif/pdf/doc/docx/xls/xlsx, max 10 MB). `driver` is a free-text string (not a driver model FK).\n- Purchase order invoices nest under purchase orders. Optional `payment_receipt` and `disbursement_voucher` uploads use `multipart/form-data` (jpg/jpeg/png/webp/heic/heif/pdf, max 10 MB). Bulk attach/detach trip reports with `trip_report_ids`.",
+		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | Public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` | Public registration route; the server may still return **403** if registration is disabled. |\n| `GET /api/user`, `PUT /api/password`, `POST /api/logout` | Bearer token required. |\n| All other `/api/v1/...` routes | Bearer token required. |\n\nThis collection sets collection-level Bearer auth with `{{token}}`. Public requests override auth to `No Auth`.\n\n## Setup\n1. Set `base_url` (default: `http://localhost`; add a port if needed, for example `http://localhost:8000`).\n2. Run **Login**. The token is stored automatically. Seeded accounts after `php artisan migrate --seed`: `test@example.com` / `password` and `admin@example.com` / `password`.\n3. Reuse saved variables from earlier responses: `car_id`, `driver_id`, `customer_id`, `program_id`, `purchase_order_id`, `purchase_order_attachment_id`, `transaction_id`, `booking_id`, `trip_report_id`, `invoice_id`, `car_import_id`, `driver_import_id`, `bill_payment_id`.\n\n## Notes\n- User registration requires `name`, `email`, `password`, and `password_confirmation`. Optional `role` defaults to `user` (`owner` | `admin` | `user`); public registration rejects elevated roles with **422**.\n- Change password requires `current_password`, `password`, and `password_confirmation`.\n- Car import CSV columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number`.\n- Driver import CSV columns: `first_name`, `last_name`, `license_number`, `license_expiry_date`, `address`, `phone_number`, `email`, `password`.\n- Customers support hierarchy and contact fields: `parent_id`, `contact_person`, `contact_mobile_number`, `contact_email`.\n- Programs belong to a customer (`customer_id`, `name`, optional `description`). List programs with optional `customer_id` filter, or use `GET /api/v1/customers/{customer}/programs`.\n- `GET /api/v1/bookings` uses global statuses `completed`, `today`, `ongoing`, `incoming`. `GET /api/v1/transactions/{id}/bookings` uses `upcoming` and `previous`, plus `period`, `car_id`, and `driver_id` filters.\n- Bill numbers are generated automatically. Bill payment uploads use `multipart/form-data`.\n- Purchase order and trip report `amount` values are unsigned money integers (smallest currency unit).\n- Purchase order `status` is `pending` (default) or `ok`. Optional `program_id` links a PO to a program. List POs can filter by `customer_id`, `program_id` (UUID), and/or `unprogrammed=1` (null program only; mutually exclusive with `program_id`). Optional multi-file `attachments[]` uploads use `multipart/form-data` (jpg/jpeg/png/webp/heic/heif/pdf/doc/docx/xls/xlsx, max 10 MB each). On update, remove files with `remove_attachment_ids[]` (media UUIDs).\n- Trip reports nest under purchase orders. Optional `trip_report_image` uploads use `multipart/form-data` (jpg/jpeg/png/webp/heic/heif/pdf/doc/docx/xls/xlsx, max 10 MB). `driver` is a free-text string (not a driver model FK).\n- Purchase order invoices nest under purchase orders. Optional `payment_receipt` and `disbursement_voucher` uploads use `multipart/form-data` (jpg/jpeg/png/webp/heic/heif/pdf, max 10 MB). Bulk attach/detach trip reports with `trip_report_ids`.\n- Only **owner** or **admin** may set purchase-order invoice `status` to `paid` or `unpaid` (on create or update). Regular `user` tokens receive **403** if `status` is sent. Other invoice fields remain editable by any authenticated user. Setting `paid` sets `paidAt`; setting `unpaid` clears it.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -116,7 +116,7 @@
 								"login"
 							]
 						},
-						"description": "Public endpoint - **do not** send `Authorization`. Send JSON `email` and `password`. On success, use `data.token` as `Bearer` for all `/api/v1/*` routes (except register). Response includes `data.role` (`admin` or `user`) and `data.user.attributes.role` with the same stored value. Linked driver users still return `role: user` — driver access is determined by the linked driver profile, not this field.\n\nDefault seeded credentials: `test@example.com` / `password` (user), `admin@example.com` / `password` (admin)."
+						"description": "Public endpoint - **do not** send `Authorization`. Send JSON `email` and `password`. On success, use `data.token` as `Bearer` for all `/api/v1/*` routes (except register). Response includes `data.role` (`owner`, `admin`, or `user`) and `data.user.attributes.role` with the same stored value. Linked driver users still return `role: user` — driver access is determined by the linked driver profile, not this field.\n\nDefault seeded credentials: `test@example.com` / `password` (user), `admin@example.com` / `password` (admin). Create an `owner` user via factory/seed or admin tooling when testing payment-status endpoints."
 					},
 					"event": [
 						{
@@ -3541,7 +3541,7 @@
 		},
 		{
 			"name": "Purchase Order Invoices",
-			"description": "Invoices nested under a purchase order (distinct from transaction bill printable invoices). `status` is `unpaid` (default) or `paid`. `billedAt` records when the invoice was billed; `paidAt` is managed by status transitions. Optional `payment_receipt`, `disbursement_voucher`, and `invoice_picture` use `multipart/form-data` (jpg/jpeg/png/webp/heic/heif/pdf, max 10 MB). Invoice responses include `tripReportCount` and `amount` (DB aggregates of linked trip reports for this PO). Trip reports can be bulk attached or detached via `trip_report_ids`.",
+			"description": "Invoices nested under a purchase order (distinct from transaction bill printable invoices). `status` is `unpaid` (default) or `paid`. `billedAt` records when the invoice was billed; `paidAt` is managed by status transitions.\n\n**Authorization:** Only **owner** or **admin** may include `status` when creating or updating an invoice (mark paid or revert to unpaid). Any other authenticated role may create/update other invoice fields but receives **403 Forbidden** if `status` is present. Use the dedicated **Mark Invoice as Paid** / **Mark Invoice as Unpaid** requests (login as owner/admin first).\n\nOptional `payment_receipt`, `disbursement_voucher`, and `invoice_picture` use `multipart/form-data` (jpg/jpeg/png/webp/heic/heif/pdf, max 10 MB). Invoice responses include `tripReportCount` and `amount` (DB aggregates of linked trip reports for this PO). Trip reports can be bulk attached or detached via `trip_report_ids`.",
 			"item": [
 				{
 					"name": "Add Invoice",
@@ -3577,7 +3577,7 @@
 								{
 									"key": "status",
 									"value": "unpaid",
-									"description": "Optional. `unpaid` (default) or `paid`.",
+									"description": "Optional. `unpaid` (default) or `paid`. **Owner/admin only** — sending `status` as a regular `user` returns **403**. When created as `paid`, the API sets `paidAt`.",
 									"type": "text",
 									"disabled": true
 								},
@@ -3624,7 +3624,7 @@
 								"invoices"
 							]
 						},
-						"description": "**Bearer required.** Create a purchase order invoice. Prefer `multipart/form-data` when uploading files.\n\n**Required:** `invoice_number` (unique).\n\n**Optional:** `lddap_adap_no` (nullable), `note`, `status` (`unpaid` default, or `paid`), `billed_at` (valid date; defaults to now), `payment_receipt`, `disbursement_voucher`, `invoice_picture`.\n\nResponse type `purchase-order-invoice` with attributes `invoiceNumber`, `lddapAdapNo`, `note`, `status`, `tripReportCount`, `amount`, `billedAt`, `paidAt`, media URLs, `createdAt`, and `updatedAt`. `paidAt` is set by the API when created as paid. Relationship: `purchaseOrder`."
+						"description": "**Bearer required.** Create a purchase order invoice. Prefer `multipart/form-data` when uploading files.\n\n**Required:** `invoice_number` (unique).\n\n**Optional:** `lddap_adap_no` (nullable), `note`, `status` (`unpaid` default, or `paid`), `billed_at` (valid date; defaults to now), `payment_receipt`, `disbursement_voucher`, `invoice_picture`.\n\n**Authorization:** `status` may only be sent by **owner** or **admin**. Omit `status` (or leave disabled) when using a regular `user` token; including it otherwise returns **403**. Creating as `paid` sets `paidAt`.\n\nResponse type `purchase-order-invoice` with attributes `invoiceNumber`, `lddapAdapNo`, `note`, `status`, `tripReportCount`, `amount`, `billedAt`, `paidAt`, media URLs, `createdAt`, and `updatedAt`. Relationship: `purchaseOrder`."
 					},
 					"event": [
 						{
@@ -3730,8 +3730,9 @@
 								{
 									"key": "status",
 									"value": "paid",
-									"description": "Optional. `unpaid` or `paid`.",
-									"type": "text"
+									"description": "Optional. `unpaid` or `paid`. **Owner/admin only** — regular `user` receives **403** if this field is sent. Prefer the dedicated Mark Paid / Mark Unpaid requests. Disabled here so non-privileged updates omit status.",
+									"type": "text",
+									"disabled": true
 								},
 								{
 									"key": "billed_at",
@@ -3798,7 +3799,83 @@
 								"{{invoice_id}}"
 							]
 						},
-						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when replacing or removing files.\n\n**Optional fields:** `invoice_number`, `lddap_adap_no` (nullable), `note`, `status` (`unpaid` or `paid`), `billed_at`, media fields, and media-removal flags. `paid_at` is server-managed: changing status to paid sets it once; keeping paid retains it; reverting to unpaid clears it.\n\nUploading a file replaces the previous single-file media. Setting a remove flag clears that collection. You cannot upload and remove the same file in one request. Omitting file fields leaves existing media unchanged.\n\nResponse includes `tripReportCount`, `amount`, `billedAt`, and `paidAt`."
+						"description": "**Bearer required.** Partial update (`sometimes` rules). Prefer `multipart/form-data` when replacing or removing files.\n\n**Optional fields:** `invoice_number`, `lddap_adap_no` (nullable), `note`, `status` (`unpaid` or `paid`), `billed_at`, media fields, and media-removal flags.\n\n**Authorization:** Changing `status` (paid ↔ unpaid) requires **owner** or **admin**. Leave `status` disabled/omitted for regular users; sending it without privileges returns **403**. Other fields remain editable by any authenticated user.\n\n`paidAt` is server-managed: changing status to paid sets it once; keeping paid retains it; reverting to unpaid clears it.\n\nUploading a file replaces the previous single-file media. Setting a remove flag clears that collection. You cannot upload and remove the same file in one request. Omitting file fields leaves existing media unchanged.\n\nResponse includes `tripReportCount`, `amount`, `billedAt`, and `paidAt`."
+					}
+				},
+				{
+					"name": "Mark Invoice as Paid",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "status",
+									"value": "paid",
+									"description": "Required for this request. Sets invoice to paid. **Owner/admin only.**",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/invoices/{{invoice_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders",
+								"{{purchase_order_id}}",
+								"invoices",
+								"{{invoice_id}}"
+							]
+						},
+						"description": "**Bearer required (owner or admin).** Marks the purchase-order invoice as `paid`.\n\nSend only `status=paid` (multipart or JSON). On success, response `data.attributes.status` is `paid` and `paidAt` is set to now (unchanged if already paid).\n\n**403** if the token belongs to a regular `user`. **404** if the invoice does not belong to `{{purchase_order_id}}`.\n\nLogin as `admin@example.com` / `password` (or an owner account) before running this request."
+					}
+				},
+				{
+					"name": "Mark Invoice as Unpaid",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "status",
+									"value": "unpaid",
+									"description": "Required for this request. Reverts invoice to unpaid and clears `paidAt`. **Owner/admin only.**",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/purchase-orders/{{purchase_order_id}}/invoices/{{invoice_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"purchase-orders",
+								"{{purchase_order_id}}",
+								"invoices",
+								"{{invoice_id}}"
+							]
+						},
+						"description": "**Bearer required (owner or admin).** Reverts the purchase-order invoice to `unpaid`.\n\nSend only `status=unpaid`. On success, response `data.attributes.status` is `unpaid` and `paidAt` is `null`.\n\n**403** if the token belongs to a regular `user`. **404** if the invoice does not belong to `{{purchase_order_id}}`.\n\nLogin as `admin@example.com` / `password` (or an owner account) before running this request."
 					}
 				},
 				{
