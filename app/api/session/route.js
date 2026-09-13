@@ -51,7 +51,13 @@ export async function GET() {
   }
 
   const normalizedRole =
-    role === "driver" ? "driver" : role === "admin" ? "admin" : null;
+    role === "driver"
+      ? "driver"
+      : role === "admin"
+        ? "admin"
+        : role === "owner"
+          ? "owner"
+          : null;
 
   let name = "";
   const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL;

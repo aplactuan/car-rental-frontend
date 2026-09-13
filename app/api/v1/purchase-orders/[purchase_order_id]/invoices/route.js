@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import {
+  invoiceStatusPolicyError,
+  readInvoiceStatus,
+} from "@/app/lib/invoiceStatusAuth";
 
 async function getToken(req) {
   const cookieStore = await cookies();
@@ -48,7 +52,10 @@ async function resolveAuth(req, params) {
     backendBase,
   );
 
-  return { token, url };
+  const cookieStore = await cookies();
+  const role = cookieStore.get("auth_role")?.value || "";
+
+  return { token, url, role };
 }
 
 export async function GET(req, { params }) {
@@ -86,6 +93,17 @@ export async function POST(req, { params }) {
       { error: "Invalid multipart form body." },
       { status: 400 },
     );
+  }
+
+  const { present, value } = readInvoiceStatus(formData);
+  const policyError = invoiceStatusPolicyError({
+    role: auth.role,
+    isCreate: true,
+    statusPresent: present,
+    status: value,
+  });
+  if (policyError) {
+    return NextResponse.json({ error: policyError }, { status: 403 });
   }
 
   try {

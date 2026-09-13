@@ -4,6 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import FileUploadWithCamera from "@/app/dashboard/components/FileUploadWithCamera";
 import ModalShell from "@/app/dashboard/components/ModalShell";
+import {
+  invoiceStatusOptions,
+  resolveInvoiceCreateStatus,
+} from "@/app/lib/invoiceStatusAuth";
 
 const EMPTY_FORM = {
   invoice_number: "",
@@ -14,10 +18,6 @@ const EMPTY_FORM = {
 
 const FILE_ACCEPT =
   "image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,.heic,.heif,application/pdf";
-const INVOICE_STATUS_OPTIONS = [
-  { value: "unpaid", label: "Unpaid" },
-  { value: "paid", label: "Paid" },
-];
 
 function formatPhp(amount) {
   if (typeof amount !== "number" || !Number.isFinite(amount)) return "—";
@@ -44,6 +44,7 @@ function formatDate(value) {
 export default function AddInvoiceButton({
   purchaseOrderId,
   availableTripReports = [],
+  canChangeInvoiceStatus = false,
 }) {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -99,7 +100,10 @@ export default function AddInvoiceButton({
     const invoiceNumber = form.invoice_number.trim();
     const lddapAdapNo = form.lddap_adap_no.trim();
     const note = form.note.trim();
-    const status = form.status === "paid" ? "paid" : "unpaid";
+    const status = resolveInvoiceCreateStatus(
+      canChangeInvoiceStatus,
+      form.status,
+    );
 
     if (!invoiceNumber) {
       setError("Invoice number is required.");
@@ -335,10 +339,10 @@ export default function AddInvoiceButton({
                   id="invoiceStatus"
                   value={form.status}
                   onChange={(event) => updateField("status", event.target.value)}
-                  disabled={isLoading}
+                  disabled={isLoading || !canChangeInvoiceStatus}
                   className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none ring-zinc-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-100"
                 >
-                  {INVOICE_STATUS_OPTIONS.map((option) => (
+                  {invoiceStatusOptions(canChangeInvoiceStatus).map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
