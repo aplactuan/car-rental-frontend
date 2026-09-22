@@ -4,6 +4,9 @@ import AddProgramButton from "./AddProgramButton";
 import AddPurchaseOrderButton from "./AddPurchaseOrderButton";
 import ProgramActions from "./ProgramActions";
 import PurchaseOrdersSection from "./PurchaseOrdersSection";
+import AuditTimeline, {
+  normalizeAudits,
+} from "../../components/AuditTimeline";
 
 function readField(source, keys) {
   if (!source || typeof source !== "object") return "";
@@ -280,43 +283,58 @@ export default async function CustomerDetailPage({ params }) {
   let programsError = "";
   let programsUnprogrammedCount = 0;
   let programsUnprogrammedTotal = 0;
+  let audits = [];
+  let auditsError = "";
 
   if (customerId) {
-    const [customerResult, poResult, programsResult] = await Promise.all([
-      fetch(`${baseUrl}/api/v1/customers/${customerId}`, {
-        headers: fetchHeaders,
-        cache: "no-store",
-      })
-        .then(async (res) => {
-          const data = await res.json().catch(() => ({}));
-          return { res, data };
-        })
-        .catch(() => null),
-      fetch(
-        `${baseUrl}/api/v1/purchase-orders?customer_id=${encodeURIComponent(customerId)}&per_page=100`,
-        {
+    const [customerResult, poResult, programsResult, auditsResult] =
+      await Promise.all([
+        fetch(`${baseUrl}/api/v1/customers/${customerId}`, {
           headers: fetchHeaders,
           cache: "no-store",
-        },
-      )
-        .then(async (res) => {
-          const data = await res.json().catch(() => ({}));
-          return { res, data };
         })
-        .catch(() => null),
-      fetch(
-        `${baseUrl}/api/v1/customers/${encodeURIComponent(customerId)}/programs`,
-        {
-          headers: fetchHeaders,
-          cache: "no-store",
-        },
-      )
-        .then(async (res) => {
-          const data = await res.json().catch(() => ({}));
-          return { res, data };
-        })
-        .catch(() => null),
-    ]);
+          .then(async (res) => {
+            const data = await res.json().catch(() => ({}));
+            return { res, data };
+          })
+          .catch(() => null),
+        fetch(
+          `${baseUrl}/api/v1/purchase-orders?customer_id=${encodeURIComponent(customerId)}&per_page=100`,
+          {
+            headers: fetchHeaders,
+            cache: "no-store",
+          },
+        )
+          .then(async (res) => {
+            const data = await res.json().catch(() => ({}));
+            return { res, data };
+          })
+          .catch(() => null),
+        fetch(
+          `${baseUrl}/api/v1/customers/${encodeURIComponent(customerId)}/programs`,
+          {
+            headers: fetchHeaders,
+            cache: "no-store",
+          },
+        )
+          .then(async (res) => {
+            const data = await res.json().catch(() => ({}));
+            return { res, data };
+          })
+          .catch(() => null),
+        fetch(
+          `${baseUrl}/api/v1/audits?customer_id=${encodeURIComponent(customerId)}&per_page=8`,
+          {
+            headers: fetchHeaders,
+            cache: "no-store",
+          },
+        )
+          .then(async (res) => {
+            const data = await res.json().catch(() => ({}));
+            return { res, data };
+          })
+          .catch(() => null),
+      ]);
 
     if (!customerResult) {
       error = "Could not reach the customer details endpoint.";
@@ -354,6 +372,14 @@ export default async function CustomerDetailPage({ params }) {
         normalizedPrograms.unprogrammedPurchaseOrderCount;
       programsUnprogrammedTotal =
         normalizedPrograms.unprogrammedPurchaseOrderTotal;
+    }
+
+    if (!auditsResult) {
+      auditsError = "Could not reach the recent changes endpoint.";
+    } else if (!auditsResult.res.ok) {
+      auditsError = "Activity history is temporarily unavailable.";
+    } else {
+      audits = normalizeAudits(auditsResult.data);
     }
   } else {
     error = "Customer ID was not provided.";
@@ -553,6 +579,20 @@ export default async function CustomerDetailPage({ params }) {
           </div>
         ) : null}
       </header>
+
+      {!error && customer ? (
+        auditsError ? (
+          <section className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+            Recent changes: {auditsError}
+          </section>
+        ) : (
+          <AuditTimeline
+            audits={audits}
+            title="Customer Activity"
+            description="Latest changes to this customer's trip reports, invoices, and purchase orders."
+          />
+        )
+      ) : null}
 
       {!error && customer ? (
         <details className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">

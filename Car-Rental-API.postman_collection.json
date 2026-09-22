@@ -3980,6 +3980,85 @@
 			]
 		},
 		{
+			"name": "Audits",
+			"description": "Read-only audit history for trip reports, purchase orders, and purchase-order invoices.",
+			"item": [
+				{
+					"name": "List Audits",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/audits?per_page=15",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"audits"
+							],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Optional page size from 1 to 100. Defaults to 15."
+								},
+								{
+									"key": "customer_id",
+									"value": "{{customer_id}}",
+									"description": "Optional customer UUID. Includes purchase-order, trip-report, and invoice history for that customer, including deleted records.",
+									"disabled": true
+								},
+								{
+									"key": "auditable_type",
+									"value": "purchase-order",
+									"description": "Optional model filter: purchase-order, trip-report, or invoice.",
+									"disabled": true
+								},
+								{
+									"key": "auditable_id",
+									"value": "{{purchase_order_id}}",
+									"description": "Optional audited record UUID. Pair with auditable_type when fetching one record's history.",
+									"disabled": true
+								},
+								{
+									"key": "event",
+									"value": "updated",
+									"description": "Optional event filter: created, updated, or deleted.",
+									"disabled": true
+								},
+								{
+									"key": "user_id",
+									"value": "1",
+									"description": "Optional ID of the user who performed the change.",
+									"disabled": true
+								},
+								{
+									"key": "date_from",
+									"value": "2026-09-01",
+									"description": "Optional inclusive start date.",
+									"disabled": true
+								},
+								{
+									"key": "date_to",
+									"value": "2026-09-30",
+									"description": "Optional inclusive end date; must be on or after date_from.",
+									"disabled": true
+								}
+							]
+						},
+						"description": "**Bearer required.** Returns newest audits first using the collection's standard `data`, `links`, and `meta` pagination shape.\n\nEach audit exposes `event`, `auditableType`, `auditableId`, `customerId`, `oldValues`, `newValues`, `changedFields`, request metadata, `createdAt`, and the acting user relationship. All filters can be combined. Use `customer_id` for a complete customer history or pair `auditable_type` with `auditable_id` for one record's timeline."
+					}
+				}
+			]
+		},
+		{
 			"name": "Availability",
 			"item": [
 				{

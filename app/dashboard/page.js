@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import AuditTimeline, {
+  normalizeAudits,
+} from "./components/AuditTimeline";
 
 function toNumber(value) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -446,8 +449,13 @@ export default async function DashboardPage() {
       : "http://localhost:3000");
   const fetchHeaders = cookieHeader ? { Cookie: cookieHeader } : {};
 
-  const [overviewResult, rankingsResult, recentResult, monthResult] =
-    await Promise.all([
+  const [
+    overviewResult,
+    rankingsResult,
+    recentResult,
+    monthResult,
+    auditsResult,
+  ] = await Promise.all([
       fetchDashboardSection(
         `${baseUrl}/api/v1/dashboard/customer-overview`,
         fetchHeaders,
@@ -464,6 +472,10 @@ export default async function DashboardPage() {
         `${baseUrl}/api/v1/dashboard/month-report`,
         fetchHeaders,
       ),
+      fetchDashboardSection(
+        `${baseUrl}/api/v1/audits?per_page=8`,
+        fetchHeaders,
+      ),
     ]);
 
   const overview = overviewResult.ok
@@ -478,12 +490,16 @@ export default async function DashboardPage() {
   const months = monthResult.ok
     ? normalizeMonthReport(monthResult.data)
     : null;
+  const audits = auditsResult.ok ? normalizeAudits(auditsResult.data) : null;
 
   const sectionErrors = [
     overviewResult.ok ? null : `Overview: ${overviewResult.error}`,
     rankingsResult.ok ? null : `Program rankings: ${rankingsResult.error}`,
     recentResult.ok ? null : `Recent trip reports: ${recentResult.error}`,
     monthResult.ok ? null : `Month report: ${monthResult.error}`,
+    auditsResult.ok
+      ? null
+      : "Recent changes: Activity history is temporarily unavailable.",
   ].filter(Boolean);
 
   const kpis = overview
@@ -591,6 +607,12 @@ export default async function DashboardPage() {
             ))}
           </div>
         </section>
+      ) : null}
+
+      {audits ? (
+        <div className="mt-4">
+          <AuditTimeline audits={audits} />
+        </div>
       ) : null}
 
       {months ? (
