@@ -251,42 +251,6 @@ function normalizeRecentInvoices(payload) {
     .filter((item) => item.id || item.invoiceNumber !== "—");
 }
 
-function normalizeRecentBill(raw) {
-  const source = raw?.attributes ?? raw ?? {};
-  const relationships = raw?.relationships ?? {};
-  const id = String(source.id ?? raw?.id ?? "").trim();
-
-  return {
-    id,
-    billNumber:
-      String(source.billNumber ?? source.bill_number ?? "—").trim() || "—",
-    invoiceNumber: String(
-      source.invoiceNumber ?? source.invoice_number ?? "",
-    ).trim(),
-    amount: toNumber(source.amount),
-    amountPaid: toNumber(source.amountPaid ?? source.amount_paid),
-    remainingBalance: toNumber(
-      source.remainingBalance ?? source.remaining_balance,
-    ),
-    status: String(source.status ?? "").trim().toLowerCase() || "—",
-    issuedAt: String(source.issuedAt ?? source.issued_at ?? "").trim(),
-    dueAt: String(source.dueAt ?? source.due_at ?? "").trim(),
-    paidAt: String(source.paidAt ?? source.paid_at ?? "").trim(),
-    transactionId: String(
-      source.transactionId ??
-        source.transaction_id ??
-        relationshipId(relationships, ["transaction", "transactions"]) ??
-        "",
-    ).trim(),
-  };
-}
-
-function normalizeRecentBills(payload) {
-  return dashboardList(payload, ["bills", "recentBills", "recent_bills"])
-    .map(normalizeRecentBill)
-    .filter((item) => item.id || item.billNumber !== "—");
-}
-
 function formatDashboardDate(value) {
   if (!value) return "";
   const parsed = new Date(value);
@@ -302,15 +266,6 @@ function invoiceStatusBadgeClass(status) {
   return status === "paid"
     ? "bg-emerald-50 text-emerald-800"
     : "bg-amber-50 text-amber-800";
-}
-
-function billStatusBadgeClass(status) {
-  if (status === "draft") return "bg-zinc-100 text-zinc-700";
-  if (status === "issued") return "bg-blue-50 text-blue-800";
-  if (status === "partially_paid") return "bg-indigo-50 text-indigo-800";
-  if (status === "paid") return "bg-emerald-50 text-emerald-800";
-  if (status === "cancelled") return "bg-amber-50 text-amber-800";
-  return "bg-zinc-100 text-zinc-700";
 }
 
 function normalizeMonthRow(raw) {
@@ -407,6 +362,80 @@ function StatusBadge({ status, className }) {
   );
 }
 
+function RecentTripReportsPanel({ reports }) {
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+      <div className="flex items-start justify-between gap-3 border-b border-zinc-100 px-4 py-4 sm:px-6">
+        <div>
+          <h2 className="text-sm font-semibold text-zinc-900">
+            Recent Trip Reports
+          </h2>
+          <p className="mt-0.5 text-xs text-zinc-500">
+            Latest 10 reports by report date
+          </p>
+        </div>
+        <Link
+          href="/dashboard/add-trip-report"
+          className="shrink-0 text-xs font-semibold text-red-700 hover:text-red-800"
+        >
+          Add Trip Report
+        </Link>
+      </div>
+
+      {reports.length === 0 ? (
+        <EmptyList
+          title="No trip reports yet"
+          description="Recent reports will show up here after they are created."
+        />
+      ) : (
+        <ul className="divide-y divide-zinc-100">
+          {reports.map((report) => {
+            const href =
+              report.customerId && report.purchaseOrderId
+                ? `/dashboard/customer/${report.customerId}/purchase-order/${report.purchaseOrderId}`
+                : null;
+            const rowClass =
+              "flex flex-col gap-1 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-6";
+            const body = (
+              <>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-zinc-900">
+                    {report.tripReportNo}
+                  </p>
+                  <p className="mt-0.5 text-xs text-zinc-500">
+                    {report.driver}
+                    {report.reportDate ? ` · ${report.reportDate}` : ""}
+                  </p>
+                </div>
+                <span className="shrink-0 text-xs tabular-nums text-zinc-500">
+                  {[report.tripStart, report.tripEnd]
+                    .filter(Boolean)
+                    .join(" → ") || "—"}
+                </span>
+              </>
+            );
+
+            return (
+              <li key={report.id || report.tripReportNo}>
+                {href ? (
+                  <Link
+                    href={href}
+                    className={`${rowClass} transition hover:bg-zinc-50`}
+                  >
+                    {body}
+                  </Link>
+                ) : (
+                  <div className={rowClass}>{body}</div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function RecentInvoicesPanel({ invoices }) {
   return (
     <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
@@ -470,94 +499,6 @@ function RecentInvoicesPanel({ invoices }) {
 
             return (
               <li key={invoice.id || invoice.invoiceNumber}>
-                {href ? (
-                  <Link
-                    href={href}
-                    className={`${rowClass} transition hover:bg-zinc-50`}
-                  >
-                    {body}
-                  </Link>
-                ) : (
-                  <div className={rowClass}>{body}</div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-function RecentBillingPanel({ bills }) {
-  return (
-    <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-      <div className="flex items-start justify-between gap-3 border-b border-zinc-100 px-4 py-4 sm:px-6">
-        <div>
-          <h2 className="text-sm font-semibold text-zinc-900">
-            Recent Billing
-          </h2>
-          <p className="mt-0.5 text-xs text-zinc-500">
-            Latest 10 transaction bills by issued date
-          </p>
-        </div>
-        <Link
-          href="/dashboard/billing"
-          className="shrink-0 text-xs font-semibold text-red-700 hover:text-red-800"
-        >
-          View Billing
-        </Link>
-      </div>
-
-      {bills.length === 0 ? (
-        <EmptyList
-          title="No bills yet"
-          description="Recent billing will show up here after bills are issued."
-        />
-      ) : (
-        <ul className="divide-y divide-zinc-100">
-          {bills.map((bill) => {
-            const href = bill.transactionId
-              ? `/dashboard/transactions/${bill.transactionId}`
-              : null;
-            const rowClass =
-              "flex flex-col gap-1 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-6";
-            const body = (
-              <>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate text-sm font-medium text-zinc-900">
-                      {bill.invoiceNumber || bill.billNumber}
-                    </p>
-                    <StatusBadge
-                      status={bill.status}
-                      className={billStatusBadgeClass(bill.status)}
-                    />
-                  </div>
-                  <p className="mt-0.5 text-xs text-zinc-500">
-                    {bill.billNumber !== "—" &&
-                    bill.invoiceNumber &&
-                    bill.billNumber !== bill.invoiceNumber
-                      ? `${bill.billNumber} · `
-                      : ""}
-                    {bill.issuedAt
-                      ? `Issued ${formatDashboardDate(bill.issuedAt)}`
-                      : "Issue date unavailable"}
-                  </p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="text-sm font-semibold tabular-nums text-zinc-900">
-                    {formatCurrency(bill.amount)}
-                  </p>
-                  <p className="mt-0.5 text-xs tabular-nums text-zinc-500">
-                    Remaining {formatCurrency(bill.remainingBalance)}
-                  </p>
-                </div>
-              </>
-            );
-
-            return (
-              <li key={bill.id || bill.billNumber}>
                 {href ? (
                   <Link
                     href={href}
@@ -747,7 +688,6 @@ export default async function DashboardPage() {
     rankingsResult,
     recentResult,
     recentInvoicesResult,
-    recentBillingResult,
     monthResult,
     auditsResult,
   ] = await Promise.all([
@@ -765,10 +705,6 @@ export default async function DashboardPage() {
       ),
       fetchDashboardSection(
         `${baseUrl}/api/v1/dashboard/invoices/recent`,
-        fetchHeaders,
-      ),
-      fetchDashboardSection(
-        `${baseUrl}/api/v1/dashboard/billing/recent`,
         fetchHeaders,
       ),
       fetchDashboardSection(
@@ -793,9 +729,6 @@ export default async function DashboardPage() {
   const recentInvoices = recentInvoicesResult.ok
     ? normalizeRecentInvoices(recentInvoicesResult.data)
     : null;
-  const recentBills = recentBillingResult.ok
-    ? normalizeRecentBills(recentBillingResult.data)
-    : null;
   const months = monthResult.ok
     ? normalizeMonthReport(monthResult.data)
     : null;
@@ -808,9 +741,6 @@ export default async function DashboardPage() {
     recentInvoicesResult.ok
       ? null
       : `Recent invoices: ${recentInvoicesResult.error}`,
-    recentBillingResult.ok
-      ? null
-      : `Recent billing: ${recentBillingResult.error}`,
     monthResult.ok ? null : `Month report: ${monthResult.error}`,
     auditsResult.ok
       ? null
@@ -865,7 +795,7 @@ export default async function DashboardPage() {
             Dashboard
           </h1>
           <p className="mt-2 text-sm text-zinc-500">
-            Programs, collections, rankings, recent invoices, and billing.
+            Programs, collections, rankings, recent trip reports, and invoices.
           </p>
         </div>
       </div>
@@ -1065,86 +995,14 @@ export default async function DashboardPage() {
         </section>
       ) : null}
 
-      {recentTripReports ? (
-        <section className="mt-4">
-          <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-            <div className="flex items-start justify-between gap-3 border-b border-zinc-100 px-4 py-4 sm:px-6">
-              <div>
-                <h2 className="text-sm font-semibold text-zinc-900">
-                  Recent Trip Reports
-                </h2>
-                <p className="mt-0.5 text-xs text-zinc-500">
-                  Latest 10 reports by report date
-                </p>
-              </div>
-              <Link
-                href="/dashboard/add-trip-report"
-                className="shrink-0 text-xs font-semibold text-red-700 hover:text-red-800"
-              >
-                Add Trip Report
-              </Link>
-            </div>
-
-            {recentTripReports.length === 0 ? (
-              <EmptyList
-                title="No trip reports yet"
-                description="Recent reports will show up here after they are created."
-              />
-            ) : (
-              <ul className="divide-y divide-zinc-100">
-                {recentTripReports.map((report) => {
-                  const href =
-                    report.customerId && report.purchaseOrderId
-                      ? `/dashboard/customer/${report.customerId}/purchase-order/${report.purchaseOrderId}`
-                      : null;
-                  const rowClass =
-                    "flex flex-col gap-1 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-6";
-                  const body = (
-                    <>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-zinc-900">
-                          {report.tripReportNo}
-                        </p>
-                        <p className="mt-0.5 text-xs text-zinc-500">
-                          {report.driver}
-                          {report.reportDate ? ` · ${report.reportDate}` : ""}
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-xs tabular-nums text-zinc-500">
-                        {[report.tripStart, report.tripEnd]
-                          .filter(Boolean)
-                          .join(" → ") || "—"}
-                      </span>
-                    </>
-                  );
-
-                  return (
-                    <li key={report.id || report.tripReportNo}>
-                      {href ? (
-                        <Link
-                          href={href}
-                          className={`${rowClass} transition hover:bg-zinc-50`}
-                        >
-                          {body}
-                        </Link>
-                      ) : (
-                        <div className={rowClass}>{body}</div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        </section>
-      ) : null}
-
-      {recentInvoices || recentBills ? (
+      {recentTripReports || recentInvoices ? (
         <section className="mt-4 grid gap-4 lg:grid-cols-2">
+          {recentTripReports ? (
+            <RecentTripReportsPanel reports={recentTripReports} />
+          ) : null}
           {recentInvoices ? (
             <RecentInvoicesPanel invoices={recentInvoices} />
           ) : null}
-          {recentBills ? <RecentBillingPanel bills={recentBills} /> : null}
         </section>
       ) : null}
     </div>
