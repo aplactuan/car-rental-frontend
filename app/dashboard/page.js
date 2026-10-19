@@ -201,6 +201,118 @@ function normalizeRecentTripReports(payload) {
     .filter((item) => item.id || item.tripReportNo !== "—");
 }
 
+function dashboardList(payload, nestedKeys = []) {
+  if (Array.isArray(payload?.data)) return payload.data;
+  const source = payload?.data?.attributes ?? payload?.data ?? payload ?? {};
+  for (const key of nestedKeys) {
+    if (Array.isArray(source[key])) return source[key];
+  }
+  return asArray(payload?.data);
+}
+
+function normalizeRecentInvoice(raw) {
+  const source = raw?.attributes ?? raw ?? {};
+  const relationships = raw?.relationships ?? {};
+  const id = String(source.id ?? raw?.id ?? "").trim();
+  const statusRaw = String(source.status ?? "unpaid").trim().toLowerCase();
+
+  return {
+    id,
+    invoiceNumber:
+      String(source.invoiceNumber ?? source.invoice_number ?? "—").trim() ||
+      "—",
+    status: statusRaw === "paid" ? "paid" : "unpaid",
+    amount: toNumber(source.amount),
+    billedAt: String(source.billedAt ?? source.billed_at ?? "").trim(),
+    paidAt: String(source.paidAt ?? source.paid_at ?? "").trim(),
+    purchaseOrderId: String(
+      source.purchaseOrderId ??
+        source.purchase_order_id ??
+        relationshipId(relationships, [
+          "purchaseOrder",
+          "purchase_order",
+          "purchaseOrders",
+          "purchase_orders",
+        ]) ??
+        "",
+    ).trim(),
+    customerId: String(
+      source.customerId ??
+        source.customer_id ??
+        relationshipId(relationships, ["customer", "customers"]) ??
+        "",
+    ).trim(),
+  };
+}
+
+function normalizeRecentInvoices(payload) {
+  return dashboardList(payload, ["invoices", "recentInvoices", "recent_invoices"])
+    .map(normalizeRecentInvoice)
+    .filter((item) => item.id || item.invoiceNumber !== "—");
+}
+
+function normalizeRecentBill(raw) {
+  const source = raw?.attributes ?? raw ?? {};
+  const relationships = raw?.relationships ?? {};
+  const id = String(source.id ?? raw?.id ?? "").trim();
+
+  return {
+    id,
+    billNumber:
+      String(source.billNumber ?? source.bill_number ?? "—").trim() || "—",
+    invoiceNumber: String(
+      source.invoiceNumber ?? source.invoice_number ?? "",
+    ).trim(),
+    amount: toNumber(source.amount),
+    amountPaid: toNumber(source.amountPaid ?? source.amount_paid),
+    remainingBalance: toNumber(
+      source.remainingBalance ?? source.remaining_balance,
+    ),
+    status: String(source.status ?? "").trim().toLowerCase() || "—",
+    issuedAt: String(source.issuedAt ?? source.issued_at ?? "").trim(),
+    dueAt: String(source.dueAt ?? source.due_at ?? "").trim(),
+    paidAt: String(source.paidAt ?? source.paid_at ?? "").trim(),
+    transactionId: String(
+      source.transactionId ??
+        source.transaction_id ??
+        relationshipId(relationships, ["transaction", "transactions"]) ??
+        "",
+    ).trim(),
+  };
+}
+
+function normalizeRecentBills(payload) {
+  return dashboardList(payload, ["bills", "recentBills", "recent_bills"])
+    .map(normalizeRecentBill)
+    .filter((item) => item.id || item.billNumber !== "—");
+}
+
+function formatDashboardDate(value) {
+  if (!value) return "";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return String(value);
+  return parsed.toLocaleDateString("en-PH", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function invoiceStatusBadgeClass(status) {
+  return status === "paid"
+    ? "bg-emerald-50 text-emerald-800"
+    : "bg-amber-50 text-amber-800";
+}
+
+function billStatusBadgeClass(status) {
+  if (status === "draft") return "bg-zinc-100 text-zinc-700";
+  if (status === "issued") return "bg-blue-50 text-blue-800";
+  if (status === "partially_paid") return "bg-indigo-50 text-indigo-800";
+  if (status === "paid") return "bg-emerald-50 text-emerald-800";
+  if (status === "cancelled") return "bg-amber-50 text-amber-800";
+  return "bg-zinc-100 text-zinc-700";
+}
+
 function normalizeMonthRow(raw) {
   const source = raw?.attributes ?? raw ?? {};
   return {
@@ -280,6 +392,187 @@ function EmptyList({ title, description }) {
     <div className="px-4 py-8 text-center sm:px-6">
       <p className="text-sm font-medium text-zinc-700">{title}</p>
       <p className="mt-1 text-sm text-zinc-500">{description}</p>
+    </div>
+  );
+}
+
+function StatusBadge({ status, className }) {
+  const label = status && status !== "—" ? status.replaceAll("_", " ") : "—";
+  return (
+    <span
+      className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${className}`}
+    >
+      {label}
+    </span>
+  );
+}
+
+function RecentInvoicesPanel({ invoices }) {
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+      <div className="flex items-start justify-between gap-3 border-b border-zinc-100 px-4 py-4 sm:px-6">
+        <div>
+          <h2 className="text-sm font-semibold text-zinc-900">
+            Recent Invoices
+          </h2>
+          <p className="mt-0.5 text-xs text-zinc-500">
+            Latest 10 purchase-order invoices by billed date
+          </p>
+        </div>
+        <Link
+          href="/dashboard/add-invoice"
+          className="shrink-0 text-xs font-semibold text-red-700 hover:text-red-800"
+        >
+          Add Invoice
+        </Link>
+      </div>
+
+      {invoices.length === 0 ? (
+        <EmptyList
+          title="No invoices yet"
+          description="Recent invoices will show up here after they are created."
+        />
+      ) : (
+        <ul className="divide-y divide-zinc-100">
+          {invoices.map((invoice) => {
+            const href =
+              invoice.customerId && invoice.purchaseOrderId
+                ? `/dashboard/customer/${invoice.customerId}/purchase-order/${invoice.purchaseOrderId}`
+                : null;
+            const rowClass =
+              "flex flex-col gap-1 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-6";
+            const body = (
+              <>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="truncate text-sm font-medium text-zinc-900">
+                      {invoice.invoiceNumber}
+                    </p>
+                    <StatusBadge
+                      status={invoice.status}
+                      className={invoiceStatusBadgeClass(invoice.status)}
+                    />
+                  </div>
+                  <p className="mt-0.5 text-xs text-zinc-500">
+                    {invoice.billedAt
+                      ? `Billed ${formatDashboardDate(invoice.billedAt)}`
+                      : "Billed date unavailable"}
+                    {invoice.status === "paid" && invoice.paidAt
+                      ? ` · Paid ${formatDashboardDate(invoice.paidAt)}`
+                      : ""}
+                  </p>
+                </div>
+                <span className="shrink-0 text-sm font-semibold tabular-nums text-zinc-900">
+                  {formatCurrency(invoice.amount)}
+                </span>
+              </>
+            );
+
+            return (
+              <li key={invoice.id || invoice.invoiceNumber}>
+                {href ? (
+                  <Link
+                    href={href}
+                    className={`${rowClass} transition hover:bg-zinc-50`}
+                  >
+                    {body}
+                  </Link>
+                ) : (
+                  <div className={rowClass}>{body}</div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function RecentBillingPanel({ bills }) {
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+      <div className="flex items-start justify-between gap-3 border-b border-zinc-100 px-4 py-4 sm:px-6">
+        <div>
+          <h2 className="text-sm font-semibold text-zinc-900">
+            Recent Billing
+          </h2>
+          <p className="mt-0.5 text-xs text-zinc-500">
+            Latest 10 transaction bills by issued date
+          </p>
+        </div>
+        <Link
+          href="/dashboard/billing"
+          className="shrink-0 text-xs font-semibold text-red-700 hover:text-red-800"
+        >
+          View Billing
+        </Link>
+      </div>
+
+      {bills.length === 0 ? (
+        <EmptyList
+          title="No bills yet"
+          description="Recent billing will show up here after bills are issued."
+        />
+      ) : (
+        <ul className="divide-y divide-zinc-100">
+          {bills.map((bill) => {
+            const href = bill.transactionId
+              ? `/dashboard/transactions/${bill.transactionId}`
+              : null;
+            const rowClass =
+              "flex flex-col gap-1 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-6";
+            const body = (
+              <>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="truncate text-sm font-medium text-zinc-900">
+                      {bill.invoiceNumber || bill.billNumber}
+                    </p>
+                    <StatusBadge
+                      status={bill.status}
+                      className={billStatusBadgeClass(bill.status)}
+                    />
+                  </div>
+                  <p className="mt-0.5 text-xs text-zinc-500">
+                    {bill.billNumber !== "—" &&
+                    bill.invoiceNumber &&
+                    bill.billNumber !== bill.invoiceNumber
+                      ? `${bill.billNumber} · `
+                      : ""}
+                    {bill.issuedAt
+                      ? `Issued ${formatDashboardDate(bill.issuedAt)}`
+                      : "Issue date unavailable"}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-sm font-semibold tabular-nums text-zinc-900">
+                    {formatCurrency(bill.amount)}
+                  </p>
+                  <p className="mt-0.5 text-xs tabular-nums text-zinc-500">
+                    Remaining {formatCurrency(bill.remainingBalance)}
+                  </p>
+                </div>
+              </>
+            );
+
+            return (
+              <li key={bill.id || bill.billNumber}>
+                {href ? (
+                  <Link
+                    href={href}
+                    className={`${rowClass} transition hover:bg-zinc-50`}
+                  >
+                    {body}
+                  </Link>
+                ) : (
+                  <div className={rowClass}>{body}</div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
@@ -453,6 +746,8 @@ export default async function DashboardPage() {
     overviewResult,
     rankingsResult,
     recentResult,
+    recentInvoicesResult,
+    recentBillingResult,
     monthResult,
     auditsResult,
   ] = await Promise.all([
@@ -466,6 +761,14 @@ export default async function DashboardPage() {
       ),
       fetchDashboardSection(
         `${baseUrl}/api/v1/dashboard/trip-reports/recent`,
+        fetchHeaders,
+      ),
+      fetchDashboardSection(
+        `${baseUrl}/api/v1/dashboard/invoices/recent`,
+        fetchHeaders,
+      ),
+      fetchDashboardSection(
+        `${baseUrl}/api/v1/dashboard/billing/recent`,
         fetchHeaders,
       ),
       fetchDashboardSection(
@@ -487,6 +790,12 @@ export default async function DashboardPage() {
   const recentTripReports = recentResult.ok
     ? normalizeRecentTripReports(recentResult.data)
     : null;
+  const recentInvoices = recentInvoicesResult.ok
+    ? normalizeRecentInvoices(recentInvoicesResult.data)
+    : null;
+  const recentBills = recentBillingResult.ok
+    ? normalizeRecentBills(recentBillingResult.data)
+    : null;
   const months = monthResult.ok
     ? normalizeMonthReport(monthResult.data)
     : null;
@@ -496,6 +805,12 @@ export default async function DashboardPage() {
     overviewResult.ok ? null : `Overview: ${overviewResult.error}`,
     rankingsResult.ok ? null : `Program rankings: ${rankingsResult.error}`,
     recentResult.ok ? null : `Recent trip reports: ${recentResult.error}`,
+    recentInvoicesResult.ok
+      ? null
+      : `Recent invoices: ${recentInvoicesResult.error}`,
+    recentBillingResult.ok
+      ? null
+      : `Recent billing: ${recentBillingResult.error}`,
     monthResult.ok ? null : `Month report: ${monthResult.error}`,
     auditsResult.ok
       ? null
@@ -550,7 +865,7 @@ export default async function DashboardPage() {
             Dashboard
           </h1>
           <p className="mt-2 text-sm text-zinc-500">
-            Programs, collections, rankings, and recent trip reports.
+            Programs, collections, rankings, recent invoices, and billing.
           </p>
         </div>
       </div>
@@ -821,6 +1136,15 @@ export default async function DashboardPage() {
               </ul>
             )}
           </div>
+        </section>
+      ) : null}
+
+      {recentInvoices || recentBills ? (
+        <section className="mt-4 grid gap-4 lg:grid-cols-2">
+          {recentInvoices ? (
+            <RecentInvoicesPanel invoices={recentInvoices} />
+          ) : null}
+          {recentBills ? <RecentBillingPanel bills={recentBills} /> : null}
         </section>
       ) : null}
     </div>
