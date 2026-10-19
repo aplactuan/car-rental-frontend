@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import PaginationBar from "../../components/PaginationBar";
+import { LIST_PAGE_SIZE, extractListMeta } from "../../lib/listMeta";
 
 const FILTER_ALL = "all";
 const FILTER_NONE = "none";
@@ -80,6 +82,23 @@ function normalizePurchaseOrders(payload) {
     .filter((item) => item.id);
 }
 
+function normalizeProgramOptions(payload) {
+  const raw = payload?.data ?? payload?.programs ?? payload?.items ?? payload;
+  const list = Array.isArray(raw) ? raw : [];
+
+  return list
+    .map((record) => {
+      const attrs = record?.attributes ?? {};
+      const pick = (keys) =>
+        readField(attrs, keys) || readField(record, keys);
+      return {
+        id: String(pick(["id", "program_id", "programId"]) || ""),
+        name: String(pick(["name"]) || ""),
+      };
+    })
+    .filter((item) => item.id);
+}
+
 function formatPhp(amount) {
   if (typeof amount !== "number" || !Number.isFinite(amount)) return "—";
   return new Intl.NumberFormat("en-PH", {
@@ -118,11 +137,14 @@ function PurchaseOrderStatusBadge({ status }) {
   );
 }
 
-function buildPurchaseOrdersUrl(customerId, programFilter) {
+function buildPurchaseOrdersUrl(customerId, programFilter, page) {
   const params = new URLSearchParams({
-    customer_id: customerId,
-    per_page: "100",
+    per_page: String(LIST_PAGE_SIZE),
+    page: String(page),
   });
+  if (customerId) {
+    params.set("customer_id", customerId);
+  }
 
   if (programFilter === FILTER_NONE) {
     params.set("unprogrammed", "1");
@@ -136,22 +158,76 @@ function buildPurchaseOrdersUrl(customerId, programFilter) {
 export default function PurchaseOrdersSection({
   customerId,
   initialPurchaseOrders = [],
+  initialPagination = { currentPage: 1, lastPage: 1, total: 0 },
   programs = [],
   initialError = "",
+  lockedProgramId = "",
+  subtitle = "Purchase Orders linked to this customer.",
 }) {
-  const [programFilter, setProgramFilter] = useState(FILTER_ALL);
+  const [programFilter, setProgramFilter] = useState(
+    lockedProgramId || FILTER_ALL,
+  );
+  const [page, setPage] = useState(initialPagination.currentPage || 1);
   const [purchaseOrders, setPurchaseOrders] = useState(initialPurchaseOrders);
+  const [pagination, setPagination] = useState(initialPagination);
   const [error, setError] = useState(initialError);
   const [isLoading, setIsLoading] = useState(false);
+  const [filterPrograms, setFilterPrograms] = useState(programs);
 
   useEffect(() => {
     setPurchaseOrders(initialPurchaseOrders);
+    setPagination(initialPagination);
     setError(initialError);
-  }, [initialPurchaseOrders, initialError]);
+    setPage(initialPagination.currentPage || 1);
+    setProgramFilter(lockedProgramId || FILTER_ALL);
+  }, [initialPurchaseOrders, initialPagination, initialError, lockedProgramId]);
+
+  useEffect(() => {
+    setFilterPrograms(programs);
+  }, [programs]);
+
+  useEffect(() => {
+    if (!customerId || lockedProgramId) return undefined;
+
+    let cancelled = false;
+
+    async function loadFilterPrograms() {
+      try {
+        const authToken =
+          typeof window !== "undefined"
+            ? localStorage.getItem("auth_token")
+            : null;
+        const params = new URLSearchParams({
+          customer_id: customerId,
+          per_page: "100",
+        });
+        const response = await fetch(`/api/v1/programs?${params.toString()}`, {
+          headers: {
+            Accept: "application/json",
+            ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+          },
+          credentials: "include",
+          cache: "no-store",
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!cancelled && response.ok) {
+          const options = normalizeProgramOptions(data);
+          if (options.length > 0) setFilterPrograms(options);
+        }
+      } catch {
+        // Keep the initial programs list for the filter.
+      }
+    }
+
+    void loadFilterPrograms();
+    return () => {
+      cancelled = true;
+    };
+  }, [customerId, lockedProgramId]);
 
   const loadPurchaseOrders = useCallback(
-    async (filter) => {
-      if (!customerId) return;
+    async (filter, nextPage) => {
+      if (!customerId && programFilter === FILTER_ALL) return;
 
       setIsLoading(true);
       setError("");
@@ -162,7 +238,7 @@ export default function PurchaseOrdersSection({
             ? localStorage.getItem("auth_token")
             : null;
         const response = await fetch(
-          buildPurchaseOrdersUrl(customerId, filter),
+          buildPurchaseOrdersUrl(customerId, filter, nextPage),
           {
             headers: {
               Accept: "application/json",
@@ -176,6 +252,7 @@ export default function PurchaseOrdersSection({
 
         if (!response.ok) {
           setPurchaseOrders([]);
+          setPagination({ currentPage: 1, lastPage: 1, total: 0 });
           setError(
             data?.error ||
               data?.message ||
@@ -185,8 +262,10 @@ export default function PurchaseOrdersSection({
         }
 
         setPurchaseOrders(normalizePurchaseOrders(data));
+        setPagination(extractListMeta(data));
       } catch {
         setPurchaseOrders([]);
+        setPagination({ currentPage: 1, lastPage: 1, total: 0 });
         setError("Could not reach the purchase orders endpoint.");
       } finally {
         setIsLoading(false);
@@ -197,10 +276,17 @@ export default function PurchaseOrdersSection({
 
   const handleFilterChange = (nextFilter) => {
     setProgramFilter(nextFilter);
-    void loadPurchaseOrders(nextFilter);
+    setPage(1);
+    void loadPurchaseOrders(nextFilter, 1);
   };
 
-  const showFilter = Boolean(customerId) && !initialError;
+  const handlePageChange = (nextPage) => {
+    setPage(nextPage);
+    void loadPurchaseOrders(programFilter, nextPage);
+  };
+
+  const showFilter = Boolean(customerId) && !initialError && !lockedProgramId;
+  const total = pagination.total || purchaseOrders.length;
 
   return (
     <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
@@ -210,7 +296,7 @@ export default function PurchaseOrdersSection({
             Purchase Orders
           </h2>
           <p className="mt-1 text-sm text-zinc-500">
-            Purchase Orders linked to this customer.
+            {subtitle}
           </p>
         </div>
 
@@ -228,7 +314,7 @@ export default function PurchaseOrdersSection({
               >
                 <option value={FILTER_ALL}>All</option>
                 <option value={FILTER_NONE}>Unprogrammed</option>
-                {programs.map((program) => (
+                {filterPrograms.map((program) => (
                   <option key={program.id} value={program.id}>
                     {program.name || program.id}
                   </option>
@@ -241,7 +327,7 @@ export default function PurchaseOrdersSection({
             <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
               {isLoading
                 ? "Loading…"
-                : `${purchaseOrders.length} order${purchaseOrders.length === 1 ? "" : "s"}`}
+                : `${total.toLocaleString()} order${total === 1 ? "" : "s"}`}
             </div>
           ) : null}
         </div>
@@ -253,17 +339,20 @@ export default function PurchaseOrdersSection({
         ) : purchaseOrders.length === 0 ? (
           <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-6 py-10 text-center">
             <p className="text-sm font-medium text-zinc-700">
-              {programFilter === FILTER_ALL
+              {programFilter === FILTER_ALL && !lockedProgramId
                 ? "No Purchase Orders Yet"
                 : "No Matching Purchase Orders"}
             </p>
             <p className="mt-1 text-sm text-zinc-500">
-              {programFilter === FILTER_ALL
+              {programFilter === FILTER_ALL && !lockedProgramId
                 ? "Add the first purchase order for this customer."
-                : "Try another program filter."}
+                : lockedProgramId
+                  ? "Link a purchase order to this program from the customer page."
+                  : "Try another program filter."}
             </p>
           </div>
         ) : (
+          <>
           <div
             className={`overflow-x-auto overscroll-x-contain ${isLoading ? "opacity-60" : ""}`}
             role="region"
@@ -287,7 +376,7 @@ export default function PurchaseOrdersSection({
                 {purchaseOrders.map((po) => {
                   const programName =
                     po.programName ||
-                    programs.find((program) => program.id === po.programId)
+                    filterPrograms.find((program) => program.id === po.programId)
                       ?.name ||
                     "";
                   const purchaseOrderHref = `/dashboard/customer/${encodeURIComponent(customerId)}/purchase-order/${encodeURIComponent(po.id)}`;
@@ -338,6 +427,15 @@ export default function PurchaseOrdersSection({
               </tbody>
             </table>
           </div>
+            <PaginationBar
+              page={page}
+              lastPage={pagination.lastPage}
+              total={pagination.total}
+              rowsOnPage={purchaseOrders.length}
+              isLoading={isLoading}
+              onPageChange={handlePageChange}
+            />
+          </>
         )}
       </div>
     </section>

@@ -2,11 +2,12 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import AddProgramButton from "./AddProgramButton";
 import AddPurchaseOrderButton from "./AddPurchaseOrderButton";
-import ProgramActions from "./ProgramActions";
+import ProgramsSection from "./ProgramsSection";
 import PurchaseOrdersSection from "./PurchaseOrdersSection";
 import AuditTimeline, {
   normalizeAudits,
 } from "../../components/AuditTimeline";
+import { LIST_PAGE_SIZE, extractListMeta } from "../../lib/listMeta";
 
 function readField(source, keys) {
   if (!source || typeof source !== "object") return "";
@@ -250,15 +251,6 @@ function SummaryCell({ label, children }) {
   );
 }
 
-function SectionEmptyState({ title, description }) {
-  return (
-    <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-10 text-center sm:px-6">
-      <p className="text-sm font-medium text-zinc-700">{title}</p>
-      <p className="mt-1 text-sm text-zinc-500">{description}</p>
-    </div>
-  );
-}
-
 export default async function CustomerDetailPage({ params }) {
   const resolvedParams = await params;
   const customerId = resolvedParams?.customer_id;
@@ -279,8 +271,10 @@ export default async function CustomerDetailPage({ params }) {
   let error = "";
   let purchaseOrders = [];
   let purchaseOrdersError = "";
+  let purchaseOrdersPagination = { currentPage: 1, lastPage: 1, total: 0 };
   let programs = [];
   let programsError = "";
+  let programsPagination = { currentPage: 1, lastPage: 1, total: 0 };
   let programsUnprogrammedCount = 0;
   let programsUnprogrammedTotal = 0;
   let audits = [];
@@ -299,7 +293,7 @@ export default async function CustomerDetailPage({ params }) {
           })
           .catch(() => null),
         fetch(
-          `${baseUrl}/api/v1/purchase-orders?customer_id=${encodeURIComponent(customerId)}&per_page=100`,
+          `${baseUrl}/api/v1/purchase-orders?customer_id=${encodeURIComponent(customerId)}&per_page=${LIST_PAGE_SIZE}&page=1`,
           {
             headers: fetchHeaders,
             cache: "no-store",
@@ -311,7 +305,7 @@ export default async function CustomerDetailPage({ params }) {
           })
           .catch(() => null),
         fetch(
-          `${baseUrl}/api/v1/customers/${encodeURIComponent(customerId)}/programs`,
+          `${baseUrl}/api/v1/programs?customer_id=${encodeURIComponent(customerId)}&per_page=${LIST_PAGE_SIZE}&page=1`,
           {
             headers: fetchHeaders,
             cache: "no-store",
@@ -356,6 +350,7 @@ export default async function CustomerDetailPage({ params }) {
         "Failed to load purchase orders.";
     } else {
       purchaseOrders = normalizePurchaseOrders(poResult.data);
+      purchaseOrdersPagination = extractListMeta(poResult.data);
     }
 
     if (!programsResult) {
@@ -368,6 +363,7 @@ export default async function CustomerDetailPage({ params }) {
     } else {
       const normalizedPrograms = normalizePrograms(programsResult.data);
       programs = normalizedPrograms.programs;
+      programsPagination = extractListMeta(programsResult.data);
       programsUnprogrammedCount =
         normalizedPrograms.unprogrammedPurchaseOrderCount;
       programsUnprogrammedTotal =
@@ -391,7 +387,7 @@ export default async function CustomerDetailPage({ params }) {
       ? customer.purchaseOrderCount
       : purchaseOrdersError
         ? null
-        : purchaseOrders.length;
+        : purchaseOrdersPagination.total;
   const purchaseOrderTotal =
     customer?.purchaseOrderTotal != null
       ? customer.purchaseOrderTotal
@@ -414,7 +410,7 @@ export default async function CustomerDetailPage({ params }) {
       ? customer.programCount
       : programsError
         ? null
-        : programs.length;
+        : programsPagination.total;
   const unpaidInvoiceTotal = customer?.unpaidInvoiceTotal ?? null;
   const tripReportCount = customer?.tripReportCount ?? null;
   const unattachedTripReportCount = customer?.unattachedTripReportCount ?? null;
@@ -640,7 +636,9 @@ export default async function CustomerDetailPage({ params }) {
               { label: "Updated at", value: formatDate(customer.updated_at) },
               {
                 label: "Programs",
-                value: programsError ? "—" : String(programs.length),
+                value: programsError
+                  ? "—"
+                  : String(programCount ?? programsPagination.total),
               },
             ].map((item) => (
               <div key={item.label} className="min-w-0 bg-white px-4 py-5 sm:px-6">
@@ -662,105 +660,19 @@ export default async function CustomerDetailPage({ params }) {
         </section>
       ) : null}
 
-      <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-4 py-5 sm:px-6">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
-              Programs
-            </h2>
-            <p className="mt-1 text-sm text-zinc-500">
-              Programs linked to this customer.
-            </p>
-          </div>
-          {!programsError && programs.length > 0 ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
-                {programs.length} program{programs.length === 1 ? "" : "s"}
-              </div>
-              {unprogrammedPurchaseOrderCount > 0 ? (
-                <div className="rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">
-                  {unprogrammedPurchaseOrderCount.toLocaleString()} unprogrammed
-                  · {formatPhp(unprogrammedPurchaseOrderTotal)}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="px-4 py-5 sm:px-6">
-          {programsError ? (
-            <p className="text-sm text-red-600">{programsError}</p>
-          ) : programs.length === 0 ? (
-            <SectionEmptyState
-              title="No Programs Yet"
-              description="Add the first program for this customer."
-            />
-          ) : (
-            <div
-              className="overflow-x-auto overscroll-x-contain"
-              role="region"
-              aria-label="Customer Programs Table"
-              tabIndex={0}
-            >
-              <table className="min-w-[44rem] text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                    <th className="pb-3 pr-6">Name</th>
-                    <th className="pb-3 pr-6">Description</th>
-                    <th className="pb-3 pr-6 text-right">Purchase Orders</th>
-                    <th className="pb-3 pr-6 text-right">PO Total</th>
-                    <th className="pb-3 pr-6">Created At</th>
-                    <th className="pb-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100">
-                  {programs.map((program) => (
-                    <tr
-                      key={program.id}
-                      className="transition hover:bg-zinc-50/80"
-                    >
-                      <td className="py-3.5 pr-6 font-medium text-zinc-900">
-                        {customerId && program.id ? (
-                          <Link
-                            href={`/dashboard/customer/${encodeURIComponent(customerId)}/program/${encodeURIComponent(program.id)}`}
-                            className="underline-offset-2 transition hover:text-red-700 hover:underline"
-                          >
-                            {program.name || "View Program"}
-                          </Link>
-                        ) : (
-                          program.name || "—"
-                        )}
-                      </td>
-                      <td className="max-w-md py-3.5 pr-6 text-zinc-700">
-                        {program.description || "—"}
-                      </td>
-                      <td className="py-3.5 pr-6 text-right tabular-nums text-zinc-700">
-                        {program.purchaseOrderCount.toLocaleString()}
-                      </td>
-                      <td className="py-3.5 pr-6 text-right tabular-nums text-zinc-700">
-                        {formatPhp(program.purchaseOrderTotal)}
-                      </td>
-                      <td className="py-3.5 pr-6 text-zinc-700">
-                        {formatDate(program.createdAt)}
-                      </td>
-                      <td className="py-3.5 text-right">
-                        <ProgramActions
-                          customerId={customerId}
-                          program={program}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </section>
+      <ProgramsSection
+        customerId={customerId}
+        initialPrograms={programs}
+        initialPagination={programsPagination}
+        initialError={programsError}
+        unprogrammedPurchaseOrderCount={unprogrammedPurchaseOrderCount}
+        unprogrammedPurchaseOrderTotal={unprogrammedPurchaseOrderTotal}
+      />
 
       <PurchaseOrdersSection
         customerId={customerId}
         initialPurchaseOrders={purchaseOrders}
+        initialPagination={purchaseOrdersPagination}
         programs={programs}
         initialError={purchaseOrdersError}
       />

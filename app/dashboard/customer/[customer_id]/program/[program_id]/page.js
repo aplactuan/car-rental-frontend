@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import ProgramActions from "../../ProgramActions";
+import PurchaseOrdersSection from "../../PurchaseOrdersSection";
+import { LIST_PAGE_SIZE, extractListMeta } from "../../../../lib/listMeta";
 
 function readField(source, keys) {
   if (!source || typeof source !== "object") return "";
@@ -141,22 +143,6 @@ function normalizePurchaseOrders(payload) {
     .filter((item) => item.id);
 }
 
-function PurchaseOrderStatusBadge({ status }) {
-  const isOk = status === "ok";
-
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-        isOk
-          ? "bg-emerald-50 text-emerald-800"
-          : "bg-amber-50 text-amber-800"
-      }`}
-    >
-      {isOk ? "OK" : "Pending"}
-    </span>
-  );
-}
-
 function formatPhp(amount) {
   if (typeof amount !== "number" || !Number.isFinite(amount)) return "—";
   return new Intl.NumberFormat("en-PH", {
@@ -200,13 +186,15 @@ export default async function ProgramDetailPage({ params }) {
   let error = "";
   let purchaseOrders = [];
   let purchaseOrdersError = "";
+  let purchaseOrdersPagination = { currentPage: 1, lastPage: 1, total: 0 };
 
   if (!programId) {
     error = "Program ID was not provided.";
   } else {
     const poQuery = new URLSearchParams({
       program_id: programId,
-      per_page: "100",
+      per_page: String(LIST_PAGE_SIZE),
+      page: "1",
     });
     if (customerId) {
       poQuery.set("customer_id", customerId);
@@ -253,6 +241,7 @@ export default async function ProgramDetailPage({ params }) {
         "Failed to load purchase orders.";
     } else {
       purchaseOrders = normalizePurchaseOrders(poResult.data);
+      purchaseOrdersPagination = extractListMeta(poResult.data);
     }
   }
 
@@ -266,7 +255,7 @@ export default async function ProgramDetailPage({ params }) {
       ? program.purchaseOrderCount
       : purchaseOrdersError
         ? null
-        : purchaseOrders.length;
+        : purchaseOrdersPagination.total;
   const purchaseOrderTotal =
     program?.purchaseOrderTotal != null
       ? program.purchaseOrderTotal
@@ -422,122 +411,14 @@ export default async function ProgramDetailPage({ params }) {
         ) : null}
       </header>
 
-      <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-100 px-4 py-5 sm:px-6">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight text-zinc-900">
-              Purchase Orders
-            </h2>
-            <p className="mt-1 text-sm text-zinc-500">
-              Purchase orders linked to this program.
-            </p>
-          </div>
-          {!purchaseOrdersError && purchaseOrders.length > 0 ? (
-            <div className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
-              {purchaseOrders.length} PO
-              {purchaseOrders.length === 1 ? "" : "s"} ·{" "}
-              {formatPhp(
-                purchaseOrders.reduce(
-                  (sum, po) =>
-                    sum + (typeof po.amount === "number" ? po.amount : 0),
-                  0,
-                ),
-              )}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="px-4 py-5 sm:px-6">
-          {purchaseOrdersError ? (
-            <p className="text-sm text-red-600">{purchaseOrdersError}</p>
-          ) : purchaseOrders.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-6 py-10 text-center">
-              <p className="text-sm font-medium text-zinc-700">
-                No Purchase Orders Yet
-              </p>
-              <p className="mt-1 text-sm text-zinc-500">
-                Link a purchase order to this program from the customer page.
-              </p>
-            </div>
-          ) : (
-            <div
-              className="overflow-x-auto overscroll-x-contain"
-              role="region"
-              aria-label="Program Purchase Orders Table"
-              tabIndex={0}
-            >
-              <table className="min-w-[56rem] text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-200 text-left text-xs font-medium uppercase tracking-wide text-zinc-500">
-                    <th className="pb-3 pr-6">PO Number</th>
-                    <th className="pb-3 pr-6">Date</th>
-                    <th className="pb-3 pr-6 text-right">Amount</th>
-                    <th className="pb-3 pr-6">Status</th>
-                    <th className="pb-3 pr-6">Request Person</th>
-                    <th className="pb-3 pr-6">Description</th>
-                    <th className="pb-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100">
-                  {purchaseOrders.map((po) => {
-                    const purchaseOrderHref =
-                      resolvedCustomerId && po.id
-                        ? `/dashboard/customer/${encodeURIComponent(resolvedCustomerId)}/purchase-order/${encodeURIComponent(po.id)}`
-                        : "";
-
-                    return (
-                      <tr
-                        key={po.id}
-                        className="transition hover:bg-zinc-50/80"
-                      >
-                        <td className="py-3.5 pr-6 font-medium text-zinc-900">
-                          {purchaseOrderHref ? (
-                            <Link
-                              href={purchaseOrderHref}
-                              className="underline-offset-2 transition hover:text-red-700 hover:underline"
-                            >
-                              {po.poNumber || "View Purchase Order"}
-                            </Link>
-                          ) : (
-                            po.poNumber || "—"
-                          )}
-                        </td>
-                        <td className="py-3.5 pr-6 text-zinc-700">
-                          {formatDate(po.date)}
-                        </td>
-                        <td className="py-3.5 pr-6 text-right tabular-nums text-zinc-700">
-                          {formatPhp(po.amount)}
-                        </td>
-                        <td className="py-3.5 pr-6">
-                          <PurchaseOrderStatusBadge status={po.status} />
-                        </td>
-                        <td className="py-3.5 pr-6 text-zinc-700">
-                          {po.requestPerson || "—"}
-                        </td>
-                        <td className="max-w-xs py-3.5 pr-6 text-zinc-700">
-                          {po.description || "—"}
-                        </td>
-                        <td className="py-3.5 text-right">
-                          {purchaseOrderHref ? (
-                            <Link
-                              href={purchaseOrderHref}
-                              className="text-xs font-medium text-red-700 transition hover:text-red-800"
-                            >
-                              View
-                            </Link>
-                          ) : (
-                            <span className="text-xs text-zinc-400">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </section>
+      <PurchaseOrdersSection
+        customerId={resolvedCustomerId}
+        initialPurchaseOrders={purchaseOrders}
+        initialPagination={purchaseOrdersPagination}
+        initialError={purchaseOrdersError}
+        lockedProgramId={programId}
+        subtitle="Purchase orders linked to this program."
+      />
     </div>
   );
 }
