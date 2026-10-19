@@ -201,28 +201,48 @@ export default function AuditTimeline({
   description = "Latest changes across trip reports, invoices, and purchase orders.",
 }) {
   return (
-    <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-zinc-100 px-4 py-4 sm:px-6">
-        <div>
+    <details className="group overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+      <summary className="flex cursor-pointer list-none flex-wrap items-start justify-between gap-3 px-4 py-4 marker:content-none sm:px-6 [&::-webkit-details-marker]:hidden">
+        <div className="min-w-0">
           <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>
           <p className="mt-0.5 text-xs text-zinc-500">{description}</p>
         </div>
-        {audits.length > 0 ? (
-          <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-[11px] font-medium text-zinc-600">
-            {audits.length} update{audits.length === 1 ? "" : "s"}
+        <div className="flex shrink-0 items-center gap-2">
+          {audits.length > 0 ? (
+            <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-[11px] font-medium text-zinc-600">
+              {audits.length} update{audits.length === 1 ? "" : "s"}
+            </span>
+          ) : null}
+          <span
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-600 transition group-open:rotate-180"
+            aria-hidden
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="h-4 w-4"
+            >
+              <path
+                d="M6 9l6 6 6-6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </span>
-        ) : null}
-      </div>
+        </div>
+      </summary>
 
       {audits.length === 0 ? (
-        <div className="px-4 py-9 text-center sm:px-6">
+        <div className="border-t border-zinc-100 px-4 py-9 text-center sm:px-6">
           <p className="text-sm font-medium text-zinc-700">No changes yet</p>
           <p className="mt-1 text-sm text-zinc-500">
             New activity will appear here as records are changed.
           </p>
         </div>
       ) : (
-        <ol className="divide-y divide-zinc-100">
+        <ol className="divide-y divide-zinc-100 border-t border-zinc-100">
           {audits.map((audit) => {
             const style = EVENT_STYLES[audit.event] ?? EVENT_STYLES.updated;
             const modelLabel =
@@ -294,6 +314,6 @@ export default function AuditTimeline({
           })}
         </ol>
       )}
-    </section>
+    </details>
   );
 }
