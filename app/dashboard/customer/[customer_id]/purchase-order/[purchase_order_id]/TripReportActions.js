@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DriverAutocomplete from "./DriverAutocomplete";
 import FileUploadWithCamera from "@/app/dashboard/components/FileUploadWithCamera";
@@ -105,6 +106,8 @@ export default function TripReportActions({
   invoiceNumber = "",
   isViewOpen: isViewOpenProp,
   onViewOpenChange,
+  showViewButton = true,
+  afterDeleteHref = "",
 }) {
   const router = useRouter();
   const hasInvoice = Boolean(tripReport?.invoiceId);
@@ -320,7 +323,11 @@ export default function TripReportActions({
       }
 
       setIsEditOpen(false);
-      router.refresh();
+      if (afterDeleteHref) {
+        router.push(afterDeleteHref);
+      } else {
+        router.refresh();
+      }
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -336,14 +343,16 @@ export default function TripReportActions({
   return (
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={openView}
-          disabled={busy}
-          className="text-xs font-medium text-zinc-700 transition hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          View
-        </button>
+        {showViewButton ? (
+          <button
+            type="button"
+            onClick={openView}
+            disabled={busy}
+            className="text-xs font-medium text-zinc-700 transition hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            View
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={openEdit}
@@ -654,20 +663,44 @@ export default function TripReportActions({
   );
 }
 
-export function TripReportRow({ purchaseOrderId, tripReport, linkedInvoice }) {
+export function TripReportRow({
+  customerId,
+  purchaseOrderId,
+  tripReport,
+  linkedInvoice,
+}) {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const invoiceNumber = linkedInvoice?.invoiceNumber || "";
+  const tripReportHref =
+    customerId && purchaseOrderId && tripReport?.id
+      ? `/dashboard/customer/${encodeURIComponent(customerId)}/purchase-order/${encodeURIComponent(purchaseOrderId)}/trip-report/${encodeURIComponent(tripReport.id)}`
+      : null;
+  const invoiceHref =
+    customerId &&
+    purchaseOrderId &&
+    tripReport?.invoiceId
+      ? `/dashboard/customer/${encodeURIComponent(customerId)}/purchase-order/${encodeURIComponent(purchaseOrderId)}/invoice/${encodeURIComponent(tripReport.invoiceId)}`
+      : null;
 
   return (
     <tr className="transition hover:bg-zinc-50/80">
       <td className="py-3.5 pr-6 font-medium text-zinc-900">
-        <button
-          type="button"
-          onClick={() => setIsViewOpen(true)}
-          className="text-left underline-offset-2 transition hover:text-red-700 hover:underline"
-        >
-          {tripReport.tripReportNo || "View Trip Report"}
-        </button>
+        {tripReportHref ? (
+          <Link
+            href={tripReportHref}
+            className="text-red-700 underline-offset-2 transition hover:text-red-800 hover:underline"
+          >
+            {tripReport.tripReportNo || "View Trip Report"}
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setIsViewOpen(true)}
+            className="text-left underline-offset-2 transition hover:text-red-700 hover:underline"
+          >
+            {tripReport.tripReportNo || "View Trip Report"}
+          </button>
+        )}
       </td>
       <td className="py-3.5 pr-6 text-zinc-700">
         {formatDate(tripReport.reportDate)}
@@ -689,9 +722,18 @@ export function TripReportRow({ purchaseOrderId, tripReport, linkedInvoice }) {
       </td>
       <td className="py-3.5 pr-6">
         {tripReport.invoiceId ? (
-          <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
-            {linkedInvoice?.invoiceNumber || "Invoiced"}
-          </span>
+          invoiceHref ? (
+            <Link
+              href={invoiceHref}
+              className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-800 transition hover:bg-emerald-100"
+            >
+              {linkedInvoice?.invoiceNumber || "Invoiced"}
+            </Link>
+          ) : (
+            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
+              {linkedInvoice?.invoiceNumber || "Invoiced"}
+            </span>
+          )
         ) : (
           <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
             Unassigned

@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "car-rental-api-collection",
 		"name": "Car Rental API",
-		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | Public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` | Public registration route; the server may still return **403** if registration is disabled. |\n| `GET /api/user`, `PUT /api/password`, `POST /api/logout` | Bearer token required. |\n| All other `/api/v1/...` routes | Bearer token required. |\n\nThis collection sets collection-level Bearer auth with `{{token}}`. Public requests override auth to `No Auth`.\n\n## Setup\n1. Set `base_url` (default: `http://localhost`; add a port if needed, for example `http://localhost:8000`).\n2. Run **Login**. The token is stored automatically. Seeded accounts after `php artisan migrate --seed`: `test@example.com` / `password` and `admin@example.com` / `password`.\n3. Reuse saved variables from earlier responses: `car_id`, `driver_id`, `customer_id`, `program_id`, `purchase_order_id`, `purchase_order_attachment_id`, `transaction_id`, `booking_id`, `trip_report_id`, `invoice_id`, `car_import_id`, `driver_import_id`, `bill_payment_id`.\n\n## Notes\n- User registration requires `name`, `email`, `password`, and `password_confirmation`. Optional `role` defaults to `user` (`owner` | `admin` | `user`); public registration rejects elevated roles with **422**.\n- Change password requires `current_password`, `password`, and `password_confirmation`.\n- Car import CSV columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number`.\n- Driver import CSV columns: `first_name`, `last_name`, `license_number`, `license_expiry_date`, `address`, `phone_number`, `email`, `password`.\n- Customers support hierarchy and contact fields: `parent_id`, `contact_person`, `contact_mobile_number`, `contact_email`.\n- Programs belong to a customer (`customer_id`, `name`, optional `description`). List programs with optional `customer_id` filter, or use `GET /api/v1/customers/{customer}/programs`.\n- `GET /api/v1/bookings` uses global statuses `completed`, `today`, `ongoing`, `incoming`. `GET /api/v1/transactions/{id}/bookings` uses `upcoming` and `previous`, plus `period`, `car_id`, and `driver_id` filters.\n- Bill numbers are generated automatically. Bill payment uploads use `multipart/form-data`.\n- Purchase order and trip report `amount` values are unsigned money integers (smallest currency unit).\n- Purchase order `status` is `pending` (default) or `ok`. Optional `program_id` links a PO to a program. List POs can filter by `customer_id`, `program_id` (UUID), and/or `unprogrammed=1` (null program only; mutually exclusive with `program_id`). Optional multi-file `attachments[]` uploads use `multipart/form-data` (jpg/jpeg/png/webp/heic/heif/pdf/doc/docx/xls/xlsx, max 10 MB each). On update, remove files with `remove_attachment_ids[]` (media UUIDs).\n- Trip reports nest under purchase orders. Optional `trip_report_image` uploads use `multipart/form-data` (jpg/jpeg/png/webp/heic/heif/pdf/doc/docx/xls/xlsx, max 10 MB). `driver` is a free-text string (not a driver model FK).\n- Purchase order invoices nest under purchase orders. Optional `payment_receipt` and `disbursement_voucher` uploads use `multipart/form-data` (jpg/jpeg/png/webp/heic/heif/pdf, max 10 MB). Bulk attach/detach trip reports with `trip_report_ids`.\n- Only **owner** or **admin** may set purchase-order invoice `status` to `paid` or `unpaid` (on create or update). Regular `user` tokens receive **403** if `status` is sent. Other invoice fields remain editable by any authenticated user. Setting `paid` sets `paidAt`; setting `unpaid` clears it.",
+		"description": "API collection for the Car Rental project. Import this file in Postman to test all endpoints.\n\n## Authentication (when you need a token)\n\n| Endpoint pattern | `Authorization: Bearer <token>` |\n| --- | --- |\n| `POST /api/login` | Public. Response includes `data.token`; Postman saves it to `{{token}}`. |\n| `POST /api/v1/users` | Public registration route; the server may still return **403** if registration is disabled. |\n| `GET /api/user`, `PUT /api/password`, `POST /api/logout` | Bearer token required. |\n| All other `/api/v1/...` routes | Bearer token required. |\n\nThis collection sets collection-level Bearer auth with `{{token}}`. Public requests override auth to `No Auth`.\n\n## Setup\n1. Set `base_url` (default: `http://localhost`; add a port if needed, for example `http://localhost:8000`).\n2. Run **Login**. The token is stored automatically. Seeded accounts after `php artisan migrate --seed`: `test@example.com` / `password` and `admin@example.com` / `password`.\n3. Reuse saved variables from earlier responses: `car_id`, `driver_id`, `customer_id`, `program_id`, `purchase_order_id`, `purchase_order_attachment_id`, `transaction_id`, `booking_id`, `trip_report_id`, `invoice_id`, `car_import_id`, `driver_import_id`, `bill_payment_id`.\n\n## Notes\n- User registration requires `name`, `email`, `password`, and `password_confirmation`. Optional `role` defaults to `user` (`owner` | `admin` | `user`); public registration rejects elevated roles with **422**.\n- Change password requires `current_password`, `password`, and `password_confirmation`.\n- Car import CSV columns: `type`, `door`, `seats`, `year`, `color`, `make`, `model`, `plate_number`.\n- Driver import CSV columns: `first_name`, `last_name`, `license_number`, `license_expiry_date`, `address`, `phone_number`, `email`, `password`.\n- Customers support hierarchy and contact fields: `parent_id`, `contact_person`, `contact_mobile_number`, `contact_email`.\n- Programs belong to a customer (`customer_id`, `name`, optional `description`). List programs with optional `customer_id` filter, or use `GET /api/v1/customers/{customer}/programs`.\n- `GET /api/v1/bookings` uses global statuses `completed`, `today`, `ongoing`, `incoming`. `GET /api/v1/transactions/{id}/bookings` uses `upcoming` and `previous`, plus `period`, `car_id`, and `driver_id` filters.\n- Bill numbers are generated automatically. Bill payment uploads use `multipart/form-data`.\n- Purchase order and trip report `amount` values are unsigned money integers (smallest currency unit).\n- Purchase order `status` is `pending` (default) or `ok`. Optional `program_id` links a PO to a program. List POs can filter by `customer_id`, `program_id` (UUID), `unprogrammed=1` (null program only; mutually exclusive with `program_id`), and an inclusive PO `date` interval with `date_from` and/or `date_to` (`YYYY-MM-DD`). Optional multi-file `attachments[]` uploads use `multipart/form-data` (jpg/jpeg/png/webp/heic/heif/pdf/doc/docx/xls/xlsx, max 10 MB each). On update, remove files with `remove_attachment_ids[]` (media UUIDs).\n- Trip reports nest under purchase orders. Optional `trip_report_image` uploads use `multipart/form-data` (jpg/jpeg/png/webp/heic/heif/pdf/doc/docx/xls/xlsx, max 10 MB). `driver` is a free-text string (not a driver model FK).\n- Purchase order invoices nest under purchase orders. Optional `payment_receipt` and `disbursement_voucher` uploads use `multipart/form-data` (jpg/jpeg/png/webp/heic/heif/pdf, max 10 MB). Bulk attach/detach trip reports with `trip_report_ids`.\n- Only **owner** or **admin** may set purchase-order invoice `status` to `paid` or `unpaid` (on create or update). Regular `user` tokens receive **403** if `status` is sent. Other invoice fields remain editable by any authenticated user. Setting `paid` sets `paidAt`; setting `unpaid` clears it.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -887,7 +887,59 @@
 								"recent"
 							]
 						},
-						"description": "**Bearer required.** Returns up to 10 global trip reports ordered by `reportDate` descending, then driver name. Slim attributes are `tripReportNo`, `driver`, `reportDate`, `tripStart`, and `tripEnd`, with purchase-order relationship linkage."
+						"description": "**Bearer required.** Returns up to 10 global trip reports ordered by `reportDate` descending, then driver name. Slim attributes are `tripReportNo`, `driver`, `reportDate`, `tripStart`, `tripEnd`, and `customerId`, with purchase-order relationship linkage."
+					}
+				},
+				{
+					"name": "Recent invoices",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/dashboard/invoices/recent",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"dashboard",
+								"invoices",
+								"recent"
+							]
+						},
+						"description": "**Bearer required.** Returns up to 10 purchase-order invoices ordered by `billedAt` descending, then invoice number. Invoices without `billedAt` come last. Slim attributes are `invoiceNumber`, `status`, `amount` (sum of attached trip-report amounts), `billedAt`, `paidAt`, `customerId`, `customerName`, `programId`, and `programName` (null when the PO has no program), with purchase-order relationship linkage."
+					}
+				},
+				{
+					"name": "Recent billing",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/dashboard/billing/recent",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"dashboard",
+								"billing",
+								"recent"
+							]
+						},
+						"description": "**Bearer required.** Returns up to 10 transaction bills ordered by `issuedAt` descending, then bill number. Bills without `issuedAt` come last. Slim attributes are `billNumber`, `invoiceNumber`, `amount`, `amountPaid`, `remainingBalance`, `status`, `issuedAt`, `dueAt`, and `paidAt`, with transaction relationship linkage."
 					}
 				},
 				{
@@ -3065,10 +3117,22 @@
 									"value": "1",
 									"description": "Optional boolean. When true (e.g. `1`, `true`, `yes`, `on`), return only purchase orders with no program (`program_id` is null). Mutually exclusive with `program_id` (422 if both are used).",
 									"disabled": true
+								},
+								{
+									"key": "date_from",
+									"value": "2026-06-02",
+									"description": "Optional inclusive start of the purchase order date interval (`YYYY-MM-DD`). Can be used alone or with `date_to`.",
+									"disabled": true
+								},
+								{
+									"key": "date_to",
+									"value": "2026-07-31",
+									"description": "Optional inclusive end of the purchase order date interval (`YYYY-MM-DD`). Must be on or after `date_from` when both are sent.",
+									"disabled": true
 								}
 							]
 						},
-						"description": "**Bearer required.** Paginated purchase order list ordered by latest date. Each item includes `status`, `programId`, `attachments`, and `customer`/`program` relationships.\n\n**Optional query:**\n- `per_page` (1-100)\n- `customer_id` (UUID)\n- `program_id` (UUID only — not for null matching)\n- `unprogrammed` (boolean; when true, only rows with null `program_id`)\n\n`unprogrammed` and `program_id` are mutually exclusive (422 if both are used). See **List Unprogrammed Purchase Orders** for a ready-made example."
+						"description": "**Bearer required.** Paginated purchase order list ordered by latest date. Each item includes `status`, `programId`, `attachments`, and `customer`/`program` relationships.\n\n**Optional query:**\n- `per_page` (1-100)\n- `customer_id` (UUID)\n- `program_id` (UUID only — not for null matching)\n- `unprogrammed` (boolean; when true, only rows with null `program_id`)\n- `date_from` / `date_to` (`YYYY-MM-DD`) — inclusive filter on the purchase order `date`. Either bound can be sent alone. Example: `date_from=2026-06-02&date_to=2026-07-31`.\n\n`unprogrammed` and `program_id` are mutually exclusive (422 if both are used). `date_to` before `date_from` returns **422**. See **List Unprogrammed Purchase Orders** for a ready-made example."
 					}
 				},
 				{

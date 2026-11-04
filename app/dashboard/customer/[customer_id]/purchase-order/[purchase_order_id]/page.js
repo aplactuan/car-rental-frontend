@@ -651,7 +651,16 @@ export default async function PurchaseOrderDetailPage({ params }) {
                         className="transition hover:bg-zinc-50/80"
                       >
                         <td className="py-3.5 pr-6 font-medium text-zinc-900">
-                          {invoice.invoiceNumber || "—"}
+                          {customerId && purchaseOrderId && invoice.id ? (
+                            <Link
+                              href={`/dashboard/customer/${encodeURIComponent(customerId)}/purchase-order/${encodeURIComponent(purchaseOrderId)}/invoice/${encodeURIComponent(invoice.id)}`}
+                              className="text-red-700 transition hover:text-red-800 hover:underline"
+                            >
+                              {invoice.invoiceNumber || "View invoice"}
+                            </Link>
+                          ) : (
+                            invoice.invoiceNumber || "—"
+                          )}
                         </td>
                         <td className="py-3.5 pr-6">
                           <InvoiceStatusBadge status={invoice.status} />
@@ -777,6 +786,7 @@ export default async function PurchaseOrderDetailPage({ params }) {
                     return (
                       <TripReportRow
                         key={report.id}
+                        customerId={customerId || purchaseOrder?.customerId}
                         purchaseOrderId={purchaseOrderId}
                         tripReport={report}
                         linkedInvoice={linkedInvoice}

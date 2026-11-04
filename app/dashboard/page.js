@@ -185,6 +185,21 @@ function normalizeRecentTripReport(raw) {
   };
 }
 
+function purchaseOrderHref(customerId, purchaseOrderId) {
+  if (!customerId || !purchaseOrderId) return null;
+  return `/dashboard/customer/${encodeURIComponent(customerId)}/purchase-order/${encodeURIComponent(purchaseOrderId)}`;
+}
+
+function tripReportHref(customerId, purchaseOrderId, tripReportId) {
+  if (!customerId || !purchaseOrderId || !tripReportId) return null;
+  return `${purchaseOrderHref(customerId, purchaseOrderId)}/trip-report/${encodeURIComponent(tripReportId)}`;
+}
+
+function invoiceHref(customerId, purchaseOrderId, invoiceId) {
+  if (!customerId || !purchaseOrderId || !invoiceId) return null;
+  return `${purchaseOrderHref(customerId, purchaseOrderId)}/invoice/${encodeURIComponent(invoiceId)}`;
+}
+
 function normalizeRecentTripReports(payload) {
   const rawList = Array.isArray(payload?.data)
     ? payload.data
@@ -241,6 +256,18 @@ function normalizeRecentInvoice(raw) {
         source.customer_id ??
         relationshipId(relationships, ["customer", "customers"]) ??
         "",
+    ).trim(),
+    customerName: String(
+      source.customerName ?? source.customer_name ?? "",
+    ).trim(),
+    programId: String(
+      source.programId ??
+        source.program_id ??
+        relationshipId(relationships, ["program", "programs"]) ??
+        "",
+    ).trim(),
+    programName: String(
+      source.programName ?? source.program_name ?? "",
     ).trim(),
   };
 }
@@ -390,18 +417,28 @@ function RecentTripReportsPanel({ reports }) {
       ) : (
         <ul className="divide-y divide-zinc-100">
           {reports.map((report) => {
-            const href =
-              report.customerId && report.purchaseOrderId
-                ? `/dashboard/customer/${report.customerId}/purchase-order/${report.purchaseOrderId}`
-                : null;
+            const href = tripReportHref(
+              report.customerId,
+              report.purchaseOrderId,
+              report.id,
+            );
             const rowClass =
               "flex flex-col gap-1 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-6";
+            const title = (
+              <p
+                className={`truncate text-sm font-medium ${
+                  href
+                    ? "text-red-700 underline-offset-2 group-hover:underline"
+                    : "text-zinc-900"
+                }`}
+              >
+                {report.tripReportNo}
+              </p>
+            );
             const body = (
               <>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-zinc-900">
-                    {report.tripReportNo}
-                  </p>
+                  {title}
                   <p className="mt-0.5 text-xs text-zinc-500">
                     {report.driver}
                     {report.reportDate ? ` · ${report.reportDate}` : ""}
@@ -420,7 +457,7 @@ function RecentTripReportsPanel({ reports }) {
                 {href ? (
                   <Link
                     href={href}
-                    className={`${rowClass} transition hover:bg-zinc-50`}
+                    className={`group ${rowClass} transition hover:bg-zinc-50`}
                   >
                     {body}
                   </Link>
@@ -464,17 +501,28 @@ function RecentInvoicesPanel({ invoices }) {
       ) : (
         <ul className="divide-y divide-zinc-100">
           {invoices.map((invoice) => {
-            const href =
-              invoice.customerId && invoice.purchaseOrderId
-                ? `/dashboard/customer/${invoice.customerId}/purchase-order/${invoice.purchaseOrderId}`
-                : null;
+            const href = invoiceHref(
+              invoice.customerId,
+              invoice.purchaseOrderId,
+              invoice.id,
+            );
+            const contextParts = [
+              invoice.customerName || null,
+              invoice.programName || null,
+            ].filter(Boolean);
             const rowClass =
               "flex flex-col gap-1 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-6";
             const body = (
               <>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate text-sm font-medium text-zinc-900">
+                    <p
+                      className={`truncate text-sm font-medium ${
+                        href
+                          ? "text-red-700 underline-offset-2 group-hover:underline"
+                          : "text-zinc-900"
+                      }`}
+                    >
                       {invoice.invoiceNumber}
                     </p>
                     <StatusBadge
@@ -482,6 +530,11 @@ function RecentInvoicesPanel({ invoices }) {
                       className={invoiceStatusBadgeClass(invoice.status)}
                     />
                   </div>
+                  {contextParts.length > 0 ? (
+                    <p className="mt-0.5 truncate text-xs text-zinc-600">
+                      {contextParts.join(" · ")}
+                    </p>
+                  ) : null}
                   <p className="mt-0.5 text-xs text-zinc-500">
                     {invoice.billedAt
                       ? `Billed ${formatDashboardDate(invoice.billedAt)}`
@@ -502,7 +555,7 @@ function RecentInvoicesPanel({ invoices }) {
                 {href ? (
                   <Link
                     href={href}
-                    className={`${rowClass} transition hover:bg-zinc-50`}
+                    className={`group ${rowClass} transition hover:bg-zinc-50`}
                   >
                     {body}
                   </Link>

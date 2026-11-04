@@ -59,6 +59,7 @@ export default function InvoiceActions({
   availableTripReports = [],
   attachedTripReports = [],
   canChangeInvoiceStatus = false,
+  afterDeleteHref = "",
 }) {
   const router = useRouter();
   const isPaid = invoice?.status === "paid";
@@ -352,7 +353,11 @@ export default function InvoiceActions({
       }
 
       setIsEditOpen(false);
-      router.refresh();
+      if (afterDeleteHref) {
+        router.push(afterDeleteHref);
+      } else {
+        router.refresh();
+      }
     } catch {
       setError("Network error. Please try again.");
     } finally {
