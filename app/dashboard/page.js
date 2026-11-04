@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import AuditTimeline, {
   normalizeAudits,
 } from "./components/AuditTimeline";
+import RecentInvoicesPanel from "./components/RecentInvoicesPanel";
 
 function toNumber(value) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -195,10 +196,6 @@ function tripReportHref(customerId, purchaseOrderId, tripReportId) {
   return `${purchaseOrderHref(customerId, purchaseOrderId)}/trip-report/${encodeURIComponent(tripReportId)}`;
 }
 
-function invoiceHref(customerId, purchaseOrderId, invoiceId) {
-  if (!customerId || !purchaseOrderId || !invoiceId) return null;
-  return `${purchaseOrderHref(customerId, purchaseOrderId)}/invoice/${encodeURIComponent(invoiceId)}`;
-}
 
 function normalizeRecentTripReports(payload) {
   const rawList = Array.isArray(payload?.data)
@@ -289,12 +286,6 @@ function formatDashboardDate(value) {
   });
 }
 
-function invoiceStatusBadgeClass(status) {
-  return status === "paid"
-    ? "bg-emerald-50 text-emerald-800"
-    : "bg-amber-50 text-amber-800";
-}
-
 function normalizeMonthRow(raw) {
   const source = raw?.attributes ?? raw ?? {};
   return {
@@ -378,17 +369,6 @@ function EmptyList({ title, description }) {
   );
 }
 
-function StatusBadge({ status, className }) {
-  const label = status && status !== "—" ? status.replaceAll("_", " ") : "—";
-  return (
-    <span
-      className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${className}`}
-    >
-      {label}
-    </span>
-  );
-}
-
 function RecentTripReportsPanel({ reports }) {
   return (
     <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
@@ -454,104 +434,6 @@ function RecentTripReportsPanel({ reports }) {
 
             return (
               <li key={report.id || report.tripReportNo}>
-                {href ? (
-                  <Link
-                    href={href}
-                    className={`group ${rowClass} transition hover:bg-zinc-50`}
-                  >
-                    {body}
-                  </Link>
-                ) : (
-                  <div className={rowClass}>{body}</div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-function RecentInvoicesPanel({ invoices }) {
-  return (
-    <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-      <div className="flex items-start justify-between gap-3 border-b border-zinc-100 px-4 py-4 sm:px-6">
-        <div>
-          <h2 className="text-sm font-semibold text-zinc-900">
-            Recent Invoices
-          </h2>
-          <p className="mt-0.5 text-xs text-zinc-500">
-            Latest 10 purchase-order invoices by billed date
-          </p>
-        </div>
-        <Link
-          href="/dashboard/add-invoice"
-          className="shrink-0 text-xs font-semibold text-red-700 hover:text-red-800"
-        >
-          Add Invoice
-        </Link>
-      </div>
-
-      {invoices.length === 0 ? (
-        <EmptyList
-          title="No invoices yet"
-          description="Recent invoices will show up here after they are created."
-        />
-      ) : (
-        <ul className="divide-y divide-zinc-100">
-          {invoices.map((invoice) => {
-            const href = invoiceHref(
-              invoice.customerId,
-              invoice.purchaseOrderId,
-              invoice.id,
-            );
-            const contextParts = [
-              invoice.customerName || null,
-              invoice.programName || null,
-            ].filter(Boolean);
-            const rowClass =
-              "flex flex-col gap-1 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-6";
-            const body = (
-              <>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p
-                      className={`truncate text-sm font-medium ${
-                        href
-                          ? "text-red-700 underline-offset-2 group-hover:underline"
-                          : "text-zinc-900"
-                      }`}
-                    >
-                      {invoice.invoiceNumber}
-                    </p>
-                    <StatusBadge
-                      status={invoice.status}
-                      className={invoiceStatusBadgeClass(invoice.status)}
-                    />
-                  </div>
-                  {contextParts.length > 0 ? (
-                    <p className="mt-0.5 truncate text-xs text-zinc-600">
-                      {contextParts.join(" · ")}
-                    </p>
-                  ) : null}
-                  <p className="mt-0.5 text-xs text-zinc-500">
-                    {invoice.billedAt
-                      ? `Billed ${formatDashboardDate(invoice.billedAt)}`
-                      : "Billed date unavailable"}
-                    {invoice.status === "paid" && invoice.paidAt
-                      ? ` · Paid ${formatDashboardDate(invoice.paidAt)}`
-                      : ""}
-                  </p>
-                </div>
-                <span className="shrink-0 text-sm font-semibold tabular-nums text-zinc-900">
-                  {formatCurrency(invoice.amount)}
-                </span>
-              </>
-            );
-
-            return (
-              <li key={invoice.id || invoice.invoiceNumber}>
                 {href ? (
                   <Link
                     href={href}
