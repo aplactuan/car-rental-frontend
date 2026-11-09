@@ -114,6 +114,12 @@ function normalizeCustomer(payload) {
       "unattached_trip_report_count",
       "unattachedTripReportCount",
     ]),
+    invoicedTotal: pickNumber(["invoiced_total", "invoicedTotal"]),
+    invoicePaidTotal: pickNumber([
+      "invoice_paid_total",
+      "invoicePaidTotal",
+    ]),
+    balance: pickNumber(["balance"]),
     unpaidInvoiceTotal: pickNumber([
       "unpaid_invoice_total",
       "unpaidInvoiceTotal",
@@ -412,6 +418,14 @@ export default async function CustomerDetailPage({ params }) {
         ? null
         : programsPagination.total;
   const unpaidInvoiceTotal = customer?.unpaidInvoiceTotal ?? null;
+  const invoicedTotal = customer?.invoicedTotal ?? null;
+  const invoicePaidTotal = customer?.invoicePaidTotal ?? null;
+  const balanceTotal =
+    customer?.balance != null
+      ? customer.balance
+      : purchaseOrderTotal != null && invoicePaidTotal != null
+        ? purchaseOrderTotal - invoicePaidTotal
+        : null;
   const tripReportCount = customer?.tripReportCount ?? null;
   const unattachedTripReportCount = customer?.unattachedTripReportCount ?? null;
 
@@ -570,6 +584,45 @@ export default async function CustomerDetailPage({ params }) {
                     : unattachedTripReportCount > 0
                       ? `${unattachedTripReportCount.toLocaleString()} unattached`
                       : "All attached to invoices"}
+              </p>
+            </SummaryCell>
+          </div>
+        ) : null}
+
+        {!error && customer ? (
+          <div className="grid gap-px border-t border-zinc-200 bg-zinc-200 sm:grid-cols-3">
+            <SummaryCell label="Invoiced">
+              <p className="text-2xl font-semibold tracking-tight text-zinc-900">
+                {invoicedTotal == null ? "—" : formatPhp(invoicedTotal)}
+              </p>
+              <p className="mt-1 text-xs text-zinc-500">
+                {invoicedTotal == null
+                  ? "Unavailable"
+                  : invoicedTotal === 0
+                    ? "No invoiced trip totals yet"
+                    : "Trip totals attached to invoices"}
+              </p>
+            </SummaryCell>
+            <SummaryCell label="Invoice Paid">
+              <p className="text-2xl font-semibold tracking-tight text-zinc-900">
+                {invoicePaidTotal == null ? "—" : formatPhp(invoicePaidTotal)}
+              </p>
+              <p className="mt-1 text-xs text-zinc-500">
+                {invoicePaidTotal == null
+                  ? "Unavailable"
+                  : invoicePaidTotal === 0
+                    ? "No paid invoices yet"
+                    : "Trip totals on paid invoices"}
+              </p>
+            </SummaryCell>
+            <SummaryCell label="Balance">
+              <p className="text-2xl font-semibold tracking-tight text-zinc-900">
+                {balanceTotal == null ? "—" : formatPhp(balanceTotal)}
+              </p>
+              <p className="mt-1 text-xs text-zinc-500">
+                {balanceTotal == null
+                  ? "Unavailable"
+                  : "PO value minus invoice paid"}
               </p>
             </SummaryCell>
           </div>

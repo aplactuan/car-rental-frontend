@@ -106,6 +106,21 @@ function normalizePurchaseOrder(payload) {
     description: String(pick(["description"]) || ""),
     status,
     attachments,
+    invoicedTotal: toAmount(
+      attrs?.invoicedTotal ??
+        attrs?.invoiced_total ??
+        record?.invoicedTotal ??
+        record?.invoiced_total,
+    ),
+    invoicePaidTotal: toAmount(
+      attrs?.invoicePaidTotal ??
+        attrs?.invoice_paid_total ??
+        record?.invoicePaidTotal ??
+        record?.invoice_paid_total,
+    ),
+    balance: toAmount(
+      attrs?.balance ?? record?.balance,
+    ),
     customerId: String(
       pick(["customer_id", "customerId"]) || customerRelationship?.id || "",
     ),
@@ -416,6 +431,37 @@ export default async function PurchaseOrderDetailPage({ params }) {
     typeof purchaseOrder?.amount === "number" ? purchaseOrder.amount : null;
   const tripTotalExceedsPo =
     poAmount != null && tripTotal > poAmount;
+  const invoicedFromInvoices = invoices.reduce(
+    (sum, invoice) =>
+      sum + (typeof invoice.amount === "number" ? invoice.amount : 0),
+    0,
+  );
+  const invoicePaidFromInvoices = invoices.reduce(
+    (sum, invoice) =>
+      sum +
+      (invoice.status === "paid" && typeof invoice.amount === "number"
+        ? invoice.amount
+        : 0),
+    0,
+  );
+  const invoicedTotal =
+    typeof purchaseOrder?.invoicedTotal === "number"
+      ? purchaseOrder.invoicedTotal
+      : invoicesError
+        ? null
+        : invoicedFromInvoices;
+  const invoicePaidTotal =
+    typeof purchaseOrder?.invoicePaidTotal === "number"
+      ? purchaseOrder.invoicePaidTotal
+      : invoicesError
+        ? null
+        : invoicePaidFromInvoices;
+  const balanceTotal =
+    typeof purchaseOrder?.balance === "number"
+      ? purchaseOrder.balance
+      : poAmount != null && typeof invoicePaidTotal === "number"
+        ? poAmount - invoicePaidTotal
+        : null;
 
   return (
     <div className="min-w-0 w-full space-y-6 lg:pr-8">
@@ -521,40 +567,77 @@ export default async function PurchaseOrderDetailPage({ params }) {
         </div>
 
         {!error && purchaseOrder ? (
-          <div className="grid gap-px bg-zinc-200 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="bg-white px-4 py-5 sm:px-6">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                Amount
-              </p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900">
-                {formatPhp(purchaseOrder.amount)}
-              </p>
-            </div>
-            <div className="bg-white px-4 py-5 sm:px-6">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                Date
-              </p>
-              <p className="mt-2 break-words text-lg font-semibold text-zinc-900">
-                {formatDate(purchaseOrder.date)}
-              </p>
-            </div>
-            <div className="bg-white px-4 py-5 sm:px-6">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                Request person
-              </p>
-              <p className="mt-2 text-lg font-semibold text-zinc-900">
-                {purchaseOrder.requestPerson || "—"}
-              </p>
-            </div>
-            <div className="bg-white px-4 py-5 sm:px-6">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                Status
-              </p>
-              <div className="mt-2">
-                <PurchaseOrderStatusBadge status={purchaseOrder.status} />
+          <>
+            <div className="grid gap-px bg-zinc-200 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="bg-white px-4 py-5 sm:px-6">
+                <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  Amount
+                </p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900">
+                  {formatPhp(purchaseOrder.amount)}
+                </p>
+              </div>
+              <div className="bg-white px-4 py-5 sm:px-6">
+                <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  Date
+                </p>
+                <p className="mt-2 break-words text-lg font-semibold text-zinc-900">
+                  {formatDate(purchaseOrder.date)}
+                </p>
+              </div>
+              <div className="bg-white px-4 py-5 sm:px-6">
+                <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  Request person
+                </p>
+                <p className="mt-2 text-lg font-semibold text-zinc-900">
+                  {purchaseOrder.requestPerson || "—"}
+                </p>
+              </div>
+              <div className="bg-white px-4 py-5 sm:px-6">
+                <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  Status
+                </p>
+                <div className="mt-2">
+                  <PurchaseOrderStatusBadge status={purchaseOrder.status} />
+                </div>
               </div>
             </div>
-          </div>
+            <div className="grid gap-px border-t border-zinc-200 bg-zinc-200 sm:grid-cols-3">
+              <div className="bg-white px-4 py-5 sm:px-6">
+                <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  Invoiced
+                </p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900">
+                  {formatPhp(invoicedTotal)}
+                </p>
+                <p className="mt-1 text-xs text-zinc-500">
+                  Trip totals attached to invoices
+                </p>
+              </div>
+              <div className="bg-white px-4 py-5 sm:px-6">
+                <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  Invoice Paid
+                </p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900">
+                  {formatPhp(invoicePaidTotal)}
+                </p>
+                <p className="mt-1 text-xs text-zinc-500">
+                  Trip totals on paid invoices
+                </p>
+              </div>
+              <div className="bg-white px-4 py-5 sm:px-6">
+                <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  Balance
+                </p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900">
+                  {formatPhp(balanceTotal)}
+                </p>
+                <p className="mt-1 text-xs text-zinc-500">
+                  PO amount minus invoice paid
+                </p>
+              </div>
+            </div>
+          </>
         ) : null}
 
         {!error && purchaseOrder?.description ? (
