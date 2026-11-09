@@ -5,6 +5,7 @@ import AuditTimeline, {
   normalizeAudits,
 } from "./components/AuditTimeline";
 import RecentInvoicesPanel from "./components/RecentInvoicesPanel";
+import RecentTripReportsPanel from "./components/RecentTripReportsPanel";
 
 function toNumber(value) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -186,17 +187,6 @@ function normalizeRecentTripReport(raw) {
   };
 }
 
-function purchaseOrderHref(customerId, purchaseOrderId) {
-  if (!customerId || !purchaseOrderId) return null;
-  return `/dashboard/customer/${encodeURIComponent(customerId)}/purchase-order/${encodeURIComponent(purchaseOrderId)}`;
-}
-
-function tripReportHref(customerId, purchaseOrderId, tripReportId) {
-  if (!customerId || !purchaseOrderId || !tripReportId) return null;
-  return `${purchaseOrderHref(customerId, purchaseOrderId)}/trip-report/${encodeURIComponent(tripReportId)}`;
-}
-
-
 function normalizeRecentTripReports(payload) {
   const rawList = Array.isArray(payload?.data)
     ? payload.data
@@ -273,17 +263,6 @@ function normalizeRecentInvoices(payload) {
   return dashboardList(payload, ["invoices", "recentInvoices", "recent_invoices"])
     .map(normalizeRecentInvoice)
     .filter((item) => item.id || item.invoiceNumber !== "—");
-}
-
-function formatDashboardDate(value) {
-  if (!value) return "";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return String(value);
-  return parsed.toLocaleDateString("en-PH", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
 }
 
 function normalizeMonthRow(raw) {
@@ -365,90 +344,6 @@ function EmptyList({ title, description }) {
     <div className="px-4 py-8 text-center sm:px-6">
       <p className="text-sm font-medium text-zinc-700">{title}</p>
       <p className="mt-1 text-sm text-zinc-500">{description}</p>
-    </div>
-  );
-}
-
-function RecentTripReportsPanel({ reports }) {
-  return (
-    <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-      <div className="flex items-start justify-between gap-3 border-b border-zinc-100 px-4 py-4 sm:px-6">
-        <div>
-          <h2 className="text-sm font-semibold text-zinc-900">
-            Recent Trip Reports
-          </h2>
-          <p className="mt-0.5 text-xs text-zinc-500">
-            Latest 10 reports by report date
-          </p>
-        </div>
-        <Link
-          href="/dashboard/add-trip-report"
-          className="shrink-0 text-xs font-semibold text-red-700 hover:text-red-800"
-        >
-          Add Trip Report
-        </Link>
-      </div>
-
-      {reports.length === 0 ? (
-        <EmptyList
-          title="No trip reports yet"
-          description="Recent reports will show up here after they are created."
-        />
-      ) : (
-        <ul className="divide-y divide-zinc-100">
-          {reports.map((report) => {
-            const href = tripReportHref(
-              report.customerId,
-              report.purchaseOrderId,
-              report.id,
-            );
-            const rowClass =
-              "flex flex-col gap-1 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-6";
-            const title = (
-              <p
-                className={`truncate text-sm font-medium ${
-                  href
-                    ? "text-red-700 underline-offset-2 group-hover:underline"
-                    : "text-zinc-900"
-                }`}
-              >
-                {report.tripReportNo}
-              </p>
-            );
-            const body = (
-              <>
-                <div className="min-w-0">
-                  {title}
-                  <p className="mt-0.5 text-xs text-zinc-500">
-                    {report.driver}
-                    {report.reportDate ? ` · ${report.reportDate}` : ""}
-                  </p>
-                </div>
-                <span className="shrink-0 text-xs tabular-nums text-zinc-500">
-                  {[report.tripStart, report.tripEnd]
-                    .filter(Boolean)
-                    .join(" → ") || "—"}
-                </span>
-              </>
-            );
-
-            return (
-              <li key={report.id || report.tripReportNo}>
-                {href ? (
-                  <Link
-                    href={href}
-                    className={`group ${rowClass} transition hover:bg-zinc-50`}
-                  >
-                    {body}
-                  </Link>
-                ) : (
-                  <div className={rowClass}>{body}</div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
     </div>
   );
 }
