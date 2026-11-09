@@ -891,6 +891,39 @@
 					}
 				},
 				{
+					"name": "Search trip reports",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/dashboard/trip-reports/search?q=TR-123",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"dashboard",
+								"trip-reports",
+								"search"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "TR-123",
+									"description": "Required. Case-insensitive partial match against trip report number, driver, or destinations."
+								}
+							]
+						},
+						"description": "**Bearer required.** Searches global trip reports by `q` (partial match on trip report number, driver, or destinations). Returns up to 20 matches ordered by `reportDate` descending, then driver name. Response shape matches **Recent trip reports**."
+					}
+				},
+				{
 					"name": "Recent invoices",
 					"request": {
 						"method": "GET",
