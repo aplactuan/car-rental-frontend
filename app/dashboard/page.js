@@ -608,7 +608,7 @@ export default async function DashboardPage() {
           icon: kpiIcons.paid,
         },
         {
-          label: "Balance to Collect",
+          label: "Unpaid Invoice",
           value: formatCurrency(overview.balanceToCollect),
           hint: "Unpaid PO invoice trip reports",
           href: "/dashboard/billing",
