@@ -539,21 +539,7 @@ export default async function CustomerDetailPage({ params }) {
                   : formatPhp(purchaseOrderTotal)}
               </p>
               <p className="mt-1 text-xs text-zinc-500">
-                {programCount == null
-                  ? unprogrammedPurchaseOrderTotal > 0
-                    ? `${formatPhp(unprogrammedPurchaseOrderTotal)} unprogrammed`
-                    : "Sum of PO amounts"
-                  : programCount === 0
-                    ? unprogrammedPurchaseOrderTotal > 0
-                      ? `${formatPhp(unprogrammedPurchaseOrderTotal)} unprogrammed`
-                      : "No programs with POs"
-                    : `Across ${programCount.toLocaleString()} program${
-                        programCount === 1 ? "" : "s"
-                      }${
-                        unprogrammedPurchaseOrderTotal > 0
-                          ? ` · ${formatPhp(unprogrammedPurchaseOrderTotal)} unprogrammed`
-                          : ""
-                      }`}
+                Total Value of Purchase Order
               </p>
             </SummaryCell>
             <SummaryCell label="Outstanding">
@@ -567,7 +553,7 @@ export default async function CustomerDetailPage({ params }) {
                   ? "Unavailable"
                   : unpaidInvoiceTotal === 0
                     ? "No unpaid invoices"
-                    : "Unpaid invoice trip totals"}
+                    : "Unpaid Invoice Billed"}
               </p>
             </SummaryCell>
             <SummaryCell label="Trip Reports">
@@ -591,7 +577,7 @@ export default async function CustomerDetailPage({ params }) {
 
         {!error && customer ? (
           <div className="grid gap-px border-t border-zinc-200 bg-zinc-200 sm:grid-cols-3">
-            <SummaryCell label="Invoiced">
+            <SummaryCell label="Charged Invoice">
               <p className="text-2xl font-semibold tracking-tight text-zinc-900">
                 {invoicedTotal == null ? "—" : formatPhp(invoicedTotal)}
               </p>
@@ -622,7 +608,7 @@ export default async function CustomerDetailPage({ params }) {
               <p className="mt-1 text-xs text-zinc-500">
                 {balanceTotal == null
                   ? "Unavailable"
-                  : "PO value minus invoice paid"}
+                  : "PO Value minus INVOICED (Unused PO Value)"}
               </p>
             </SummaryCell>
           </div>
