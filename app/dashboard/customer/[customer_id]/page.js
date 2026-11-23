@@ -423,8 +423,8 @@ export default async function CustomerDetailPage({ params }) {
   const balanceTotal =
     customer?.balance != null
       ? customer.balance
-      : purchaseOrderTotal != null && invoicePaidTotal != null
-        ? purchaseOrderTotal - invoicePaidTotal
+      : purchaseOrderTotal != null && invoicedTotal != null
+        ? purchaseOrderTotal - invoicedTotal
         : null;
   const tripReportCount = customer?.tripReportCount ?? null;
   const unattachedTripReportCount = customer?.unattachedTripReportCount ?? null;
@@ -553,7 +553,7 @@ export default async function CustomerDetailPage({ params }) {
                   ? "Unavailable"
                   : unpaidInvoiceTotal === 0
                     ? "No unpaid invoices"
-                    : "Unpaid Invoice Billed"}
+                    : "Charged Invoice minus Invoice Paid"}
               </p>
             </SummaryCell>
             <SummaryCell label="Trip Reports">
@@ -586,7 +586,7 @@ export default async function CustomerDetailPage({ params }) {
                   ? "Unavailable"
                   : invoicedTotal === 0
                     ? "No invoiced trip totals yet"
-                    : "Trip totals attached to invoices"}
+                    : "Invoiced Billed"}
               </p>
             </SummaryCell>
             <SummaryCell label="Invoice Paid">
@@ -598,7 +598,7 @@ export default async function CustomerDetailPage({ params }) {
                   ? "Unavailable"
                   : invoicePaidTotal === 0
                     ? "No paid invoices yet"
-                    : "Trip totals on paid invoices"}
+                    : "Invoice Already Paid"}
               </p>
             </SummaryCell>
             <SummaryCell label="Balance">
@@ -608,7 +608,7 @@ export default async function CustomerDetailPage({ params }) {
               <p className="mt-1 text-xs text-zinc-500">
                 {balanceTotal == null
                   ? "Unavailable"
-                  : "PO Value minus INVOICED (Unused PO Value)"}
+                  : "PO Value minus Charged Invoice"}
               </p>
             </SummaryCell>
           </div>
