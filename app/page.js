@@ -6,45 +6,6 @@ import { useMemo, useState } from "react";
 const inputClass =
   "w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-red-600 focus:ring-4 focus:ring-red-600/10";
 
-const highlights = [
-  {
-    title: "Fleet visibility",
-    description: "Track every vehicle, availability, and status in one place.",
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.75}
-        d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-      />
-    ),
-  },
-  {
-    title: "Bookings & dispatch",
-    description: "Coordinate drivers, trips, and schedules without the guesswork.",
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.75}
-        d="M8 7V5a2 2 0 114 0v2m0 0h4a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2h4m0 0V5m0 7h4m-8 4h5"
-      />
-    ),
-  },
-  {
-    title: "Billing, simplified",
-    description: "Generate invoices and track payments with full confidence.",
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.75}
-        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-      />
-    ),
-  },
-];
-
 function BrandMark({ light = false }) {
   return (
     <div className="flex items-center gap-3">
@@ -63,10 +24,10 @@ function BrandMark({ light = false }) {
             light ? "text-white" : "text-zinc-900"
           }`}
         >
-          Rambo App
+          RAMBO
         </div>
         <div className={`text-[11px] leading-tight ${light ? "text-red-100/80" : "text-zinc-500"}`}>
-          Fleet Management System
+          Bennch Transport Services
         </div>
       </div>
     </div>
@@ -127,7 +88,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white lg:flex">
       {/* Brand panel — desktop only */}
-      <div className="relative hidden overflow-hidden bg-[#140a0a] lg:flex lg:w-[44%] lg:shrink-0 lg:flex-col lg:justify-between lg:px-12 lg:py-12 xl:px-16">
+      <div className="relative hidden overflow-hidden bg-[#140a0a] lg:flex lg:w-[48%] lg:shrink-0 lg:flex-col lg:justify-between lg:px-12 lg:py-12 xl:w-[50%] xl:px-16">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.07]"
           style={{
@@ -145,63 +106,94 @@ export default function Home() {
           className="pointer-events-none absolute -bottom-32 left-0 h-72 w-72 rounded-full bg-red-400/10 blur-3xl"
           aria-hidden
         />
+        <div
+          className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-red-500/30 to-transparent"
+          aria-hidden
+        />
 
-        <div className="relative z-10">
+        <div className="relative z-10 animate-fade-in-up">
           <BrandMark light />
         </div>
 
-        <div className="relative z-10 max-w-md">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-red-400">
-            Management System
+        <div className="relative z-10 max-w-lg">
+          <p
+            className="animate-fade-in-up text-xs font-semibold uppercase tracking-[0.22em] text-red-400"
+            style={{ animationDelay: "80ms" }}
+          >
+            Bennch Transport Services
           </p>
-          <h1 className="mt-4 text-3xl font-semibold leading-tight tracking-tight text-white xl:text-4xl">
-            Run your rental business with total confidence.
+          <h1
+            className="animate-fade-in-up mt-4 text-3xl font-semibold leading-[1.15] tracking-tight text-white xl:text-[2.5rem]"
+            style={{ animationDelay: "140ms" }}
+          >
+            Welcome to RAMBO Dashboard!
           </h1>
-          <p className="mt-4 text-sm leading-relaxed text-red-100/70">
-            One workspace for your fleet, drivers, bookings, and billing —
-            built to keep operations simple and every trip on schedule.
+          <p
+            className="animate-fade-in-up mt-3 text-sm font-medium text-red-100/85"
+            style={{ animationDelay: "200ms" }}
+          >
+            Operations and Financial Management System
           </p>
 
-          <ul className="mt-10 space-y-5">
-            {highlights.map((item) => (
-              <li key={item.title} className="flex items-start gap-3.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-red-300 ring-1 ring-white/10">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    className="h-4.5 w-4.5"
-                    aria-hidden
-                  >
-                    {item.icon}
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">{item.title}</p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-red-100/60">
-                    {item.description}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div
+            className="animate-fade-in-up mt-8 space-y-4 border-l border-red-500/35 pl-5 text-sm leading-relaxed text-red-100/65"
+            style={{ animationDelay: "280ms" }}
+          >
+            <p>
+              RAMBO is a centralized management application exclusively designed
+              for Bennch Transport Services to simplify daily operations,
+              organize business transactions, and monitor financial performance.
+            </p>
+            <p>
+              This system allows the team to efficiently manage trip reports,
+              purchase orders, invoices, customer collectibles, income,
+              expenses, and outstanding balances in one convenient platform.
+            </p>
+            <p>
+              With RAMBO, Bennch Transport Services can easily track completed
+              and ongoing trips, monitor payments, manage financial records, and
+              generate accurate reports to support better business decisions.
+            </p>
+          </div>
+
+          <div
+            className="animate-fade-in-up mt-10"
+            style={{ animationDelay: "360ms" }}
+          >
+            <p className="text-base font-semibold tracking-tight text-white">
+              One Platform. Organized Operations. Smarter Financial Management.
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-red-100/55">
+              Making every trip, transaction, and financial record easier to
+              manage.
+            </p>
+          </div>
         </div>
 
-        <p className="relative z-10 text-xs text-red-100/40">© 2026 Rambo App. All rights reserved.</p>
+        <p
+          className="relative z-10 animate-fade-in-up text-xs text-red-100/40"
+          style={{ animationDelay: "420ms" }}
+        >
+          © 2026 Bennch Transport Services · RAMBO
+        </p>
       </div>
 
       {/* Form panel */}
       <div className="flex min-h-screen flex-1 flex-col justify-center px-5 py-10 sm:px-10 lg:px-16 xl:px-24">
-        <div className="mx-auto w-full max-w-sm">
+        <div className="mx-auto w-full max-w-sm animate-fade-in-up">
           <div className="mb-8 lg:hidden">
             <BrandMark />
+            <p className="mt-5 text-sm leading-relaxed text-zinc-500">
+              Operations and Financial Management System for Bennch Transport
+              Services.
+            </p>
           </div>
 
           <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-[28px]">
-            Welcome Back
+            Sign in
           </h2>
           <p className="mt-2 text-sm text-zinc-500">
-            Sign in to access your dashboard.
+            Access your RAMBO dashboard.
           </p>
 
           <form onSubmit={onSubmit} className="mt-8 space-y-5">
@@ -323,7 +315,7 @@ export default function Home() {
           </form>
 
           <p className="mt-8 text-center text-xs text-zinc-400 lg:hidden">
-            © 2026 Rambo App. All rights reserved.
+            © 2026 Bennch Transport Services · RAMBO
           </p>
         </div>
       </div>

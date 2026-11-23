@@ -12,8 +12,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Rambo App Management System",
-  description: "Login to your Rambo App Management System account",
+  title: "RAMBO | Bennch Transport Services",
+  description:
+    "RAMBO Dashboard — Operations and Financial Management System for Bennch Transport Services",
 };
 
 export default function RootLayout({ children }) {
